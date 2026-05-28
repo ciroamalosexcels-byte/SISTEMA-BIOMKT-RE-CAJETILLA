@@ -40,17 +40,112 @@ export function todayBA(): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Returns current datetime in BA timezone as YYYY-MM-DDTHH:mm */
+export function nowDatetimeBA(): string {
+  const { year, month, day, hour, minute } = baParts();
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
 /** Returns current month key as YYYY-MM in BA timezone */
 export function currentMonthBA(): string {
   const { year, month } = baParts();
   return `${year}-${month}`;
 }
 
-/** Formats an ISO date string for display: DD/MM/YYYY */
+/**
+ * Convierte cualquier formato de fecha a YYYY-MM-DD[THH:MM:SS].
+ * Maneja: YYYY-MM-DD, DD/MM/YYYY, "Thu Oct 16 2025 00:00:00 GMT-0300...", ISO completo.
+ */
+export function normalizeISODate(raw: string | undefined | null): string {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+
+  // Ya es YYYY-MM-DD[T...]
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s;
+
+  // DD/MM/YYYY [HH:MM[:SS]]
+  const ddmm = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (ddmm) {
+    const [, d, m, y, h, min, sec] = ddmm;
+    const dd = d.padStart(2, "0"), mm = m.padStart(2, "0");
+    if (h) return `${y}-${mm}-${dd}T${h.padStart(2, "0")}:${min}:${sec ?? "00"}`;
+    return `${y}-${mm}-${dd}`;
+  }
+
+  // "Thu Oct 16 2025 00:00:00 GMT-0300 (...)" — formato Date.toString()
+  const parsed = new Date(s);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getUTCFullYear();
+    const m = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  return "";
+}
+
+/**
+ * Formats a date or datetime string for display.
+ * YYYY-MM-DD          → DD/MM/YYYY
+ * YYYY-MM-DDTHH:mm    → DD/MM/YYYY HH:mm
+ * Cualquier otro formato es normalizado primero.
+ */
 export function formatDateDisplay(isoDate: string): string {
   if (!isoDate) return "";
-  const [year, month, day] = isoDate.split("-");
+  const norm = normalizeISODate(isoDate);
+  if (!norm) return "";
+  const dtMatch = norm.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (dtMatch) {
+    const [, year, month, day, hour, minute] = dtMatch;
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+  }
+  const [year, month, day] = norm.split("-");
+  if (!year || !month || !day) return isoDate;
   return `${day}/${month}/${year}`;
+}
+
+/** Western zodiac sign from a YYYY-MM-DD birth date */
+export function zodiacSign(fecha: string): string {
+  if (!fecha) return "";
+  const [, m, d] = fecha.split("-").map(Number);
+  if (!m || !d) return "";
+  const signs: [number, number, string][] = [
+    [1, 19, "Capricornio"], [2, 18, "Acuario"], [3, 20, "Piscis"],
+    [4, 19, "Aries"], [5, 20, "Tauro"], [6, 20, "Géminis"],
+    [7, 22, "Cáncer"], [8, 22, "Leo"], [9, 22, "Virgo"],
+    [10, 22, "Libra"], [11, 21, "Escorpio"], [12, 21, "Sagitario"],
+    [12, 31, "Capricornio"],
+  ];
+  for (const [sm, sd, name] of signs) {
+    if (m < sm || (m === sm && d <= sd)) return name;
+  }
+  return "";
+}
+
+/** Chinese zodiac sign from a YYYY-MM-DD birth date */
+export function chineseZodiac(fecha: string): string {
+  if (!fecha) return "";
+  const year = parseInt(fecha.split("-")[0]);
+  if (!year) return "";
+  const animals = ["Mono","Gallo","Perro","Cerdo","Rata","Buey","Tigre","Conejo","Dragón","Serpiente","Caballo","Cabra"];
+  const emojis =  ["🐒",   "🐓",   "🐕",   "🐖",   "🐀",  "🐂",  "🐅",   "🐇",    "🐉",    "🐍",       "🐎",     "🐐"];
+  const elements = ["Metal ⚙️","Agua 💧","Madera 🌳","Fuego 🔥","Tierra 🪵"];
+  const ai = ((year % 12) + 12) % 12;
+  const ei = Math.floor((((year % 10) + 10) % 10) / 2);
+  return `${animals[ai]} de ${elements[ei]} ${emojis[ai]}`;
+}
+
+/** Auto-calculates age from a YYYY-MM-DD birth date string */
+export function calcAge(fechaNacimiento: string): string {
+  if (!fechaNacimiento) return "";
+  const b = new Date(fechaNacimiento + "T00:00:00");
+  if (isNaN(b.getTime())) return "";
+  const n = new Date();
+  let age = n.getFullYear() - b.getFullYear();
+  const m = n.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && n.getDate() < b.getDate())) age--;
+  return age >= 0 ? String(age) : "";
 }
 
 /** Returns the number of days from today to a future date in BA tz */

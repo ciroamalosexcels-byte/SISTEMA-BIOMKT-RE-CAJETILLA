@@ -1,8 +1,5 @@
+import { DashboardView } from "@/components/dashboard/dashboard-view";
+
 export default function DashboardPage() {
-  return (
-    <main>
-      <h1>Dashboard</h1>
-      {/* TODO: migrate renderDashboard() from the HTML file */}
-    </main>
-  );
+  return <DashboardView />;
 }

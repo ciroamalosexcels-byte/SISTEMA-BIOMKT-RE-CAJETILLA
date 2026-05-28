@@ -5,6 +5,7 @@ import type { ContentEvent, ManagementEvent } from "@/types";
 interface ContentEventsStore {
   contentEvents: ContentEvent[];
   managementEvents: ManagementEvent[];
+  dirty: boolean;
   load: () => void;
   addContentEvent: (event: Omit<ContentEvent, "id" | "order">) => void;
   updateContentEvent: (id: string, patch: Partial<ContentEvent>) => void;
@@ -24,11 +25,13 @@ function uid() {
 export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
   contentEvents: [],
   managementEvents: [],
+  dirty: false,
 
   load() {
     set({
       contentEvents: storage.getContentEvents(),
       managementEvents: storage.getManagementEvents(),
+      dirty: false,
     });
   },
 
@@ -41,7 +44,7 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       id: uid(),
       order: clientEvents.length,
     };
-    set((s) => ({ contentEvents: [...s.contentEvents, newEvent] }));
+    set((s) => ({ contentEvents: [...s.contentEvents, newEvent], dirty: true }));
     storage.setContentEvents(get().contentEvents);
   },
 
@@ -50,12 +53,13 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       contentEvents: s.contentEvents.map((e) =>
         e.id === id ? { ...e, ...patch } : e
       ),
+      dirty: true,
     }));
     storage.setContentEvents(get().contentEvents);
   },
 
   deleteContentEvent(id) {
-    set((s) => ({ contentEvents: s.contentEvents.filter((e) => e.id !== id) }));
+    set((s) => ({ contentEvents: s.contentEvents.filter((e) => e.id !== id), dirty: true }));
     storage.setContentEvents(get().contentEvents);
   },
 
@@ -66,6 +70,7 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
         const idx = orderedIds.indexOf(e.id);
         return idx !== -1 ? { ...e, order: idx } : e;
       }),
+      dirty: true,
     }));
     storage.setContentEvents(get().contentEvents);
   },
@@ -75,13 +80,14 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       contentEvents: s.contentEvents.map((e) =>
         e.id === id ? { ...e, done: !e.done } : e
       ),
+      dirty: true,
     }));
     storage.setContentEvents(get().contentEvents);
   },
 
   addManagementEvent(event) {
     const newEvent: ManagementEvent = { ...event, id: uid() };
-    set((s) => ({ managementEvents: [...s.managementEvents, newEvent] }));
+    set((s) => ({ managementEvents: [...s.managementEvents, newEvent], dirty: true }));
     storage.setManagementEvents(get().managementEvents);
   },
 
@@ -90,12 +96,13 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       managementEvents: s.managementEvents.map((e) =>
         e.id === id ? { ...e, ...patch } : e
       ),
+      dirty: true,
     }));
     storage.setManagementEvents(get().managementEvents);
   },
 
   deleteManagementEvent(id) {
-    set((s) => ({ managementEvents: s.managementEvents.filter((e) => e.id !== id) }));
+    set((s) => ({ managementEvents: s.managementEvents.filter((e) => e.id !== id), dirty: true }));
     storage.setManagementEvents(get().managementEvents);
   },
 
@@ -104,6 +111,7 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       managementEvents: s.managementEvents.map((e) =>
         e.id === id ? { ...e, done: !e.done } : e
       ),
+      dirty: true,
     }));
     storage.setManagementEvents(get().managementEvents);
   },

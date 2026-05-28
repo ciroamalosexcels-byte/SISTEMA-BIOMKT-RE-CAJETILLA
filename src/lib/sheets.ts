@@ -1,4 +1,4 @@
-import type { Lead, TeamMember, ContentEvent, ManagementEvent } from "@/types";
+import type { Lead, TeamMember, ContentEvent, ManagementEvent, Plan, PlanEvent } from "@/types";
 
 // Reads NEXT_PUBLIC_SCRIPTS_CSV from env (requires NEXT_PUBLIC_ prefix for browser access)
 const ENV_API_URL = process.env.NEXT_PUBLIC_SCRIPTS_CSV ?? "";
@@ -23,6 +23,10 @@ export interface SheetsPayload {
   team?: TeamMember[];
   contentEvents?: ContentEvent[];
   managementEvents?: ManagementEvent[];
+  plans?: Plan[];
+  planEvents?: PlanEvent[];
+  columnWidths?: Record<string, number>;
+  procedimientos?: Array<Record<string, unknown>>;
   action?: string;
   [key: string]: unknown;
 }
@@ -33,12 +37,17 @@ export interface SheetsResponse {
   team?: TeamMember[];
   contentEvents?: ContentEvent[];
   managementEvents?: ManagementEvent[];
+  plans?: Plan[];
+  planEvents?: PlanEvent[];
+  columnWidths?: Record<string, number>;
+  procedimientos?: Array<Record<string, unknown>>;
   error?: string;
 }
 
 /** Fetch all data from Google Sheets */
 export async function fetchFromSheets(): Promise<SheetsResponse> {
   const url = getApiUrl();
+  if (!url) return { ok: false, error: "No API URL configured" };
   const res = await fetch(`${url}?t=${Date.now()}`, {
     method: "GET",
     cache: "no-store",
@@ -50,6 +59,7 @@ export async function fetchFromSheets(): Promise<SheetsResponse> {
 /** Save data to Google Sheets */
 export async function saveToSheets(payload: SheetsPayload): Promise<SheetsResponse> {
   const url = getApiUrl();
+  if (!url) return { ok: false, error: "No API URL configured" };
   const res = await fetch(url, {
     method: "POST",
     // Apps Script expects text/plain with a JSON body string — not application/json

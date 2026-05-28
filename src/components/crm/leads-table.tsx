@@ -1,279 +1,560 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
+import { useColumnWidthsStore } from "@/store/column-widths";
 import { EMPRESA_BIO_OPTS, MEDIO_OPTS } from "@/lib/constants";
-import { formatDateDisplay } from "@/lib/dates";
+import { formatDateDisplay, normalizeISODate } from "@/lib/dates";
 import type { Lead, TabKey } from "@/types";
 
 interface Props {
   tab: TabKey;
+  query: string;
 }
 
 const TAB_MOVE_TARGETS: Partial<Record<TabKey, { label: string; to: TabKey }[]>> = {
   CRM: [
-    { label: "R1", to: "REUNION_1" },
-    { label: "Seguimiento", to: "SEGUIMIENTO" },
+    { label: "Reu 1", to: "REUNION_1" },
+    { label: "Seg", to: "SEGUIMIENTO" },
     { label: "Cliente", to: "CLIENTES" },
   ],
   REUNION_1: [
-    { label: "R2", to: "REUNION_2" },
-    { label: "Seguimiento", to: "SEGUIMIENTO" },
+    { label: "Reu 2", to: "REUNION_2" },
+    { label: "Seg", to: "SEGUIMIENTO" },
     { label: "Cliente", to: "CLIENTES" },
   ],
   REUNION_2: [
-    { label: "Seguimiento", to: "SEGUIMIENTO" },
+    { label: "Seg", to: "SEGUIMIENTO" },
     { label: "Cliente", to: "CLIENTES" },
   ],
   SEGUIMIENTO: [
-    { label: "R1", to: "REUNION_1" },
+    { label: "Reu 1", to: "REUNION_1" },
     { label: "Cliente", to: "CLIENTES" },
   ],
 };
 
-export function LeadsTable({ tab }: Props) {
-  const rows = useLeadsStore((s) => s.rows);
-  const { updateLead, deleteLead, moveLeadTo, dirty, saving, save } = useLeadsStore();
-  const members = useTeamStore((s) => s.members);
-  const [query, setQuery] = useState("");
+// Tabs que necesitan modal de fecha/hora al recibir un lead
+const DATE_PROMPT_ON_MOVE: Partial<Record<TabKey, { field: "meetingDatetime" | "proximoSeguimientoFecha"; title: string }>> = {
+  REUNION_1:   { field: "meetingDatetime",         title: "Reunión 1"    },
+  REUNION_2:   { field: "meetingDatetime",         title: "Reunión 2"    },
+  SEGUIMIENTO: { field: "proximoSeguimientoFecha", title: "Seguimiento"  },
+};
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    return rows.filter(
-      (r) =>
-        r.tab === tab &&
-        (!q ||
-          r.nombre.toLowerCase().includes(q) ||
-          r.empresa.toLowerCase().includes(q) ||
-          r.observaciones.toLowerCase().includes(q) ||
-          r.telefono.toLowerCase().includes(q))
-    );
-  }, [rows, tab, query]);
+// Tabs que muestran "Contactado" con tiempo relativo (en vez de fecha)
+const TABS_RELATIVE_CONTACT: TabKey[] = ["REUNION_1", "REUNION_2", "SEGUIMIENTO"];
 
-  const memberNames = members.map((m) => m.nombre);
-  const moveTargets = TAB_MOVE_TARGETS[tab] ?? [];
+const BASE_COLUMNS = [
+  { key: "nombre",                  label: "Nombre"           },
+  { key: "empresa",                 label: "Empresa / Negocio"},
+  { key: "observaciones",           label: "Observaciones"    },
+  { key: "telefono",                label: "Teléfono"         },
+  { key: "responsable1",            label: "Responsable 1"    },
+  { key: "responsable2",            label: "Responsable 2"    },
+  { key: "fechaContacto",           label: "Primer Contacto"  },
+  { key: "meetingDatetime",         label: "Reunión"          }, // solo REUNION_1/2
+  { key: "proximoSeguimientoFecha", label: "Seguimiento"      }, // solo SEGUIMIENTO
+  { key: "empresaBio",              label: "Empresa Bio"      },
+  { key: "medio",                   label: "Medio"            },
+  { key: "actions",                 label: "Pasar a"          },
+] as const;
+
+type ColKey = typeof BASE_COLUMNS[number]["key"];
+
+const TAB_LABELS: Partial<Record<TabKey, string>> = {
+  CRM:        "CRM",
+  REUNION_1:  "Reunión 1",
+  REUNION_2:  "Reunión 2",
+  SEGUIMIENTO:"Seguimiento",
+  CLIENTES:   "Cliente",
+};
+
+/* ── Modal fecha y hora ───────────────────────────────────────────── */
+
+function DateTimeModal({
+  title,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  onConfirm: (datetime: string) => void;
+  onCancel: () => void;
+}) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const label = title;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[28px] shadow-[var(--shadow)] overflow-hidden">
-      {/* Table toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap px-3 py-2.5 bg-slate-50 border-b border-slate-200">
-        <div className="flex items-center gap-2">
-          <input
-            className="w-[240px] px-3 py-2 text-[13px] border border-slate-200 rounded-xl outline-none"
-            placeholder="Buscar…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <span className="text-[12px] font-bold text-slate-500">
-            {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
-          </span>
+    <div className="modal-backdrop open" onClick={onCancel}>
+      <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Fecha y hora — {label}</h2>
+          <button className="icon-btn" onClick={onCancel}>✕</button>
         </div>
-        <button
-          onClick={() => save()}
-          disabled={!dirty || saving}
-          className={[
-            "flex items-center gap-2 px-4 py-2.5 rounded-[18px] text-[13px] font-bold transition-all",
-            dirty
-              ? "bg-[var(--dark)] text-white hover:-translate-y-px"
-              : "bg-slate-100 text-slate-400 cursor-default",
-          ].join(" ")}
-        >
-          {saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Guardado ✓"}
-        </button>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-auto -webkit-overflow-scrolling-touch">
-        <table className="w-full border-separate border-spacing-y-1 min-w-[1200px] table-fixed text-[12px]">
-          <thead>
-            <tr>
-              {[
-                ["nombre", "Nombre", "135px"],
-                ["empresa", "Empresa / Negocio", "190px"],
-                ["observaciones", "Observaciones", "240px"],
-                ["telefono", "Teléfono", "110px"],
-                ["responsable1", "Responsable 1", "130px"],
-                ["responsable2", "Responsable 2", "130px"],
-                ["fechaContacto", "Primer Contacto", "120px"],
-                ["empresaBio", "Empresa Bio", "120px"],
-                ["medio", "Medio", "110px"],
-                ["actions", "Pasar a / Acciones", "200px"],
-              ].map(([key, label, w]) => (
-                <th
-                  key={key}
-                  style={{ width: w }}
-                  className="sticky top-0 z-10 bg-[var(--dark-2)] text-white text-left px-2.5 py-2 font-extrabold text-[13px] border-r border-slate-800 first:rounded-tl-xl last:rounded-tr-xl last:border-r-0"
-                >
-                  {label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={10} className="text-center py-10 text-slate-400 font-bold">
-                  Sin registros
-                </td>
-              </tr>
-            )}
-            {filtered.map((row) => (
-              <LeadRow
-                key={row.id}
-                row={row}
-                memberNames={memberNames}
-                moveTargets={moveTargets}
-                onUpdate={(patch) => updateLead(row.id, patch)}
-                onDelete={() => deleteLead(row.id)}
-                onMove={(to) => moveLeadTo(row.id, to)}
-              />
-            ))}
-          </tbody>
-        </table>
+        <div className="modal-body" style={{ gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <label style={{ gridColumn: "1" }}>
+            <span style={{ display: "block", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: "#64748b", marginBottom: 6 }}>
+              Fecha
+            </span>
+            <input
+              className="field"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              autoFocus
+            />
+          </label>
+          <label style={{ gridColumn: "2" }}>
+            <span style={{ display: "block", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: "#64748b", marginBottom: 6 }}>
+              Hora
+            </span>
+            <input
+              className="field"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </label>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onCancel}>Cancelar</button>
+          <button
+            className="btn btn-amber"
+            disabled={!date || !time}
+            onClick={() => onConfirm(`${date}T${time}`)}
+          >
+            Confirmar y pasar
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
+/* ── Formatea "2025-03-15T14:30" → "15/03/2025 14:30" ─────────────── */
+function formatMeetingDt(dt?: string) {
+  if (!dt) return "";
+  const [datePart, timePart] = dt.split("T");
+  if (!datePart) return dt;
+  const [y, m, d] = datePart.split("-");
+  const base = `${d}/${m}/${y}`;
+  return timePart ? `${base} ${timePart.slice(0, 5)}` : base;
+}
+
+/* ── Tiempo relativo desde fecha de contacto ──────────────────────── */
+function relativeContactTime(dateStr: string): string {
+  if (!dateStr) return "—";
+
+  // Normalizar DD/MM/YYYY → YYYY-MM-DD
+  const norm = dateStr.replace(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+    (_, d, m, y) => `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`
+  );
+
+  // Separar fecha y hora (fechaContacto puede ser "YYYY-MM-DD" o "YYYY-MM-DDTHH:mm")
+  const tIdx     = norm.indexOf("T");
+  const datePart = tIdx >= 0 ? norm.slice(0, tIdx) : norm;
+  const timePart = tIdx >= 0 ? norm.slice(tIdx + 1, tIdx + 6) : "00:00";
+
+  // Interpretar como hora Buenos Aires (UTC-3)
+  const contactMs = new Date(`${datePart}T${timePart}:00-03:00`).getTime();
+  if (isNaN(contactMs)) return "—";
+
+  const elapsed = Date.now() - contactMs;
+  if (elapsed < 0) return "—";
+
+  const totalMins  = Math.floor(elapsed / 60_000);
+  const totalHours = Math.floor(elapsed / 3_600_000);
+  const totalDays  = Math.floor(elapsed / 86_400_000);
+
+  if (totalDays >= 365) {
+    const y = Math.floor(totalDays / 365);
+    const m = Math.floor((totalDays - y * 365) / 30);
+    return m > 0 ? `${y}A ${m}M` : `${y}A`;
+  }
+  if (totalDays >= 30) {
+    const m = Math.floor(totalDays / 30);
+    const d = totalDays - m * 30;
+    return d > 0 ? `${m}M ${d}D` : `${m}M`;
+  }
+  if (totalDays >= 1) {
+    const h = totalHours % 24;
+    return h > 0 ? `${totalDays}D ${h}H` : `${totalDays}D`;
+  }
+  if (totalHours >= 1) {
+    const mins = totalMins % 60;
+    return mins > 0 ? `${totalHours}H ${mins}m` : `${totalHours}H`;
+  }
+  return `${totalMins}m`;
+}
+
+/* ── LeadsTable ────────────────────────────────────────────────────── */
+
+export function LeadsTable({ tab, query }: Props) {
+  const rows            = useLeadsStore((s) => s.rows);
+  const highlightLeadId = useLeadsStore((s) => s.highlightLeadId);
+  const { updateLead, deleteLead, moveLeadTo } = useLeadsStore();
+  const members = useTeamStore((s) => s.members);
+  const { getWidth, setWidth, resizeModeEnabled, toggleResizeMode } = useColumnWidthsStore();
+  const allWidths = useColumnWidthsStore((s) => s.widths);
+  const [page, setPage] = useState(1);
+  const [datePending, setDatePending] = useState<{
+    leadId: string;
+    to: TabKey;
+    field: "meetingDatetime" | "proximoSeguimientoFecha";
+    title: string;
+  } | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const dragRef = useRef<{
+    col: string;
+    startX: number;
+    startWidth: number;
+    tableStartWidth: number;
+    th: HTMLTableCellElement;
+  } | null>(null);
+
+  const PAGE_SIZE = 33;
+  const showRelativeContact = TABS_RELATIVE_CONTACT.includes(tab);
+
+  const visibleColumns = useMemo(
+    () => BASE_COLUMNS
+      .filter((c) => {
+        if (c.key === "meetingDatetime")         return tab === "REUNION_1" || tab === "REUNION_2";
+        if (c.key === "proximoSeguimientoFecha") return tab === "SEGUIMIENTO";
+        return true;
+      })
+      .map((c) =>
+        c.key === "fechaContacto" && showRelativeContact
+          ? { ...c, label: "Contactado" }
+          : c
+      ),
+    [tab, showRelativeContact]
+  );
+
+  const colSpanCount = visibleColumns.length;
+
+  const totalTableWidth = useMemo(
+    () => visibleColumns.reduce((sum, { key }) => sum + (allWidths[`${tab}_${key as string}`] ?? 120), 0),
+    [visibleColumns, tab, allWidths]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase();
+    return rows
+      .filter(
+        (r) =>
+          (tab === "BASE" || r.tab === tab) &&
+          (!q ||
+            r.nombre.toLowerCase().includes(q) ||
+            r.empresa.toLowerCase().includes(q) ||
+            r.observaciones.toLowerCase().includes(q) ||
+            r.telefono.toLowerCase().includes(q) ||
+            (r.responsable1 ?? "").toLowerCase().includes(q) ||
+            (r.responsable2 ?? "").toLowerCase().includes(q) ||
+            (r.fechaContacto ?? "").toLowerCase().includes(q) ||
+            (r.empresaBio ?? "").toLowerCase().includes(q) ||
+            (r.medio ?? "").toLowerCase().includes(q) ||
+            formatMeetingDt(r.meetingDatetime).toLowerCase().includes(q) ||
+            formatMeetingDt(r.proximoSeguimientoFecha).toLowerCase().includes(q))
+      )
+      .sort((a, b) => {
+        const ta = a.fechaContacto ? (new Date(normalizeISODate(a.fechaContacto) || "").getTime() || 0) : 0;
+        const tb = b.fechaContacto ? (new Date(normalizeISODate(b.fechaContacto) || "").getTime() || 0) : 0;
+        return tb - ta;
+      });
+  }, [rows, tab, query]);
+
+  // Saltar a la página del lead resaltado y limpiar al hacer click
+  useEffect(() => {
+    if (!highlightLeadId) return;
+    const idx = filtered.findIndex((r) => r.id === highlightLeadId);
+    if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE) + 1);
+    const clear = () => useLeadsStore.getState().setHighlightLeadId(null);
+    const timer = setTimeout(() => document.addEventListener("click", clear, { once: true }), 1200);
+    return () => { clearTimeout(timer); document.removeEventListener("click", clear); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightLeadId]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages);
+  const paginated  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const memberNames = members.map((m) => m.nombre);
+  const moveTargets = TAB_MOVE_TARGETS[tab] ?? [];
+
+  function handleMove(leadId: string, to: TabKey) {
+    const prompt = DATE_PROMPT_ON_MOVE[to];
+    if (prompt) {
+      setDatePending({ leadId, to, ...prompt });
+    } else {
+      moveLeadTo(leadId, to);
+    }
+  }
+
+  function confirmDate(datetime: string) {
+    if (!datePending) return;
+    updateLead(datePending.leadId, { [datePending.field]: datetime });
+    moveLeadTo(datePending.leadId, datePending.to);
+    setDatePending(null);
+  }
+
+  function startResize(
+    e: React.MouseEvent<HTMLDivElement>,
+    col: string,
+    th: HTMLTableCellElement
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = {
+      col,
+      startX: e.clientX,
+      startWidth: th.offsetWidth,
+      tableStartWidth: tableRef.current?.offsetWidth ?? 0,
+      th,
+    };
+
+    function onMove(ev: MouseEvent) {
+      if (!dragRef.current) return;
+      const delta   = ev.clientX - dragRef.current.startX;
+      const newColW = Math.max(40, dragRef.current.startWidth + delta);
+      const actualDelta = newColW - dragRef.current.startWidth;
+      dragRef.current.th.style.width = newColW + "px";
+      // Ajustar el ancho total de la tabla para que las demás columnas no se muevan
+      if (tableRef.current) {
+        tableRef.current.style.width = (dragRef.current.tableStartWidth + actualDelta) + "px";
+      }
+    }
+
+    function onUp(ev: MouseEvent) {
+      if (!dragRef.current) return;
+      const newW = Math.max(40, dragRef.current.startWidth + (ev.clientX - dragRef.current.startX));
+      setWidth(tab, dragRef.current.col, newW);
+      dragRef.current = null;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    }
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }
+
+  return (
+    <>
+      <div>
+        {/* Resize mode banner */}
+        {resizeModeEnabled && (
+          <div className="col-resize-banner">
+            <span>Modo edición libre activo — arrastrá el borde de las columnas para redimensionar.</span>
+            <button className="btn btn-xs btn-dark" onClick={toggleResizeMode}>Desactivar</button>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="table-wrap">
+          <table ref={tableRef} style={{ width: totalTableWidth, tableLayout: "fixed" }}>
+            <thead>
+              <tr>
+                {visibleColumns.map(({ key, label }) => {
+                  const colLabel = (tab === "BASE" && key === "actions") ? "Estado" : label;
+                  return (
+                    <th
+                      key={key}
+                      style={{
+                        width: getWidth(tab, key as string),
+                        position: resizeModeEnabled ? "relative" : undefined,
+                      }}
+                    >
+                      {colLabel}
+                      {resizeModeEnabled && (
+                        <div
+                          className="col-resize-handle"
+                          onMouseDown={(e) => {
+                            const th = e.currentTarget.parentElement as HTMLTableCellElement;
+                            startResize(e, key as string, th);
+                          }}
+                        />
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={colSpanCount} className="empty">Sin registros</td>
+                </tr>
+              )}
+              {paginated.map((row) => (
+                <LeadRow
+                  key={row.id}
+                  row={row}
+                  memberNames={memberNames}
+                  moveTargets={moveTargets}
+                  tab={tab}
+                  showRelativeContact={showRelativeContact}
+                  isHighlighted={row.id === highlightLeadId}
+                  onUpdate={(patch) => updateLead(row.id, patch)}
+                  onDelete={() => deleteLead(row.id)}
+                  onMove={(to) => handleMove(row.id, to)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid var(--slate-200)", background: "var(--slate-50)" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--slate-500)" }}>
+              {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} de {filtered.length}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button className="btn btn-xs btn-outline" disabled={safePage <= 1} onClick={() => setPage(1)} title="Primera página">«</button>
+              <button className="btn btn-xs btn-outline" disabled={safePage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>‹ Anterior</button>
+              <span style={{ fontSize: 12, fontWeight: 800, color: "var(--dark)", padding: "0 8px" }}>
+                {safePage} / {totalPages}
+              </span>
+              <button className="btn btn-xs btn-outline" disabled={safePage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Siguiente ›</button>
+              <button className="btn btn-xs btn-outline" disabled={safePage >= totalPages} onClick={() => setPage(totalPages)} title="Última página">»</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {datePending && (
+        <DateTimeModal
+          title={datePending.title}
+          onConfirm={confirmDate}
+          onCancel={() => setDatePending(null)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ── LeadRow ───────────────────────────────────────────────────────── */
+
 interface RowProps {
   row: Lead;
   memberNames: string[];
   moveTargets: { label: string; to: TabKey }[];
+  tab: TabKey;
+  showRelativeContact: boolean;
+  isHighlighted: boolean;
   onUpdate: (patch: Partial<Lead>) => void;
   onDelete: () => void;
   onMove: (to: TabKey) => void;
 }
 
-function LeadRow({ row, memberNames, moveTargets, onUpdate, onDelete, onMove }: RowProps) {
-  const cell = "border-t border-b border-r border-slate-200 bg-white align-middle p-0";
-  const inp = "w-full border-none bg-transparent px-2.5 py-1 outline-none text-[12px] text-[var(--text)] focus:bg-[#fffbeb] min-h-[22px]";
+function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelativeContact, isHighlighted, onUpdate, onDelete, onMove }: RowProps) {
+  const isBase         = tab === "BASE";
+  const showMeetingCol = tab === "REUNION_1" || tab === "REUNION_2";
+  const showSegCol     = tab === "SEGUIMIENTO";
+  const moveTargets    = viewTargets.length > 0 ? viewTargets : (TAB_MOVE_TARGETS[row.tab] ?? []);
+
+  const [phase, setPhase] = useState<"idle" | "blink" | "active">("idle");
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isHighlighted) { setPhase("idle"); firedRef.current = false; return; }
+    firedRef.current = false;
+    setPhase("blink");
+  }, [isHighlighted]);
+
+  const getMoveClass = (to: TabKey) => {
+    if (to === "CLIENTES") return "btn-xs move-client";
+    if (to === "SEGUIMIENTO") return "btn-xs move-secondary";
+    return "btn-xs move-primary";
+  };
 
   return (
-    <tr className="group hover:![&>td]:bg-[#fff7d6]">
-      {/* nombre */}
-      <td className={`${cell} rounded-tl-xl rounded-bl-xl border-l`}>
-        <input
-          className={inp}
-          value={row.nombre}
-          onChange={(e) => onUpdate({ nombre: e.target.value })}
-          placeholder="Nombre"
-        />
-      </td>
-
-      {/* empresa */}
-      <td className={cell}>
-        <input
-          className={inp}
-          value={row.empresa}
-          onChange={(e) => onUpdate({ empresa: e.target.value })}
-          placeholder="Empresa"
-        />
-      </td>
-
-      {/* observaciones */}
-      <td className={cell}>
-        <input
-          className={inp}
-          value={row.observaciones}
-          onChange={(e) => onUpdate({ observaciones: e.target.value })}
-          placeholder="Observaciones"
-        />
-      </td>
-
-      {/* telefono */}
-      <td className={cell}>
-        <input
-          className={inp}
-          value={row.telefono}
-          onChange={(e) => onUpdate({ telefono: e.target.value })}
-          placeholder="Teléfono"
-        />
-      </td>
-
-      {/* responsable1 */}
-      <td className={cell}>
-        <select
-          className={`${inp} ${!row.responsable1 ? "text-slate-400" : ""}`}
-          value={row.responsable1}
-          onChange={(e) => onUpdate({ responsable1: e.target.value })}
-        >
+    <tr
+      className={phase === "blink" ? "row-blink" : phase === "active" ? "row-active" : ""}
+      onAnimationEnd={() => { if (!firedRef.current) { firedRef.current = true; setPhase("active"); } }}
+    >
+      <td><input className="cell-input" value={row.nombre} onChange={(e) => onUpdate({ nombre: e.target.value })} placeholder="Nombre" /></td>
+      <td><input className="cell-input" value={row.empresa} onChange={(e) => onUpdate({ empresa: e.target.value })} placeholder="Empresa" /></td>
+      <td><input className="cell-input" value={row.observaciones} onChange={(e) => onUpdate({ observaciones: e.target.value })} placeholder="Observaciones" /></td>
+      <td><input className="cell-input" value={row.telefono} onChange={(e) => onUpdate({ telefono: e.target.value })} placeholder="Teléfono" /></td>
+      <td>
+        <select className={`cell-select${!row.responsable1 ? " empty-soft" : ""}`} value={row.responsable1} onChange={(e) => onUpdate({ responsable1: e.target.value })}>
           <option value="">—</option>
-          {memberNames.map((n) => (
-            <option key={n} value={n}>{n}</option>
-          ))}
+          {memberNames.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </td>
-
-      {/* responsable2 */}
-      <td className={cell}>
-        <select
-          className={`${inp} ${!row.responsable2 ? "text-slate-400" : ""}`}
-          value={row.responsable2}
-          onChange={(e) => onUpdate({ responsable2: e.target.value })}
-        >
+      <td>
+        <select className={`cell-select${!row.responsable2 ? " empty-soft" : ""}`} value={row.responsable2} onChange={(e) => onUpdate({ responsable2: e.target.value })}>
           <option value="">—</option>
-          {memberNames.map((n) => (
-            <option key={n} value={n}>{n}</option>
-          ))}
+          {memberNames.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </td>
-
-      {/* fechaContacto */}
-      <td className={cell}>
-        <span className="px-2.5 py-1 block text-[12px] text-slate-500">
-          {formatDateDisplay(row.fechaContacto)}
-        </span>
+      <td>
+        {showRelativeContact ? (
+          <span style={{ padding: "4px 10px", display: "block", fontSize: 12, fontWeight: 800, color: "var(--dark)", letterSpacing: ".02em" }}>
+            {relativeContactTime(row.fechaContacto)}
+          </span>
+        ) : (
+          <span style={{ padding: "4px 10px", display: "block", fontSize: 12, color: "var(--slate-500)" }}>
+            {formatDateDisplay(row.fechaContacto)}
+          </span>
+        )}
       </td>
-
-      {/* empresaBio */}
-      <td className={cell}>
-        <select
-          className={inp}
-          value={row.empresaBio}
-          onChange={(e) => onUpdate({ empresaBio: e.target.value as Lead["empresaBio"] })}
-        >
-          {EMPRESA_BIO_OPTS.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
+      {showMeetingCol && (
+        <td>
+          <input
+            className="cell-input"
+            type="datetime-local"
+            value={row.meetingDatetime ?? ""}
+            onChange={(e) => onUpdate({ meetingDatetime: e.target.value || undefined })}
+            style={{ fontSize: 12, minWidth: 160 }}
+          />
+        </td>
+      )}
+      {showSegCol && (
+        <td>
+          <input
+            className="cell-input"
+            type="datetime-local"
+            value={row.proximoSeguimientoFecha ?? ""}
+            onChange={(e) => onUpdate({ proximoSeguimientoFecha: e.target.value || undefined })}
+            style={{ fontSize: 12, minWidth: 160 }}
+          />
+        </td>
+      )}
+      <td>
+        <select className="cell-select" value={row.empresaBio} onChange={(e) => onUpdate({ empresaBio: e.target.value as Lead["empresaBio"] })}>
+          {EMPRESA_BIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
       </td>
-
-      {/* medio */}
-      <td className={cell}>
-        <select
-          className={`${inp} ${!row.medio ? "text-slate-400" : ""}`}
-          value={row.medio}
-          onChange={(e) => onUpdate({ medio: e.target.value as Lead["medio"] })}
-        >
+      <td>
+        <select className={`cell-select${!row.medio ? " empty-soft" : ""}`} value={row.medio} onChange={(e) => onUpdate({ medio: e.target.value as Lead["medio"] })}>
           <option value="">—</option>
-          {MEDIO_OPTS.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
+          {MEDIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
       </td>
-
-      {/* actions */}
-      <td className={`${cell} rounded-tr-xl rounded-br-xl border-r`}>
-        <div className="flex gap-1.5 flex-wrap items-center px-1.5 py-1">
-          {moveTargets.map((t) => (
+      <td>
+        {isBase ? (
+          <div className="actions">
+            <span className="base-tab-status">{TAB_LABELS[row.tab] ?? row.tab}</span>
             <button
-              key={t.to}
-              onClick={() => onMove(t.to)}
-              className="px-2 py-1 rounded-full text-[11px] font-extrabold bg-[#16284d] text-white leading-none"
-            >
-              {t.label}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              if (confirm(`¿Eliminar "${row.nombre || "este registro"}"?`)) onDelete();
-            }}
-            className="px-2 py-1 rounded-full text-[11px] font-extrabold bg-[#fff1f2] text-[#be123c] border border-[#fecdd3] leading-none"
-          >
-            ✕
-          </button>
-        </div>
+              onClick={() => { if (confirm(`¿Eliminar "${row.nombre || "este registro"}"?`)) onDelete(); }}
+              className="btn btn-xs btn-danger"
+            >✕</button>
+          </div>
+        ) : (
+          <div className="actions">
+            {moveTargets.map((t) => (
+              <button key={t.to} onClick={() => onMove(t.to)} className={`btn ${getMoveClass(t.to)}`}>
+                {t.label}
+              </button>
+            ))}
+            <button
+              onClick={() => { if (confirm(`¿Eliminar "${row.nombre || "este registro"}"?`)) onDelete(); }}
+              className="btn btn-xs btn-danger"
+            >✕</button>
+          </div>
+        )}
       </td>
     </tr>
   );

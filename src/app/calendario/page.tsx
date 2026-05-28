@@ -1,8 +1,5 @@
+import { CalendarioView } from "@/components/calendario/calendario-view";
+
 export default function CalendarioPage() {
-  return (
-    <main>
-      <h1>Calendario</h1>
-      {/* TODO: migrate renderCalendarGlobal() */}
-    </main>
-  );
+  return <CalendarioView />;
 }

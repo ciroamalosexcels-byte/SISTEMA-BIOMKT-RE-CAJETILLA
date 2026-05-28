@@ -23,6 +23,12 @@ export interface ContentEvent {
   timerStartedAt?: number; // timestamp ms
   notes?: string;
   order: number;
+  // Extended planning fields
+  assignee?: string;
+  objetivo?: string;
+  frase?: string;
+  copy?: string;
+  archivo?: string;
 }
 
 export interface ManagementEvent {

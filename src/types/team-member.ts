@@ -2,28 +2,31 @@ export type StatusColor = "red" | "yellow" | "green" | "lime" | "";
 
 export type BadgeKey = "wood" | "bronze" | "silver" | "gold";
 
-export interface Status91 {
-  ventas: StatusColor;
-  atencion: StatusColor;
-  equipo: StatusColor;
-  puntualidad: StatusColor;
-  updatedAt?: string;
+export type Status91 = Record<string, string>;
+
+export interface MonthlyPoint {
+  puntos: string;
+  detalles: string;
+  fecha: string;
+  estado: StatusColor;
 }
 
 export interface TeamMember {
   id: string;
   nombre: string;
-  // Profile data
+  edad?: string;
+  equipo?: string;
+  roles?: string;
+  horarios?: string;
+  sueno?: string;
   telefono?: string;
   mail?: string;
   direccion?: string;
   fechaNacimiento?: string;
   notas?: string;
-  // Zodiac (computed or stored)
   signo?: string;
   signoChino?: string;
-  // Status 9.1
   status91: Status91;
-  // Badges awarded
   badges: BadgeKey[];
+  monthlyPoints?: MonthlyPoint[];
 }

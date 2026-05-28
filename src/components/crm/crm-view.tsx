@@ -19,31 +19,51 @@ interface Props {
 
 export function CrmView({ tab }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [query, setQuery]         = useState("");
   const meta = META[tab] ?? { title: tab, subtitle: "" };
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
-        <div>
-          <h2 className="text-[27px] font-black tracking-[-0.03em] uppercase text-[var(--dark)] m-0 leading-none">
-            {meta.title}
-          </h2>
-          <p className="text-[12px] font-extrabold text-[#102a56] uppercase tracking-wide mt-1 m-0">
-            {meta.subtitle}
-          </p>
+      <div className="card">
+        <div className="table-top">
+          <div className="table-top-left">
+            <div className="table-title-row">
+              <h2 className="table-section-title">{meta.title}</h2>
+              <div className="table-section-subtitle">{meta.subtitle}</div>
+            </div>
+          </div>
+          <div className="table-top-right">
+            <div className="filters">
+              <div className="search-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input
+                  className="search-input"
+                  placeholder="Buscar por nombre, empresa..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="btn btn-amber btn-sm"
+                type="button"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 5v14"/><path d="M5 12h14"/>
+                </svg>
+                <span>Nuevo lead</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 rounded-[18px] bg-[var(--dark)] text-white font-bold text-[13px] hover:-translate-y-px transition-all shadow-[var(--shadow)]"
-        >
-          + Nuevo Lead
-        </button>
+
+        <LeadsTable tab={tab} query={query} />
       </div>
 
-      <LeadsTable tab={tab} />
-
       <NewLeadModal
-        tab={tab}
+        tab={tab === "BASE" ? "CRM" : tab}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       />

@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { storage } from "@/lib/storage";
 import { saveToSheets } from "@/lib/sheets";
-import { DEFAULT_TEAM, DEFAULT_BADGE_REQUIREMENTS } from "@/lib/constants";
+import { DEFAULT_TEAM, DEFAULT_BADGE_REQUIREMENTS, STATUS91_ITEMS } from "@/lib/constants";
 import type { TeamMember, BadgeKey } from "@/types";
 
 interface TeamStore {
   members: TeamMember[];
+  dirty: boolean;
   load: () => void;
   addMember: (nombre: string) => void;
   updateMember: (id: string, patch: Partial<TeamMember>) => void;
@@ -19,13 +20,15 @@ function makeMember(nombre: string): TeamMember {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     nombre,
-    status91: { ventas: "", atencion: "", equipo: "", puntualidad: "" },
+    status91: Object.fromEntries(STATUS91_ITEMS.map((k) => [k, ""])),
     badges: [],
+    monthlyPoints: [],
   };
 }
 
 export const useTeamStore = create<TeamStore>((set, get) => ({
   members: [],
+  dirty: false,
 
   load() {
     let members = storage.getTeam();
@@ -38,19 +41,20 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
 
   addMember(nombre) {
     const member = makeMember(nombre);
-    set((s) => ({ members: [...s.members, member] }));
+    set((s) => ({ members: [...s.members, member], dirty: true }));
     storage.setTeam(get().members);
   },
 
   updateMember(id, patch) {
     set((s) => ({
       members: s.members.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+      dirty: true,
     }));
     storage.setTeam(get().members);
   },
 
   deleteMember(id) {
-    set((s) => ({ members: s.members.filter((m) => m.id !== id) }));
+    set((s) => ({ members: s.members.filter((m) => m.id !== id), dirty: true }));
     storage.setTeam(get().members);
   },
 
@@ -61,6 +65,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           ? { ...m, badges: [...m.badges, badge] }
           : m
       ),
+      dirty: true,
     }));
     storage.setTeam(get().members);
   },
@@ -70,12 +75,14 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
       members: s.members.map((m) =>
         m.id === id ? { ...m, badges: m.badges.filter((b) => b !== badge) } : m
       ),
+      dirty: true,
     }));
     storage.setTeam(get().members);
   },
 
   async save() {
-    await saveToSheets({ team: get().members });
+    await saveToSheets({ action: "saveTeam", team: get().members });
+    set({ dirty: false });
   },
 }));
 

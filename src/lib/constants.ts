@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   awards: "ventas_biomarketing_awards_v2",
   contentEvents: "ventas_biomarketing_client_content_events_v1",
   managementEvents: "ventas_biomarketing_client_management_events_v1",
+  plans: "ventas_biomarketing_plans_v1",
+  planEvents: "ventas_biomarketing_plan_events_v1",
 } as const;
 
 export const BA_TIME_ZONE = "America/Argentina/Buenos_Aires";
@@ -49,6 +51,11 @@ export const MANAGEMENT_TYPES: ManagementType[] = [
   "Pago",
 ];
 
+export const STATUS91_ITEMS = [
+  "COMPROMISO", "HONESTIDAD", "CONFIANZA", "APRENDER", "BIENESTAR",
+  "GANAR DINERO", "SUMAR", "MULTIPLICAR", "COLABORATIVO", "TU SUEÑO",
+] as const;
+
 export const BADGES = [
   { key: "wood", label: "Madera", icon: "🪵", className: "wood" },
   { key: "bronze", label: "Bronce", icon: "🥉", className: "bronze" },
@@ -65,9 +72,35 @@ export const TABS = [
   { key: "BASE", label: "Base de Datos", href: "/base" },
   { key: "CLIENTES", label: "Clientes", href: "/clientes" },
   { key: "PLANIFICACION", label: "Planificación de contenidos", href: "/planificacion" },
+  { key: "PLANES", label: "Planes", href: "/planes" },
+  { key: "MAPA_CLIENTES", label: "Mapa", href: "/mapa" },
   { key: "EQUIPO", label: "Equipo", href: "/equipo" },
+  { key: "COLABORADORES", label: "Colaboradores", href: "/colaboradores" },
+  { key: "PROCEDIMIENTOS", label: "Procedimientos", href: "/procedimientos" },
+  { key: "REUNIONES_EQUIPO", label: "Reunión", href: "/reuniones-equipo" },
   { key: "CALENDARIO", label: "📅", href: "/calendario" },
 ] as const;
+
+export type WorkspaceMode = "ventas" | "clientes" | "equipo";
+
+export const WORKSPACE_TITLES: Record<WorkspaceMode, string> = {
+  ventas: "VENTAS BIOMARKETING",
+  clientes: "CLIENTES BIOMARKETING",
+  equipo: "EQUIPO BIOMARKETING",
+};
+
+export const WORKSPACE_OPTION_LABELS: Record<WorkspaceMode, string> = {
+  ventas: "Ventas Biomarketing",
+  clientes: "Clientes Biomarketing",
+  equipo: "Equipo Biomarketing",
+};
+
+/* Tab keys visible per workspace mode (matches VIEW_TABS_V30 from the HTML reference) */
+export const WORKSPACE_TABS: Record<WorkspaceMode, string[]> = {
+  ventas:   ["DASHBOARD", "CRM", "REUNION_1", "REUNION_2", "SEGUIMIENTO", "BASE", "CLIENTES", "EQUIPO", "CALENDARIO"],
+  clientes: ["CLIENTES", "PLANIFICACION", "PLANES", "MAPA_CLIENTES", "CALENDARIO"],
+  equipo:   ["EQUIPO", "COLABORADORES", "PROCEDIMIENTOS", "REUNIONES_EQUIPO"],
+};
 
 export const DEFAULT_BADGE_REQUIREMENTS = {
   wood: 3,
@@ -75,3 +108,20 @@ export const DEFAULT_BADGE_REQUIREMENTS = {
   silver: 12,
   gold: 30,
 };
+
+export const PLAN_SERVICES = [
+  "Contenido Audiovisual",
+  "Página Web",
+  "Branding",
+  "Pauta Publicitaria",
+  "Eventos",
+] as const;
+
+export const PLAN_NAMES = ["Plan 1", "Plan 2", "Plan 3"] as const;
+
+export interface PlanItem {
+  type: string;
+  qty: number;
+  day: number;
+  idea: string;
+}

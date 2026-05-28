@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from "./constants";
-import type { Lead, TeamMember, ContentEvent, ManagementEvent } from "@/types";
+import type { Lead, TeamMember, ContentEvent, ManagementEvent, Plan, PlanEvent } from "@/types";
 
 function safeGet<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -35,4 +35,10 @@ export const storage = {
 
   getColumnWidths: () => safeGet<Record<string, number>>(STORAGE_KEYS.columnWidths, {}),
   setColumnWidths: (widths: Record<string, number>) => safeSet(STORAGE_KEYS.columnWidths, widths),
+
+  getPlans: () => safeGet<Plan[]>(STORAGE_KEYS.plans, []),
+  setPlans: (plans: Plan[]) => safeSet(STORAGE_KEYS.plans, plans),
+
+  getPlanEvents: () => safeGet<PlanEvent[]>(STORAGE_KEYS.planEvents, []),
+  setPlanEvents: (events: PlanEvent[]) => safeSet(STORAGE_KEYS.planEvents, events),
 };
