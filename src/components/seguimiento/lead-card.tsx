@@ -106,8 +106,11 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-[5px]">
-          <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-[#1e3a5f] flex items-center justify-center text-[8px] font-black text-slate-500 dark:text-[#4b7ab5] flex-shrink-0">{initials}</div>
-          <span className="text-[10px] text-slate-400 dark:text-[#1e3a5f]">{lead.responsable1}</span>
+          {lead.responsable1 && (
+            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60">
+              {lead.responsable1}
+            </span>
+          )}
         </div>
         <div className="flex gap-[3px] opacity-0 group-hover:opacity-100 transition-opacity">
           {lead.telefono && (
