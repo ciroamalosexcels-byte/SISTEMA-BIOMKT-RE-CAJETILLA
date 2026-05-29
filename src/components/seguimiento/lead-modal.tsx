@@ -85,26 +85,44 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   /* Active stage color */
   const activeStage = stages.find(s => s.id === stageId);
 
+  /* Shared input/select/textarea classes */
+  const inputCls = "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] focus:bg-white dark:focus:bg-white/[0.05] w-full transition-colors";
+
   return (
-    <div className="lm-backdrop" onClick={onClose}>
-      <div className="lm-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-slate-900/50 dark:bg-[#020817]/[0.82] backdrop-blur-[4px] flex items-center justify-center z-[200] p-5"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[680px] bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.07] max-h-[92vh] flex flex-col shadow-[0_24px_60px_rgba(15,23,42,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.65)] text-slate-900 dark:text-slate-200"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {/* ── Top ─────────────────────────────────────────── */}
-        <div className="lm-top">
-          <div className="lm-stage-dot" style={{ background: activeStage?.color ?? "#94a3b8" }} />
-          <div className="lm-title-area">
-            <div className="lm-name">{form.nombre || (isNew ? "Nuevo lead" : "—")}</div>
-            <div className="lm-sub">{form.empresa || "Sin empresa"} · {form.empresaBio}</div>
+        <div className="pt-5 px-[22px] flex items-start gap-3 flex-shrink-0">
+          <div className="w-2.5 h-2.5 rounded-full mt-[6px] flex-shrink-0" style={{ background: activeStage?.color ?? "#94a3b8" }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[19px] font-black text-slate-900 dark:text-slate-100 mb-0.5 truncate">{form.nombre || (isNew ? "Nuevo lead" : "—")}</div>
+            <div className="text-xs text-slate-400 dark:text-[#334155]">{form.empresa || "Sin empresa"} · {form.empresaBio}</div>
           </div>
-          <button className="lm-close" onClick={onClose}><X size={15} /></button>
+          <button
+            className="w-[30px] h-[30px] bg-slate-100 dark:bg-white/[0.04] border-none text-slate-400 dark:text-[#475569] cursor-pointer flex items-center justify-center flex-shrink-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/[0.1] dark:hover:text-red-400 transition-colors"
+            onClick={onClose}
+          >
+            <X size={15} />
+          </button>
         </div>
 
         {/* ── Stage pills ─────────────────────────────────── */}
-        <div className="lm-stages">
+        <div className="flex gap-1 px-[22px] py-3 border-b border-slate-200 dark:border-white/[0.05] flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden">
           {stages.map(s => (
             <button
               key={s.id}
-              className={`lm-stage-pill${stageId === s.id ? " active" : ""}`}
+              className={
+                stageId === s.id
+                  ? "px-3 py-1 rounded-full text-[10px] font-black cursor-pointer whitespace-nowrap border transition-all"
+                  : "px-3 py-1 rounded-full text-[10px] font-black cursor-pointer whitespace-nowrap border transition-all bg-slate-50 dark:bg-white/[0.03] text-slate-400 dark:text-[#334155] border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-500 dark:hover:text-slate-400"
+              }
               style={stageId === s.id ? { background: `${s.color}18`, color: s.color, borderColor: `${s.color}40` } : {}}
               onClick={() => setStageId(s.id)}
             >
@@ -114,118 +132,141 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
         </div>
 
         {/* ── Quick actions ────────────────────────────────── */}
-        <div className="lm-quick">
-          <button className="lm-quick-btn ws" onClick={openWhatsApp}>
+        <div className="flex gap-1 px-[22px] py-2 border-b border-slate-100 dark:border-white/[0.04] flex-shrink-0 flex-wrap">
+          <button
+            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-green-50 dark:hover:bg-green-500/[0.08] hover:text-green-600 dark:hover:text-green-400 hover:border-green-200 dark:hover:border-green-500/[0.2]"
+            onClick={openWhatsApp}
+          >
             <MessageCircle size={13} /> WhatsApp
           </button>
-          <button className="lm-quick-btn call" onClick={() => form.telefono && window.open(`tel:${form.telefono}`)}>
+          <button
+            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-500/[0.2]"
+            onClick={() => form.telefono && window.open(`tel:${form.telefono}`)}
+          >
             <Phone size={13} /> Llamar
           </button>
-          <button className="lm-quick-btn ig" onClick={openInstagram}>
+          <button
+            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-purple-50 dark:hover:bg-purple-500/[0.08] hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-500/[0.2]"
+            onClick={openInstagram}
+          >
             <ExternalLink size={13} /> Instagram
           </button>
-          <button className="lm-quick-btn" onClick={() => set("meetingDatetime", "")}>
+          <button
+            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-white/[0.06]"
+            onClick={() => set("meetingDatetime", "")}
+          >
             <CalendarDays size={13} /> Reunión
           </button>
         </div>
 
         {/* ── Fields ──────────────────────────────────────── */}
-        <div className="lm-body">
+        <div className="flex-1 overflow-y-auto px-[22px] py-3.5 flex flex-col gap-3.5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e3a5f] [&::-webkit-scrollbar-track]:bg-transparent">
 
           <div>
-            <div className="lm-section-title">Contacto</div>
-            <div className="lm-grid">
-              <div className="lm-field">
-                <label className="lm-label">Nombre *</label>
-                <input className="lm-input" value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Nombre y apellido" />
+            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Contacto</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Nombre *</label>
+                <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Nombre y apellido" />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Empresa</label>
-                <input className="lm-input" value={form.empresa} onChange={e => set("empresa", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Empresa</label>
+                <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Teléfono</label>
-                <input className="lm-input" value={form.telefono} onChange={e => set("telefono", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Teléfono</label>
+                <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Instagram</label>
-                <input className="lm-input" value={form.instagram ?? ""} onChange={e => set("instagram", e.target.value)} placeholder="@usuario" />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Instagram</label>
+                <input className={inputCls} value={form.instagram ?? ""} onChange={e => set("instagram", e.target.value)} placeholder="@usuario" />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Email</label>
-                <input className="lm-input" type="email" value={form.email ?? ""} onChange={e => set("email", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Email</label>
+                <input className={inputCls} type="email" value={form.email ?? ""} onChange={e => set("email", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Rubro</label>
-                <input className="lm-input" value={form.rubro ?? ""} onChange={e => set("rubro", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Rubro</label>
+                <input className={inputCls} value={form.rubro ?? ""} onChange={e => set("rubro", e.target.value)} />
               </div>
             </div>
           </div>
 
           <div>
-            <div className="lm-section-title">Gestión</div>
-            <div className="lm-grid">
-              <div className="lm-field">
-                <label className="lm-label">Responsable</label>
-                <select className="lm-select" value={form.responsable1} onChange={e => set("responsable1", e.target.value)}>
+            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Gestión</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Responsable</label>
+                <select className={inputCls} value={form.responsable1} onChange={e => set("responsable1", e.target.value)}>
                   {TEAM.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Medio</label>
-                <select className="lm-select" value={form.medio} onChange={e => set("medio", e.target.value)}>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Medio</label>
+                <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
                   <option value="">—</option>
                   {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
                 </select>
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Empresa Bio</label>
-                <select className="lm-select" value={form.empresaBio} onChange={e => set("empresaBio", e.target.value)}>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Empresa Bio</label>
+                <select className={inputCls} value={form.empresaBio} onChange={e => set("empresaBio", e.target.value)}>
                   {EMPRESA_BIO_OPTS.map(e => <option key={e}>{e}</option>)}
                 </select>
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Próximo seguimiento</label>
-                <input className="lm-input" type="date" value={form.proximoSeguimientoFecha ?? ""} onChange={e => set("proximoSeguimientoFecha", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Próximo seguimiento</label>
+                <input className={inputCls} type="date" value={form.proximoSeguimientoFecha ?? ""} onChange={e => set("proximoSeguimientoFecha", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Fecha reunión</label>
-                <input className="lm-input" type="datetime-local" value={form.meetingDatetime ?? ""} onChange={e => set("meetingDatetime", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha reunión</label>
+                <input className={inputCls} type="datetime-local" value={form.meetingDatetime ?? ""} onChange={e => set("meetingDatetime", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Servicio</label>
-                <input className="lm-input" value={form.servicio ?? ""} onChange={e => set("servicio", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Servicio</label>
+                <input className={inputCls} value={form.servicio ?? ""} onChange={e => set("servicio", e.target.value)} />
               </div>
-              <div className="lm-field full">
-                <label className="lm-label">Observaciones</label>
-                <textarea className="lm-textarea" value={form.observaciones} onChange={e => set("observaciones", e.target.value)} rows={3} />
+              <div className="col-span-2 flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Observaciones</label>
+                <textarea className={`${inputCls} resize-y min-h-[68px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} rows={3} />
               </div>
             </div>
           </div>
 
           <div>
-            <div className="lm-section-title">Información adicional</div>
-            <div className="lm-grid">
-              <div className="lm-field">
-                <label className="lm-label">Dirección</label>
-                <input className="lm-input" value={form.direccion} onChange={e => set("direccion", e.target.value)} />
+            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Información adicional</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Dirección</label>
+                <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
               </div>
-              <div className="lm-field">
-                <label className="lm-label">Objetivos</label>
-                <input className="lm-input" value={form.objetivos ?? ""} onChange={e => set("objetivos", e.target.value)} />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Objetivos</label>
+                <input className={inputCls} value={form.objetivos ?? ""} onChange={e => set("objetivos", e.target.value)} />
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Footer ──────────────────────────────────────── */}
-        <div className="lm-footer">
-          <button className="lm-btn-save" onClick={handleSave}>
+        <div className="px-[22px] py-3 border-t border-slate-200 dark:border-white/[0.05] flex items-center gap-2 flex-shrink-0">
+          <button
+            className="px-[18px] py-2 bg-amber text-bio-dark border-none font-black text-xs cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={handleSave}
+          >
             {isNew ? "Crear lead" : "Guardar cambios"}
           </button>
-          <button className="lm-btn-cancel" onClick={onClose}>Cancelar</button>
+          <button
+            className="px-[13px] py-2 bg-transparent text-slate-500 dark:text-[#334155] border border-slate-200 dark:border-white/[0.06] text-xs cursor-pointer hover:text-slate-700 dark:hover:text-slate-400 transition-colors"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
           {!isNew && (
-            <button className="lm-btn-delete" onClick={handleDelete}>
+            <button
+              className="ml-auto px-[13px] py-2 bg-transparent text-red-700 dark:text-[#7f1d1d] border border-red-200 dark:border-red-500/[0.1] text-xs cursor-pointer flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-500/[0.08] hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              onClick={handleDelete}
+            >
               <Trash2 size={13} /> Eliminar
             </button>
           )}
