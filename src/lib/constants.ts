@@ -111,7 +111,7 @@ export interface WorkspaceNavItem {
 export const WORKSPACE_NAV: Record<WorkspaceMode, WorkspaceNavItem[]> = {
   ventas: [
     { key: "DASHBOARD",    label: "Dashboard",    href: "/dashboard" },
-    { key: "SEGUIMIENTO",  label: "Seguimiento",  href: "/seguimiento" },
+    { key: "SEGUIMIENTO",  label: "Leads",        href: "/seguimiento" },
     { key: "CLIENTES",     label: "Clientes",     href: "/clientes" },
     { key: "EQUIPO",       label: "Equipo",       href: "/equipo" },
     { key: "CALENDARIO",   label: "Calendario",   href: "/calendario" },
