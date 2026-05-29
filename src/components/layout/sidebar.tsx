@@ -275,8 +275,9 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           })}
         </div>
 
-        {/* Utilidades */}
+        {/* Utilidades — columna vertical igual que el nav */}
         <div className="border-t border-white/[0.05] py-1 flex-shrink-0">
+
           {/* Guardar */}
           {onSave && (
             <button
@@ -286,17 +287,16 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               onClick={onSave} disabled={saving}
               title={saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}
             >
-              {saving
-                ? <RefreshCw size={14} className="animate-spin flex-shrink-0 min-w-[20px]" />
-                : dirty
-                  ? <FloppyIcon size={14} />
-                  : <FloppyCheckIcon size={14} />
-              }
-              <span className="flex-shrink-0">
-                {saving ? "Guardando…" : dirty ? "Guardar" : "Guardado"}
+              <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+                {saving
+                  ? <RefreshCw size={14} className="animate-spin" />
+                  : dirty ? <FloppyIcon size={14} /> : <FloppyCheckIcon size={14} />
+                }
               </span>
+              <span className={lbl}>{saving ? "Guardando…" : dirty ? "Guardar" : "Guardado"}</span>
             </button>
           )}
+
           {/* Sincronizar */}
           {onSync && (
             <button
@@ -304,47 +304,50 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               onClick={onSync} disabled={syncing}
               title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
             >
-              <RefreshCw size={14} className={`flex-shrink-0 min-w-[20px] ${syncing ? "animate-spin" : ""}`} />
+              <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+                <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
+              </span>
               <span className={lbl}>{syncing ? "Sincronizando…" : "Sincronizar"}</span>
             </button>
           )}
 
-          {/* Íconos utilitarios en fila */}
-          <div className="flex px-2 pt-1 gap-0.5">
-            {[
-              {
-                icon: settings.darkMode ? <Sun size={15} /> : <Moon size={15} />,
-                onClick: () => update({ darkMode: !settings.darkMode }),
-                title: settings.darkMode ? "Modo claro" : "Modo noche",
-                active: false,
-              },
-              {
-                icon: <Bell size={15} />,
-                onClick: () => setNotifOpen(true),
-                title: "Notificaciones",
-                active: hasUnread,
-              },
-              {
-                icon: <Settings size={15} />,
-                onClick: () => setSettingsOpen((v) => !v),
-                title: "Configuración",
-                active: false,
-                ref: settingsRef,
-              },
-            ].map(({ icon, onClick, title, active, ref: r }, i) => (
-              <button
-                key={i}
-                ref={r as React.RefObject<HTMLButtonElement> | undefined}
-                className={`flex-1 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer border-none bg-transparent ${
-                  active ? "text-amber" : "text-white hover:bg-white/[0.07]"
-                }`}
-                onClick={onClick}
-                title={title}
-              >
-                {icon}
-              </button>
-            ))}
-          </div>
+          {/* Modo noche */}
+          <button
+            className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
+            onClick={() => update({ darkMode: !settings.darkMode })}
+            title={settings.darkMode ? "Modo claro" : "Modo noche"}
+          >
+            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+              {settings.darkMode ? <Sun size={14} /> : <Moon size={14} />}
+            </span>
+            <span className={lbl}>{settings.darkMode ? "Modo claro" : "Modo noche"}</span>
+          </button>
+
+          {/* Notificaciones */}
+          <button
+            className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold transition-colors whitespace-nowrap ${hasUnread ? "text-amber hover:bg-amber/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
+            onClick={() => setNotifOpen(true)}
+            title="Notificaciones"
+          >
+            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+              <Bell size={14} />
+            </span>
+            <span className={lbl}>Notificaciones</span>
+          </button>
+
+          {/* Configuración */}
+          <button
+            ref={settingsRef}
+            className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
+            onClick={() => setSettingsOpen((v) => !v)}
+            title="Configuración"
+          >
+            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+              <Settings size={14} />
+            </span>
+            <span className={lbl}>Configuración</span>
+          </button>
+
         </div>
       </aside>
 
