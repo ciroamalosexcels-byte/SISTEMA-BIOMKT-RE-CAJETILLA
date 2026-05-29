@@ -259,7 +259,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             key={key}
             className={[
               "w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none flex-shrink-0",
-              mode === key
+              mode === key && !isActive("/general")
                 ? "bg-amber/[0.14] text-amber"
                 : "bg-transparent text-white hover:bg-white/[0.08] hover:text-white",
             ].join(" ")}
@@ -390,7 +390,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                 <button
                   className={[
                     "w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-bold transition-colors border-none bg-transparent cursor-pointer",
-                    isActiveWS
+                    isActiveWS && !isActive("/general")
                       ? "text-amber"
                       : "text-white hover:bg-white/[0.06]",
                   ].join(" ")}
