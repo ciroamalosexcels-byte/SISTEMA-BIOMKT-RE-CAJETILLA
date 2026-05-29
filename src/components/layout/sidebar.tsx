@@ -156,6 +156,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
   const hasUnread = settings.notificationsLog.length > (settings.notifLastSeenCount ?? 0);
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const sidebarW = collapsed ? 52 : 220;
+  /* Clase compartida para todos los textos — se vuelven invisibles al colapsar */
+  const lbl = `whitespace-nowrap transition-opacity duration-100 ${collapsed ? "opacity-0 select-none pointer-events-none" : "opacity-100"}`;
 
   function switchWorkspace(ws: WorkspaceMode) {
     update({ workspaceMode: ws });
@@ -198,7 +200,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               d="M26 2C17.163 2 10 9.163 10 18C10 26.837 17.163 34 26 34C34.837 34 42 26.837 42 18C42 9.163 34.837 2 26 2ZM26 10C30.418 10 34 13.582 34 18C34 22.418 30.418 26 26 26C21.582 26 18 22.418 18 18C18 13.582 21.582 10 26 10Z"
               fill="#f6bf26"/>
           </svg>
-          <span className="text-[11px] font-black text-white tracking-[0.06em] uppercase whitespace-nowrap flex-1 text-left">
+          <span className={`text-[11px] font-black text-white tracking-[0.06em] uppercase flex-1 text-left ${lbl}`}>
             BIOMKT
           </span>
           <ChevronLeft
@@ -214,7 +216,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           {/* Dashboard General */}
           <Link href="/general" className={navItem(isActive("/general"))}>
             <BarChart3 size={15} className="flex-shrink-0 min-w-[20px]" />
-            <span>Dashboard General</span>
+            <span className={lbl}>Dashboard General</span>
           </Link>
 
           <div className="mx-3 my-1.5 border-b border-white/[0.06]" />
@@ -235,7 +237,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                   onClick={() => switchWorkspace(key)}
                 >
                   <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><Icon size={15} /></span>
-                  <span className="flex-1 text-left">{wsLabel}</span>
+                  <span className={`flex-1 text-left ${lbl}`}>{wsLabel}</span>
                   <ChevronDown
                     size={11}
                     className="flex-shrink-0 transition-transform duration-200"
@@ -260,7 +262,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                           style={{ paddingLeft: 36 }}
                         >
                           <span className="flex-shrink-0 min-w-[16px] flex items-center justify-center"><NavIcon size={13} /></span>
-                          <span>{link.label}</span>
+                          <span className={lbl}>{link.label}</span>
                         </Link>
                       );
                     })}
@@ -303,7 +305,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
             >
               <RefreshCw size={14} className={`flex-shrink-0 min-w-[20px] ${syncing ? "animate-spin" : ""}`} />
-              <span>{syncing ? "Sincronizando…" : "Sincronizar"}</span>
+              <span className={lbl}>{syncing ? "Sincronizando…" : "Sincronizar"}</span>
             </button>
           )}
 
