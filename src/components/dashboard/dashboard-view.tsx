@@ -120,36 +120,29 @@ function DailyReportChart({
 }) {
   const dateLabel = today.split("-").reverse().slice(0, 2).join("/");
 
-  /* Un color por barra según performance, más el color de la línea objetivo */
+  /* Un color por barra según performance */
   const barColors = memberNames.map((_, i) => perfColor(contactados[i], objetivos[i]));
+  const markerColor = dark ? "#475569" : "#94a3b8";
 
   const opts: ApexOptions = {
     chart: {
-      type: "line",
+      type: "bar",
       background: "transparent",
       toolbar: { show: false },
       animations: { enabled: true, speed: 600 },
     },
     theme: { mode: dark ? "dark" : "light" },
-    /* Los primeros N colores son para las barras distribuidas; el último para la línea */
-    colors: [...barColors, "#64748b"],
-    stroke: {
-      width: [0, 2],
-      curve: "straight",
-      dashArray: [0, 6],
-    },
-    fill: { opacity: [0.9, 1] },
+    colors: barColors,
     plotOptions: {
       bar: {
-        distributed: true,          // cada barra toma su color del array
+        distributed: true,
         borderRadius: 8,
         borderRadiusApplication: "end" as const,
-        columnWidth: "52%",
+        columnWidth: "55%",
       },
     },
     dataLabels: {
       enabled: true,
-      enabledOnSeries: [0],
       style: {
         fontSize: "12px",
         fontWeight: "900",
@@ -158,6 +151,32 @@ function DailyReportChart({
       formatter: (val: number) => (val > 0 ? String(val) : ""),
       background: { enabled: false },
       dropShadow: { enabled: false },
+    },
+    /* Marcadores de objetivo por miembro — sin línea */
+    annotations: {
+      points: memberNames.map((name, i) => ({
+        x: name,
+        y: objetivos[i],
+        marker: {
+          size: 5,
+          fillColor: markerColor,
+          strokeColor: markerColor,
+          strokeWidth: 2,
+          shape: "rect" as const,
+        },
+        label: {
+          text: `obj: ${objetivos[i]}`,
+          borderColor: "transparent",
+          style: {
+            background: "transparent",
+            color: markerColor,
+            fontSize: "9px",
+            fontWeight: "700",
+            fontFamily: "Poppins, sans-serif",
+          },
+          offsetY: -4,
+        },
+      })),
     },
     xaxis: {
       categories: memberNames,
@@ -191,8 +210,6 @@ function DailyReportChart({
     legend: { show: false },
     tooltip: {
       theme: dark ? "dark" : "light",
-      shared: false,
-      intersect: true,
       y: {
         formatter: (val: number, opts?: { dataPointIndex?: number }) => {
           const idx = opts?.dataPointIndex ?? 0;
@@ -202,10 +219,6 @@ function DailyReportChart({
           return `${val} — ${pct}% del obj. (${goal})`;
         },
       },
-    },
-    markers: {
-      size: [0, 5],
-      hover: { size: 7 },
     },
   };
 
@@ -225,11 +238,8 @@ function DailyReportChart({
       </div>
 
       <ReactApexChart
-        type="line"
-        series={[
-          { name: "Contactados", type: "bar",  data: contactados },
-          { name: "Objetivo",    type: "line", data: objetivos },
-        ]}
+        type="bar"
+        series={[{ name: "Contactados", data: contactados }]}
         options={opts}
         height={220}
       />
