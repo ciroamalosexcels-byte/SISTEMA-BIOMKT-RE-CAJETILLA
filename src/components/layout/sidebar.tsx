@@ -141,11 +141,31 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, s
       <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar leads</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
-      <button className={MBTN} onClick={() => {
-        const v = window.prompt("Escala (0.5–1.5):", String(settings.systemScale ?? 1));
-        if (v !== null) { const n = parseFloat(v); if (!isNaN(n) && n >= 0.5 && n <= 1.5) update({ systemScale: n }); }
-        onClose();
-      }}><Settings size={17} /> Escalar sistema</button>
+      {/* Escalar sistema — barra deslizable */}
+      <div className="px-3 py-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="flex items-center gap-2 text-[12px] font-semibold text-white">
+            <Settings size={17} /> Escalar sistema
+          </span>
+          <span className="text-[11px] font-black text-amber tabular-nums">
+            {((settings.systemScale ?? 1) * 100).toFixed(0)}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0.5} max={1.5} step={0.05}
+          value={settings.systemScale ?? 1}
+          onChange={(e) => update({ systemScale: parseFloat(e.target.value) })}
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #f6bf26 0%, #f6bf26 ${((( settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) ${(((settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) 100%)`,
+            accentColor: "#f6bf26",
+          }}
+        />
+        <div className="flex justify-between text-[9px] text-white/30 font-bold mt-0.5">
+          <span>50%</span><span>100%</span><span>150%</span>
+        </div>
+      </div>
     </div>
   );
 }
