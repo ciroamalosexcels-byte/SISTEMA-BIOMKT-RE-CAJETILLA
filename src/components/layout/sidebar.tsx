@@ -285,7 +285,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                   "flex items-center gap-2 px-3.5 py-[7px] text-xs font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden",
                   isActive(link.href)
                     ? "text-amber bg-amber/[0.07] font-bold"
-                    : "text-white/50 hover:text-white hover:bg-white/[0.06]",
+                    : "text-white hover:text-white hover:bg-white/[0.08]",
                 ].join(" ")}
               >
                 <Icon size={14} />
@@ -301,7 +301,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             <button
               className={[
                 "flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer",
-                dirty ? "text-amber" : "text-white/40 hover:text-white/70",
+                dirty ? "text-amber" : "text-white hover:text-white",
               ].join(" ")}
               onClick={onSave}
               disabled={saving}
@@ -317,7 +317,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           )}
           {onSync && (
             <button
-              className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.06] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-white/40 hover:text-white/70"
+              className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-white"
               onClick={onSync}
               disabled={syncing}
             >
