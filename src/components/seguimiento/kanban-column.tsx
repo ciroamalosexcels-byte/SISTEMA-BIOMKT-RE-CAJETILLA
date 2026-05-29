@@ -5,9 +5,56 @@ import { useDroppable } from "@dnd-kit/core";
 import { Pencil, Check, X, Trash2 } from "lucide-react";
 import { usePipelineStore } from "@/store/pipeline";
 import { useLeadsStore } from "@/store/leads";
+import { todayBA } from "@/lib/dates";
 import { LeadCard } from "./lead-card";
 import type { PipelineStage } from "@/types";
 import type { Lead } from "@/types";
+
+/* ── Divisor de fecha ────────────────────────────────────────────── */
+function DateDivider({ dateStr }: { dateStr: string }) {
+  const today = todayBA();
+  const [y, m, d] = dateStr.split("-");
+  const yesterday = (() => {
+    const dt = new Date(`${dateStr}T12:00:00`);
+    dt.setDate(dt.getDate() - 1);
+    return dt.toISOString().slice(0, 10);
+  })();
+
+  let label = `${d}/${m}/${y}`;
+  if (dateStr === today) label = "Hoy";
+  else if (dateStr === yesterday) label = "Ayer";
+
+  return (
+    <div className="flex items-center gap-2 py-1 px-1">
+      <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
+      <span className="text-[9px] font-black text-slate-400 dark:text-white/25 tracking-wide uppercase whitespace-nowrap">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
+    </div>
+  );
+}
+
+/* ── Agrupar leads por fecha ─────────────────────────────────────── */
+function groupByDate(leads: Lead[]): { date: string; leads: Lead[] }[] {
+  const sorted = [...leads].sort((a, b) => {
+    const da = a.fechaContacto ?? "";
+    const db = b.fechaContacto ?? "";
+    return db.localeCompare(da); // más reciente primero
+  });
+
+  const groups: { date: string; leads: Lead[] }[] = [];
+  for (const lead of sorted) {
+    const date = (lead.fechaContacto ?? "").slice(0, 10);
+    const last = groups[groups.length - 1];
+    if (last && last.date === date) {
+      last.leads.push(lead);
+    } else {
+      groups.push({ date, leads: [lead] });
+    }
+  }
+  return groups;
+}
 
 interface KanbanColumnProps {
   stage: PipelineStage;
@@ -85,15 +132,20 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
         )}
       </div>
 
-      {/* ── Cards ──────────────────────────────────────── */}
+      {/* ── Cards con divisores de fecha ───────────────── */}
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e293b]">
-        {leads.map(lead => (
-          <LeadCard
-            key={lead.id}
-            lead={lead}
-            stageColor={stage.color}
-            onClick={() => onCardClick(lead)}
-          />
+        {groupByDate(leads).map(({ date, leads: group }) => (
+          <div key={date}>
+            <DateDivider dateStr={date} />
+            {group.map(lead => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                stageColor={stage.color}
+                onClick={() => onCardClick(lead)}
+              />
+            ))}
+          </div>
         ))}
       </div>
 
