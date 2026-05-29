@@ -1,0 +1,148 @@
+"use client";
+
+import { useState } from "react";
+import { useDroppable } from "@dnd-kit/core";
+import { Pencil, Check, X, Trash2 } from "lucide-react";
+import { usePipelineStore } from "@/store/pipeline";
+import { useLeadsStore } from "@/store/leads";
+import { LeadCard } from "./lead-card";
+import type { PipelineStage } from "@/types";
+import type { Lead } from "@/types";
+
+interface KanbanColumnProps {
+  stage: PipelineStage;
+  leads: Lead[];
+  onCardClick: (lead: Lead) => void;
+  onAddLead: (stageId: string) => void;
+}
+
+export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanColumnProps) {
+  const { updateStage, removeStage } = usePipelineStore();
+  const { moveLeadTo } = useLeadsStore();
+  const stages = usePipelineStore((s) => s.stages);
+
+  const [editing, setEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(stage.label);
+  const [editColor, setEditColor] = useState(stage.color);
+  const [showDelete, setShowDelete] = useState(false);
+  const [moveTo, setMoveTo] = useState("");
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: stage.id,
+    data: { type: "column" },
+  });
+
+  function saveEdit() {
+    if (editLabel.trim()) updateStage(stage.id, { label: editLabel.trim(), color: editColor });
+    setEditing(false);
+  }
+
+  function handleDelete() {
+    const target = moveTo || stages.find(s => s.id !== stage.id)?.id || "";
+    if (!target) return;
+    leads.forEach(l => moveLeadTo(l.id, target));
+    removeStage(stage.id);
+    setShowDelete(false);
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex-shrink-0 w-[220px] border flex flex-col max-h-[calc(100vh-110px)] transition-colors ${
+        isOver
+          ? "bg-amber/[0.04] border-amber/[0.2]"
+          : "bg-black/[0.03] dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.05]"
+      }`}
+    >
+      {/* ── Header ─────────────────────────────────────── */}
+      <div className="px-3 py-2.5 flex items-center gap-[7px] border-b border-slate-200 dark:border-white/[0.04] flex-shrink-0 group">
+        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: stage.color }} />
+        {editing ? (
+          <>
+            <input
+              autoFocus
+              value={editLabel}
+              onChange={e => setEditLabel(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && saveEdit()}
+              className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded px-[7px] py-0.5 text-[11px] font-bold text-slate-200 outline-none"
+            />
+            <div className="flex gap-1 flex-wrap" style={{ maxWidth: 80 }}>
+              {["#38bdf8","#a78bfa","#f472b6","#fb923c","#4ade80","#facc15","#e879f9","#f87171","#94a3b8","#67e8f9"].map(c => (
+                <div key={c} onClick={() => setEditColor(c)} className="w-3 h-3 rounded-full cursor-pointer flex-shrink-0 ring-offset-1" style={{ background: c, outline: editColor === c ? `2px solid ${c}` : "none", outlineOffset: 1 }} />
+              ))}
+            </div>
+            <button onClick={saveEdit} className="bg-transparent border-none cursor-pointer text-green-400 flex-shrink-0"><Check size={13} /></button>
+            <button onClick={() => setEditing(false)} className="bg-transparent border-none cursor-pointer text-red-400 flex-shrink-0"><X size={13} /></button>
+          </>
+        ) : (
+          <>
+            <span className="text-[11px] font-black tracking-[0.04em] uppercase flex-1 truncate" style={{ color: stage.color }}>{stage.label}</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-600 bg-black/[0.05] dark:bg-white/[0.04] px-[7px] py-px rounded-full font-bold">{leads.length}</span>
+            <button className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-slate-400 cursor-pointer bg-transparent border-none hover:text-amber transition-all" onClick={() => setEditing(true)}>
+              <Pencil size={11} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Cards ──────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e293b]">
+        {leads.map(lead => (
+          <LeadCard
+            key={lead.id}
+            lead={lead}
+            stageColor={stage.color}
+            onClick={() => onCardClick(lead)}
+          />
+        ))}
+      </div>
+
+      {/* ── Footer ─────────────────────────────────────── */}
+      <button className="mx-2 mb-2 py-1.5 border border-dashed border-slate-300 dark:border-white/[0.06] bg-transparent text-slate-400 dark:text-[#1e3a5f] text-[11px] cursor-pointer text-center hover:border-amber hover:text-slate-500 font-semibold transition-colors" onClick={() => onAddLead(stage.id)}>
+        + Agregar lead
+      </button>
+
+      {/* ── Delete stage (inline confirm) ──────────────── */}
+      {showDelete && (
+        <div className="px-2 pb-2 flex flex-col gap-1.5">
+          <div className="text-[10px] text-red-500 font-bold">
+            ¿Mover {leads.length} leads a?
+          </div>
+          <select
+            className="lm-select text-[11px]"
+            value={moveTo}
+            onChange={e => setMoveTo(e.target.value)}
+          >
+            <option value="">— elegir etapa —</option>
+            {stages.filter(s => s.id !== stage.id).map(s => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+          <div className="flex gap-1.5">
+            <button
+              onClick={handleDelete}
+              disabled={leads.length > 0 && !moveTo}
+              className={`flex-1 py-1 rounded text-[11px] font-bold text-white border-none cursor-pointer ${leads.length > 0 && !moveTo ? "bg-slate-800 cursor-not-allowed" : "bg-red-500 cursor-pointer"}`}
+            >
+              Eliminar
+            </button>
+            <button
+              onClick={() => setShowDelete(false)}
+              className="px-2.5 py-1 bg-white/[0.05] text-slate-500 border-none rounded text-[11px] cursor-pointer"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {!editing && !showDelete && (
+        <button
+          onClick={() => setShowDelete(true)}
+          className="mx-2 mb-2 flex items-center justify-center gap-1 text-[10px] text-[#1e3a5f] hover:text-red-500 bg-transparent border-none cursor-pointer transition-colors"
+        >
+          <Trash2 size={10} /> eliminar etapa
+        </button>
+      )}
+    </div>
+  );
+}
