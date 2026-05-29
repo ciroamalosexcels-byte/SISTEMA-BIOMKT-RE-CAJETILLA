@@ -97,13 +97,22 @@ function KpiCard({
   );
 }
 
-// ── Reporte Diario — gráfico combo barras + línea objetivo ───────────
+// ── Color de barra según % de cumplimiento del objetivo ──────────────
+function perfColor(contacts: number, goal: number): string {
+  if (goal <= 0) return "#94a3b8";
+  const pct = (contacts / goal) * 100;
+  if (pct >= 161) return "#a3e635"; // lima
+  if (pct >= 100) return "#16a34a"; // verde oscuro
+  if (pct >= 70)  return "#f59e0b"; // amarillo
+  return "#ef4444";                   // rojo
+}
+
+// ── Reporte Diario — barras distribuidas + línea de objetivo ─────────
 function DailyReportChart({
-  memberNames, contactados, reuniones, objetivos, setGoal, today, dark,
+  memberNames, contactados, objetivos, setGoal, today, dark,
 }: {
   memberNames: string[];
   contactados: number[];
-  reuniones: number[];
   objetivos: number[];
   setGoal: (name: string, val: number) => void;
   today: string;
@@ -111,34 +120,44 @@ function DailyReportChart({
 }) {
   const dateLabel = today.split("-").reverse().slice(0, 2).join("/");
 
+  /* Un color por barra según performance, más el color de la línea objetivo */
+  const barColors = memberNames.map((_, i) => perfColor(contactados[i], objetivos[i]));
+
   const opts: ApexOptions = {
     chart: {
       type: "line",
       background: "transparent",
       toolbar: { show: false },
-      animations: { enabled: true, speed: 700 },
+      animations: { enabled: true, speed: 600 },
     },
     theme: { mode: dark ? "dark" : "light" },
-    colors: ["#f6bf26", "#3b82f6", "#94a3b8"],
+    /* Los primeros N colores son para las barras distribuidas; el último para la línea */
+    colors: [...barColors, "#64748b"],
     stroke: {
-      width: [0, 0, 2.5],
+      width: [0, 2],
       curve: "straight",
-      dashArray: [0, 0, 6],
+      dashArray: [0, 6],
     },
-    fill: { opacity: [0.85, 0.7, 1] },
+    fill: { opacity: [0.9, 1] },
     plotOptions: {
-      bar: { borderRadius: 3, columnWidth: "50%" },
+      bar: {
+        distributed: true,          // cada barra toma su color del array
+        borderRadius: 8,
+        borderRadiusApplication: "end" as const,
+        columnWidth: "52%",
+      },
     },
     dataLabels: {
       enabled: true,
-      enabledOnSeries: [0, 1],
+      enabledOnSeries: [0],
       style: {
-        fontSize: "10px",
+        fontSize: "12px",
         fontWeight: "900",
         fontFamily: "Poppins, sans-serif",
       },
       formatter: (val: number) => (val > 0 ? String(val) : ""),
       background: { enabled: false },
+      dropShadow: { enabled: false },
     },
     xaxis: {
       categories: memberNames,
@@ -169,60 +188,70 @@ function DailyReportChart({
       strokeDashArray: 3,
       padding: { top: -10, bottom: 0 },
     },
-    legend: {
-      show: true,
-      position: "top",
-      horizontalAlign: "right",
-      fontFamily: "Poppins, sans-serif",
-      fontSize: "10px",
-      fontWeight: "700",
-      labels: { colors: dark ? "#64748b" : "#94a3b8" },
-      markers: { size: 5 },
-    },
+    legend: { show: false },
     tooltip: {
       theme: dark ? "dark" : "light",
-      shared: true,
-      intersect: false,
+      shared: false,
+      intersect: true,
+      y: {
+        formatter: (val: number, opts?: { dataPointIndex?: number }) => {
+          const idx = opts?.dataPointIndex ?? 0;
+          const goal = objetivos[idx] ?? 0;
+          if (goal <= 0) return `${val} contactados`;
+          const pct = Math.round((val / goal) * 100);
+          return `${val} — ${pct}% del obj. (${goal})`;
+        },
+      },
     },
     markers: {
-      size: [0, 0, 5],
+      size: [0, 5],
       hover: { size: 7 },
     },
   };
 
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+      {/* Header */}
       <div className="flex items-center justify-between px-5 py-2.5 bg-[#07152f]">
         <span className="text-[10px] font-black text-amber uppercase tracking-[0.12em]">
           REPORTE DIARIO — {dateLabel}
         </span>
-        <span className="text-[9px] font-bold text-white/[0.25] uppercase tracking-[0.08em]">HOY</span>
+        <div className="flex items-center gap-3 text-[9px] font-bold text-white/[0.35] uppercase tracking-[0.06em]">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444] inline-block" />0–69%</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b] inline-block" />70–99%</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16a34a] inline-block" />100–160%</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a3e635] inline-block" />161%+</span>
+        </div>
       </div>
 
       <ReactApexChart
         type="line"
         series={[
           { name: "Contactados", type: "bar",  data: contactados },
-          { name: "Reuniones",   type: "bar",  data: reuniones },
           { name: "Objetivo",    type: "line", data: objetivos },
         ]}
         options={opts}
         height={220}
       />
 
-      {/* Fila editable de objetivos por miembro */}
+      {/* Fila editable de objetivos */}
       <div className="px-5 py-3 border-t border-slate-100 dark:border-white/[0.04] flex items-center gap-3 flex-wrap">
         <span className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.08em] flex-shrink-0">
           Objetivo diario:
         </span>
         {memberNames.map((name, i) => (
           <div key={name} className="flex items-center gap-1">
-            <span className="text-[9px] font-bold text-slate-400 dark:text-[#1e3a5f]">{name}</span>
+            <span
+              className="text-[9px] font-bold"
+              style={{ color: perfColor(contactados[i], objetivos[i]) }}
+            >
+              {name}
+            </span>
             <input
               type="text"
               inputMode="numeric"
               value={objetivos[i] || ""}
-              className="w-9 h-6 text-center text-[11px] font-black bg-amber/[0.08] dark:bg-amber/[0.06] border border-amber/[0.25] dark:border-amber/[0.2] outline-none text-amber-3 dark:text-amber focus:bg-amber/[0.15] transition-colors"
+              className="w-9 h-6 text-center text-[11px] font-black bg-amber/[0.08] dark:bg-amber/[0.06] border border-amber/[0.25] dark:border-amber/[0.2] rounded outline-none text-amber-3 dark:text-amber focus:bg-amber/[0.15] transition-colors"
               onChange={(e) => {
                 const n = parseInt(e.target.value, 10);
                 if (!isNaN(n)) setGoal(name, n);
@@ -662,7 +691,6 @@ export function DashboardView() {
       <DailyReportChart
         memberNames={memberNames}
         contactados={memberNames.map((n) => countByMember(todayRows, n))}
-        reuniones={memberNames.map((n) => countByMember(todayRows.filter(isR1R2), n))}
         objetivos={memberNames.map((n) => getGoal(n))}
         setGoal={(name, val) => setGoal(name, val)}
         today={today}
