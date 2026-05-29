@@ -239,6 +239,20 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
         </button>
 
+        {/* Dashboard General */}
+        <Link
+          href="/general"
+          className={[
+            "w-9 h-9 rounded-lg flex items-center justify-center transition-colors flex-shrink-0",
+            isActive("/general")
+              ? "bg-amber/[0.14] text-amber"
+              : "text-white hover:bg-white/[0.08]",
+          ].join(" ")}
+          title="Dashboard General"
+        >
+          <BarChart3 size={18} />
+        </Link>
+
         {/* Íconos de workspace — siempre visibles para navegar cuando el panel está colapsado */}
         {WORKSPACE_CONFIGS.map(({ key, Icon, label }) => (
           <button
