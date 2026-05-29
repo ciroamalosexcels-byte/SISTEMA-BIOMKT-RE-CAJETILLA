@@ -310,16 +310,17 @@ function WelcomeAreaChart({
       categories,
       labels: {
         style: {
-          fontSize: "10px",
+          fontSize: "9px",
           fontFamily: "Poppins, sans-serif",
           colors: dark ? "#334155" : "#94a3b8",
           fontWeight: 700,
         },
         rotate: 0,
+        hideOverlappingLabels: false,
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
-      tickAmount: Math.min(categories.length, 10),
+      tickAmount: categories.length,
     },
     yaxis: {
       labels: {
