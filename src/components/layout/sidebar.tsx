@@ -186,11 +186,32 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
   return (
     <>
-      {/* ── Rail — solo utilidades ───────────────────────────────── */}
+      {/* ── Rail ─────────────────────────────────────────────────── */}
       <aside className="w-[52px] bg-bio-rail flex flex-col items-center py-3 gap-1 z-50 border-r border-white/[0.04] flex-shrink-0">
+        {/* Logo */}
         <div className="w-[34px] h-[34px] bg-amber text-bio-dark rounded-lg flex items-center justify-center text-sm font-black mb-2.5 flex-shrink-0">
           B
         </div>
+
+        {/* Íconos de workspace — siempre visibles para navegar cuando el panel está colapsado */}
+        {WORKSPACE_CONFIGS.map(({ key, Icon, label }) => (
+          <button
+            key={key}
+            className={[
+              "w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none flex-shrink-0",
+              mode === key
+                ? "bg-amber/[0.14] text-amber"
+                : "bg-transparent text-slate-500 hover:bg-white/[0.06] hover:text-slate-300",
+            ].join(" ")}
+            onClick={() => {
+              switchWorkspace(key);
+              if (collapsed) setCollapsed(false);
+            }}
+            title={label}
+          >
+            <Icon size={18} />
+          </button>
+        ))}
 
         <div className="flex-1" />
 
