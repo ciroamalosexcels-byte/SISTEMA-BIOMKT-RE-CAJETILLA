@@ -1453,18 +1453,6 @@ body.dark-mode .cd-filter-menu { background: #0b1220; border-color: #243044; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   NUEVO LAYOUT — Sidebar doble columna
-   ═══════════════════════════════════════════════════════════════════ */
-
-.app-layout {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-  background: var(--bg); /* cambia automáticamente con body.dark-mode --bg */
-}
-body.dark-mode .app-layout { background: var(--bg); }
-
-/* ═══════════════════════════════════════════════════════════════════
    KANBAN — Vista Seguimiento  (light-first, dark-mode override)
    ═══════════════════════════════════════════════════════════════════ */
 

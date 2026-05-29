@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAppSettings } from "@/store/app-settings";
 import { useLeadsStore, deduplicateLeads } from "@/store/leads";
@@ -8,19 +8,14 @@ import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
 import { useColumnWidthsStore } from "@/store/column-widths";
 import { usePlansStore } from "@/store/plans";
+import { usePipelineStore } from "@/store/pipeline";
 import { fetchFromSheets, saveToSheets } from "@/lib/sheets";
 import { todayBA } from "@/lib/dates";
-import {
-  WORKSPACE_TITLES,
-  WORKSPACE_OPTION_LABELS,
-  type WorkspaceMode,
-} from "@/lib/constants";
+import type { WorkspaceMode } from "@/lib/constants";
 
 interface AppShellProps {
   children: React.ReactNode;
 }
-
-const WORKSPACE_MODES: WorkspaceMode[] = ["ventas", "clientes", "equipo"];
 
 export function AppShell({ children }: AppShellProps) {
   const loadSettings = useAppSettings((s) => s.load);
@@ -41,6 +36,7 @@ export function AppShell({ children }: AppShellProps) {
   const contentDirty     = useContentEventsStore((s) => s.dirty);
   const loadColumnWidths = useColumnWidthsStore((s) => s.load);
   const loadPlans   = usePlansStore((s) => s.load);
+  const loadPipeline = usePipelineStore((s) => s.load);
   const plans       = usePlansStore((s) => s.plans);
   const planEvents  = usePlansStore((s) => s.planEvents);
   const plansDirty  = usePlansStore((s) => s.dirty);
@@ -86,15 +82,6 @@ export function AppShell({ children }: AppShellProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans, planEvents]);
 
-  const today = todayBA();
-  const counters = useMemo(() => ({
-    clientes:       rows.filter((r) => r.tab === "CLIENTES").length,
-    contactadosHoy: rows.filter((r) => r.fechaContacto?.startsWith(today)).length,
-    crm:            rows.filter((r) => r.tab === "CRM").length,
-    reunion1:       rows.filter((r) => r.tab === "REUNION_1").length,
-    reunion2:       rows.filter((r) => r.tab === "REUNION_2").length,
-  }), [rows, today]);
-
   useEffect(() => {
     loadSettings();
     loadLeads();
@@ -102,6 +89,7 @@ export function AppShell({ children }: AppShellProps) {
     loadEvents();
     loadColumnWidths();
     loadPlans();
+    loadPipeline();
 
     fetchFromSheets()
       .then((data) => applyFetchedData(data, false))
@@ -109,14 +97,6 @@ export function AppShell({ children }: AppShellProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const clientsGoal = settings.clientsGoal ?? 21;
-  const handleGoalChange = (val: string) => {
-    const n = parseInt(val.trim(), 10);
-    if (!isNaN(n)) updateSettings({ clientsGoal: n });
-    else if (val.trim() === "") updateSettings({ clientsGoal: 0 });
-  };
-
-  /* Workspace switcher */
   const [syncing, setSyncing] = useState(false);
 
   async function applyFetchedData(data: Awaited<ReturnType<typeof fetchFromSheets>>, notify = false): Promise<boolean> {
@@ -284,129 +264,32 @@ export function AppShell({ children }: AppShellProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [wsMenuOpen, setWsMenuOpen] = useState(false);
-  const wsRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (wsRef.current && !wsRef.current.contains(e.target as Node)) {
-        setWsMenuOpen(false);
-      }
-    };
-    if (wsMenuOpen) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [wsMenuOpen]);
-
-  const currentMode: WorkspaceMode = settings.workspaceMode ?? "ventas";
+  const anyDirty = dirty || teamDirty || contentDirty || plansDirty;
 
   return (
-    <div className="container" style={{ zoom: `${settings.systemScale}` }}>
-      <div className="app-space">
-        <header className="header">
-          <h1 className="title">
-            <span className="title-switch-wrap" ref={wsRef}>
-              <button
-                className="workspace-arrow"
-                type="button"
-                title="Cambiar vista"
-                aria-label="Cambiar vista"
-                onClick={(e) => { e.stopPropagation(); setWsMenuOpen((v) => !v); }}
-              />
-              <span>{WORKSPACE_TITLES[currentMode]}</span>
-              <span className={`workspace-menu${wsMenuOpen ? " open" : ""}`}>
-                {WORKSPACE_MODES.map((mode) => (
-                  <button
-                    key={mode}
-                    className="btn btn-outline btn-sm"
-                    type="button"
-                    onClick={() => {
-                      updateSettings({ workspaceMode: mode });
-                      setWsMenuOpen(false);
-                    }}
-                  >
-                    {WORKSPACE_OPTION_LABELS[mode]}
-                  </button>
-                ))}
-              </span>
-            </span>
-          </h1>
-
-          <div className="header-counters">
-            <div className="header-counter wide">
-              <div className="label">CANTIDAD DE CLIENTES</div>
-              <div className="value">
-                <span>{counters.clientes}</span>
-                <span>/</span>
-                <input
-                  className="header-counter-goal"
-                  type="text"
-                  inputMode="numeric"
-                  value={clientsGoal || ""}
-                  onChange={(e) => handleGoalChange(e.target.value)}
-                  aria-label="Objetivo de clientes"
-                />
-              </div>
-            </div>
-            <div className="header-counter">
-              <div className="label">CONTACTADOS HOY</div>
-              <div className="value">{counters.contactadosHoy}</div>
-            </div>
-            <div className="header-counter">
-              <div className="label">CANTIDAD EN CRM</div>
-              <div className="value">{counters.crm}</div>
-            </div>
-            <div className="header-counter">
-              <div className="label">CANTIDAD DE REUNIONES 1</div>
-              <div className="value">{counters.reunion1}</div>
-            </div>
-            <div className="header-counter">
-              <div className="label">CANTIDAD DE REUNIONES 2</div>
-              <div className="value">{counters.reunion2}</div>
-            </div>
-          </div>
-
-          <div className="toolbar">
-            {(() => {
-              const anyDirty = dirty || teamDirty || contentDirty || plansDirty;
-              return (
-                <button
-                  onClick={() => void saveAllToSheets()}
-                  disabled={isSaving}
-                  className="btn btn-dark"
-                  title="Guardar cambios"
-                >
-                  {anyDirty && !isSaving ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
-                      <path d="M17 21v-8H7v8"/>
-                      <path d="M7 3v5h8"/>
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M20 6 9 17l-5-5"/>
-                    </svg>
-                  )}
-                  <span>{isSaving ? "Guardando…" : anyDirty ? "Guardar en Sheets" : "Guardado"}</span>
-                </button>
-              );
-            })()}
-          </div>
-        </header>
-
-        <Sidebar onSync={syncFromSheets} syncing={syncing} />
+    <div
+      className="flex h-screen overflow-hidden bg-bio-bg dark:bg-[#060e1c]"
+      style={{ zoom: settings.systemScale }}
+    >
+      <Sidebar
+        onSync={syncFromSheets}
+        syncing={syncing}
+        onSave={() => void saveAllToSheets()}
+        saving={isSaving}
+        dirty={anyDirty}
+      />
+      <div className="flex-1 overflow-y-auto flex flex-col min-w-0 bg-bio-bg dark:bg-[#060e1c] [scrollbar-width:thin]">
         {children}
-
-        {/* Toast stack */}
-        {toasts.length > 0 && (
-          <div className="toast-stack">
-            {toasts.map((t) => (
-              <div key={t.id} className="toast-card" onClick={() => dismissToast(t.id)}>
-                {t.message}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
+      {toasts.length > 0 && (
+        <div className="toast-stack">
+          {toasts.map((t) => (
+            <div key={t.id} className="toast-card" onClick={() => dismissToast(t.id)}>
+              {t.message}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
