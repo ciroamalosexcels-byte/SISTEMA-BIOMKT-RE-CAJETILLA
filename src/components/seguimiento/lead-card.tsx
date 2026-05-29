@@ -14,12 +14,13 @@ const MEDIO_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
   PRESENCIAL: ExternalLink,
 };
 
-const MEDIO_CLASS: Record<string, string> = {
-  WHATSAPP:   "bg-sky-100 dark:bg-sky-500/[0.1] text-sky-600 dark:text-sky-400",
-  LLAMADA:    "bg-green-100 dark:bg-green-500/[0.1] text-green-600 dark:text-green-400",
-  INSTAGRAM:  "bg-fuchsia-100 dark:bg-fuchsia-500/[0.1] text-fuchsia-600 dark:text-fuchsia-400",
-  MAIL:       "bg-orange-100 dark:bg-orange-500/[0.1] text-orange-600 dark:text-orange-400",
-  PRESENCIAL: "bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400",
+/* Colores por medio — misma paleta que las etapas del pipeline */
+const MEDIO_COLOR: Record<string, string> = {
+  WHATSAPP:   "#22c55e", // verde
+  LLAMADA:    "#f97316", // naranja
+  INSTAGRAM:  "#ef4444", // rojo
+  MAIL:       "#3b82f6", // azul
+  PRESENCIAL: "#eab308", // amarillo
 };
 
 interface LeadCardProps {
@@ -75,11 +76,17 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
       {lead.empresa && <div className="text-[10px] text-slate-400 dark:text-slate-600 mb-[7px]">{lead.empresa}</div>}
 
       <div className="flex gap-1 flex-wrap mb-[7px]">
-        {MedioIcon && (
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] ${MEDIO_CLASS[lead.medio ?? ""]}`}>
-            <MedioIcon size={9} /> {lead.medio}
-          </span>
-        )}
+        {MedioIcon && (() => {
+          const c = MEDIO_COLOR[lead.medio ?? ""] ?? "#94a3b8";
+          return (
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px]"
+              style={{ background: `${c}18`, color: c }}
+            >
+              <MedioIcon size={9} /> {lead.medio}
+            </span>
+          );
+        })()}
         {displayDate && (
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
             <Calendar size={9} /> {displayDate}
