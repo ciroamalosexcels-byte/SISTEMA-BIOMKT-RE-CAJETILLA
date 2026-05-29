@@ -227,11 +227,11 @@ function DailyReportChart({
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-2.5 bg-[#07152f]">
-        <span className="text-[10px] font-black text-amber uppercase tracking-[0.12em]">
+      <div className="flex items-center justify-between px-5 py-2.5 bg-[#111827]">
+        <span className="text-[10px] font-black text-white uppercase tracking-[0.12em]">
           REPORTE DIARIO — {dateLabel}
         </span>
-        <div className="flex items-center gap-3 text-[9px] font-bold text-white/[0.35] uppercase tracking-[0.06em]">
+        <div className="flex items-center gap-3 text-[9px] font-bold text-white/[0.45] uppercase tracking-[0.06em]">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444] inline-block" />0–69%</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b] inline-block" />70–99%</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16a34a] inline-block" />100–160%</span>
@@ -355,15 +355,17 @@ function WelcomeAreaChart({
   };
 
   return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 pb-3">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.12em]">{title}</span>
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+      {/* Header negro */}
+      <div className="flex items-center justify-between px-5 py-2.5 bg-[#111827]">
+        <span className="text-[10px] font-black text-white uppercase tracking-[0.12em]">{title}</span>
         <div className="flex gap-2">
-          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.12] dark:bg-amber/[0.1] text-amber-3 dark:text-amber rounded-full">Contactos</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-100 dark:bg-blue-500/[0.1] text-blue-600 dark:text-blue-400 rounded-full">Reuniones</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-green-100 dark:bg-green-500/[0.1] text-green-600 dark:text-green-400 rounded-full">Cierres</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.15] text-amber rounded-full">Contactos</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-500/[0.15] text-blue-400 rounded-full">Reuniones</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-green-500/[0.15] text-green-400 rounded-full">Cierres</span>
         </div>
       </div>
+      <div className="p-5 pb-3">
       <ReactApexChart
         type="area"
         series={[
@@ -374,6 +376,7 @@ function WelcomeAreaChart({
         options={opts}
         height={220}
       />
+      </div>
     </div>
   );
 }
