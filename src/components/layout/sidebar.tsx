@@ -86,6 +86,8 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Settings Menu ───────────────────────────────────────────────── */
+const MENU_BTN = "flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer w-full text-white";
+
 function SettingsMenu({
   onClose, onImport, onApiSettings, onColWidths,
 }: {
@@ -99,40 +101,28 @@ function SettingsMenu({
   return (
     <div
       style={{
-        position: "fixed", left: 52, bottom: 60, zIndex: 300,
-        background: "#07152f", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 12, padding: 10, width: 240,
-        boxShadow: "0 18px 50px rgba(0,0,0,0.55)", display: "flex",
-        flexDirection: "column", gap: 2,
+        position: "fixed", left: 52, bottom: 44, zIndex: 300,
+        background: "#07152f", border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 14, padding: 8, width: 220,
+        boxShadow: "0 18px 50px rgba(0,0,0,0.6)",
+        display: "flex", flexDirection: "column", gap: 1,
       }}
     >
-      <button
-        className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-[#1e3a5f] hover:text-[#4b7ab5]"
-        onClick={() => { onImport(); onClose(); }}
-      >
-        <Upload size={13} /> Importar leads
+      <button className={MENU_BTN} onClick={() => { onImport(); onClose(); }}>
+        <Upload size={14} /> Importar leads
       </button>
-      <button
-        className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-[#1e3a5f] hover:text-[#4b7ab5]"
-        onClick={() => { onApiSettings(); onClose(); }}
-      >
-        <Settings size={13} /> Link API
+      <button className={MENU_BTN} onClick={() => { onApiSettings(); onClose(); }}>
+        <Settings size={14} /> Link API
       </button>
-      <button
-        className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-[#1e3a5f] hover:text-[#4b7ab5]"
-        onClick={() => { onColWidths(); onClose(); }}
-      >
-        <Settings size={13} /> Ancho columnas
+      <button className={MENU_BTN} onClick={() => { onColWidths(); onClose(); }}>
+        <Settings size={14} /> Ancho columnas
       </button>
-      <button
-        className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-[#1e3a5f] hover:text-[#4b7ab5]"
-        onClick={() => {
-          const v = window.prompt("Escala (0.5–1.5):", String(settings.systemScale ?? 1));
-          if (v !== null) { const n = parseFloat(v); if (!isNaN(n) && n >= 0.5 && n <= 1.5) update({ systemScale: n }); }
-          onClose();
-        }}
-      >
-        <Settings size={13} /> Escalar sistema
+      <button className={MENU_BTN} onClick={() => {
+        const v = window.prompt("Escala (0.5–1.5):", String(settings.systemScale ?? 1));
+        if (v !== null) { const n = parseFloat(v); if (!isNaN(n) && n >= 0.5 && n <= 1.5) update({ systemScale: n }); }
+        onClose();
+      }}>
+        <Settings size={14} /> Escalar sistema
       </button>
     </div>
   );
@@ -345,10 +335,13 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             return (
               <div key={key}>
                 {/* Workspace header */}
+                {/* Workspace header */}
                 <button
                   className={[
                     "w-full flex items-center gap-2.5 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.06em] transition-colors border-none bg-transparent cursor-pointer",
-                    isActiveWS ? "text-amber" : "text-white hover:text-white",
+                    isActiveWS
+                      ? "text-amber"
+                      : "text-white hover:bg-white/[0.06]",
                   ].join(" ")}
                   onClick={() => switchWorkspace(key)}
                 >
@@ -356,7 +349,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                   <span>{wsLabel}</span>
                   <ChevronDown
                     size={11}
-                    className={`ml-auto transition-transform duration-200 ${isActiveWS ? "rotate-0 opacity-60" : "-rotate-90 opacity-30"}`}
+                    className={`ml-auto transition-transform duration-200 ${isActiveWS ? "rotate-0" : "-rotate-90"}`}
                   />
                 </button>
 
@@ -372,8 +365,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                           className={[
                             "flex items-center gap-2 pl-8 pr-3.5 py-[6px] text-[12px] font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden",
                             isActive(link.href)
-                              ? "text-amber bg-amber/[0.07] font-bold"
-                              : "text-white hover:text-white hover:bg-white/[0.06]",
+                              ? "text-amber bg-amber/[0.08] font-bold"
+                              : "text-white hover:bg-white/[0.06]",
                           ].join(" ")}
                         >
                           <NavIcon size={12} />
@@ -385,7 +378,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                 )}
 
                 {/* Separador entre workspaces */}
-                <div className="mx-3.5 my-1 border-b border-white/[0.05]" />
+                <div className="mx-3.5 my-1 border-b border-white/[0.08]" />
               </div>
             );
           })}
