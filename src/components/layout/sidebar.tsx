@@ -121,14 +121,14 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
       boxShadow: "0 18px 50px rgba(0,0,0,0.6)",
       display: "flex", flexDirection: "column", gap: 1,
     }}>
-      <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={14} /> Importar leads</button>
-      <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={14} /> Link API</button>
-      <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={14} /> Ancho columnas</button>
+      <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar leads</button>
+      <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
+      <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
       <button className={MBTN} onClick={() => {
         const v = window.prompt("Escala (0.5–1.5):", String(settings.systemScale ?? 1));
         if (v !== null) { const n = parseFloat(v); if (!isNaN(n) && n >= 0.5 && n <= 1.5) update({ systemScale: n }); }
         onClose();
-      }}><Settings size={14} /> Escalar sistema</button>
+      }}><Settings size={17} /> Escalar sistema</button>
     </div>
   );
 }
@@ -194,7 +194,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           title={collapsed ? "Expandir" : "Colapsar"}
         >
           {/* SVG logo */}
-          <svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26" className="flex-shrink-0">
+          <svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="31" height="31" className="flex-shrink-0">
             <rect x="1" y="1" width="9" height="38" rx="4" fill="#f6bf26"/>
             <path fillRule="evenodd" clipRule="evenodd"
               d="M26 2C17.163 2 10 9.163 10 18C10 26.837 17.163 34 26 34C34.837 34 42 26.837 42 18C42 9.163 34.837 2 26 2ZM26 10C30.418 10 34 13.582 34 18C34 22.418 30.418 26 26 26C21.582 26 18 22.418 18 18C18 13.582 21.582 10 26 10Z"
@@ -204,7 +204,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             BIOMKT
           </span>
           <ChevronLeft
-            size={13}
+            size={16}
             className="text-white/40 flex-shrink-0 transition-transform duration-200"
             style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
           />
@@ -215,7 +215,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
           {/* Dashboard General */}
           <Link href="/general" className={navItem(isActive("/general"))}>
-            <BarChart3 size={15} className="flex-shrink-0 min-w-[20px]" />
+            <BarChart3 size={18} className="flex-shrink-0 min-w-[20px]" />
             <span className={lbl}>Dashboard General</span>
           </Link>
 
@@ -236,10 +236,10 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                   }`}
                   onClick={() => switchWorkspace(key)}
                 >
-                  <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><Icon size={15} /></span>
+                  <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><Icon size={18} /></span>
                   <span className={`flex-1 text-left ${lbl}`}>{wsLabel}</span>
                   <ChevronDown
-                    size={11}
+                    size={13}
                     className="flex-shrink-0 transition-transform duration-200"
                     style={{ transform: isActiveWS ? "rotate(0deg)" : "rotate(-90deg)" }}
                   />
@@ -261,7 +261,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                           }`}
                           style={{ paddingLeft: 36 }}
                         >
-                          <span className="flex-shrink-0 min-w-[16px] flex items-center justify-center"><NavIcon size={13} /></span>
+                          <span className="flex-shrink-0 min-w-[16px] flex items-center justify-center"><NavIcon size={16} /></span>
                           <span className={lbl}>{link.label}</span>
                         </Link>
                       );
@@ -289,8 +289,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             >
               <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
                 {saving
-                  ? <RefreshCw size={14} className="animate-spin" />
-                  : dirty ? <FloppyIcon size={14} /> : <FloppyCheckIcon size={14} />
+                  ? <RefreshCw size={17} className="animate-spin" />
+                  : dirty ? <FloppyIcon size={17} /> : <FloppyCheckIcon size={17} />
                 }
               </span>
               <span className={lbl}>{saving ? "Guardando…" : dirty ? "Guardar" : "Guardado"}</span>
@@ -305,7 +305,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
             >
               <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-                <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
+                <RefreshCw size={17} className={syncing ? "animate-spin" : ""} />
               </span>
               <span className={lbl}>{syncing ? "Sincronizando…" : "Sincronizar"}</span>
             </button>
@@ -318,7 +318,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             title={settings.darkMode ? "Modo claro" : "Modo noche"}
           >
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-              {settings.darkMode ? <Sun size={14} /> : <Moon size={14} />}
+              {settings.darkMode ? <Sun size={17} /> : <Moon size={17} />}
             </span>
             <span className={lbl}>{settings.darkMode ? "Modo claro" : "Modo noche"}</span>
           </button>
@@ -330,7 +330,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             title="Notificaciones"
           >
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-              <Bell size={14} />
+              <Bell size={17} />
             </span>
             <span className={lbl}>Notificaciones</span>
           </button>
@@ -343,7 +343,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             title="Configuración"
           >
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-              <Settings size={14} />
+              <Settings size={17} />
             </span>
             <span className={lbl}>Configuración</span>
           </button>
