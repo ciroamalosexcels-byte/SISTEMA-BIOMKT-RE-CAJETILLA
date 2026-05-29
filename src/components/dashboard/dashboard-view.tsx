@@ -1,307 +1,352 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
 import { todayBA, currentMonthBA } from "@/lib/dates";
+import { ReactApexChart } from "@/components/ui/apex-chart";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
+} from "@/components/ui/table";
 import type { Lead } from "@/types";
+import type { ApexOptions } from "apexcharts";
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+const MONTH_NAMES = [
+  "ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
+  "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE",
+];
 
 function monthLabel(m: string) {
   const [y, mo] = m.split("-").map(Number);
   return `${MONTH_NAMES[mo - 1]} DE ${y}`;
 }
-
 function shiftMonth(m: string, delta: number) {
   const [y, mo] = m.split("-").map(Number);
   const d = new Date(y, mo - 1 + delta, 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
-
 function countByMember(rows: Lead[], member: string) {
   return rows.filter((r) => r.responsable1 === member || r.responsable2 === member).length;
 }
+function pctColor(pct: number) {
+  if (pct >= 120) return "#22c55e";
+  if (pct >= 100) return "#16a34a";
+  if (pct >= 70)  return "#f59e0b";
+  return "#ef4444";
+}
 
-// ── Day Bar Chart ─────────────────────────────────────────────────────
-function DayBarChart({ title, data, barH = 110 }: { title: string; data: { label: string; value: number }[]; barH?: number }) {
-  const days = data.length || 1;
-  const max = Math.max(1, ...data.map((d) => d.value));
+// ── KPI Card con sparkline ────────────────────────────────────────────
+function KpiCard({
+  label, value, trend, series, color, dark,
+}: {
+  label: string; value: number; trend: number; series: number[];
+  color: string; dark: boolean;
+}) {
+  const sparkOpts: ApexOptions = {
+    chart: {
+      type: "area",
+      sparkline: { enabled: true },
+      background: "transparent",
+      animations: { enabled: true, speed: 600 },
+    },
+    stroke: { curve: "smooth", width: 2.5 },
+    fill: {
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.35,
+        opacityTo: 0.02,
+        stops: [0, 100],
+      },
+    },
+    colors: [color],
+    tooltip: {
+      fixed: { enabled: false },
+      x: { show: false },
+      y: { formatter: (v: number) => String(v) },
+      theme: dark ? "dark" : "light",
+      marker: { show: false },
+    },
+    theme: { mode: dark ? "dark" : "light" },
+  };
 
   return (
-    <article className="stat-wide" style={{ "--days": days } as React.CSSProperties}>
-      <h3 className="stat-wide-title">{title}</h3>
-      <div className="month-chart-wide">
-        <div className="bars-area-wide" style={{ minHeight: barH }}>
-          {data.map((d) => {
-            const height = Math.max(5, Math.round((d.value / max) * (barH - 35)));
-            return (
-              <div key={d.label} className="bar-wrap-wide">
-                <div className="bar-val-wide">{d.value > 0 ? d.value : ""}</div>
-                <div className="bar-wide" style={{ height }} />
-              </div>
-            );
-          })}
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+      <div className="flex items-start justify-between px-[18px] pt-5 pb-3">
+        <div>
+          <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5 font-mono">{label}</div>
+          <div className="text-4xl font-black leading-none [font-variant-numeric:tabular-nums]" style={{ color }}>{value.toLocaleString("es-AR")}</div>
         </div>
-        <div className="days-row-wide">
-          {data.map((d) => (
-            <div key={d.label} className="day-label-wide">{d.label}</div>
-          ))}
+        <div className={`text-[11px] font-black px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 font-mono ${trend >= 0 ? "bg-green-100 dark:bg-green-500/[0.1] text-green-700 dark:text-green-400" : "bg-red-100 dark:bg-red-500/[0.1] text-red-700 dark:text-red-400"}`}>
+          {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
         </div>
       </div>
-    </article>
-  );
-}
-
-// ── Monthly Area Chart ────────────────────────────────────────────────
-interface MonthSerie { label: string; contactos: number; reuniones: number; clientes: number; }
-
-interface TooltipState { i: number; x: number; y: number; }
-
-function MonthAreaChart({ data, title = "Crecimiento mensual" }: { data: MonthSerie[]; title?: string }) {
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-
-  const W = 1000;
-  const H = 180;
-  const PAD = { top: 18, right: 16, bottom: 36, left: 36 };
-  const iW = W - PAD.left - PAD.right;
-  const iH = H - PAD.top - PAD.bottom;
-  const n = data.length || 1;
-
-  const maxVal = Math.max(1,
-    ...data.map((d) => d.contactos),
-    ...data.map((d) => d.reuniones),
-    ...data.map((d) => d.clientes),
-  );
-
-  const xOf = (i: number) => PAD.left + (i / Math.max(n - 1, 1)) * iW;
-  const yOf = (v: number) => PAD.top + iH - (v / maxVal) * iH;
-
-  function polyPoints(key: keyof MonthSerie) {
-    if (n === 1) {
-      const x = xOf(0); const y = yOf(data[0][key] as number);
-      return `${PAD.left},${PAD.top + iH} ${x},${y} ${PAD.left + iW},${PAD.top + iH}`;
-    }
-    const top = data.map((d, i) => `${xOf(i)},${yOf(d[key] as number)}`).join(" ");
-    return `${PAD.left},${PAD.top + iH} ${top} ${PAD.left + iW},${PAD.top + iH}`;
-  }
-
-  function linePath(key: keyof MonthSerie) {
-    return data.map((d, i) => `${i === 0 ? "M" : "L"}${xOf(i)},${yOf(d[key] as number)}`).join(" ");
-  }
-
-  const series: { key: keyof MonthSerie; color: string; label: string }[] = [
-    { key: "contactos", color: "#ef4444", label: "Contactos" },
-    { key: "reuniones", color: "#f6bf26", label: "Reuniones" },
-    { key: "clientes",  color: "#3b82f6", label: "Clientes cerrados" },
-  ];
-
-  const TW = 160; const TH = 72; const TP = 10;
-
-  return (
-    <article className="stat-wide">
-      <h3 className="stat-wide-title">{title}</h3>
-      <div className="area-chart-legend">
-        {series.map((s) => (
-          <span key={s.key} className="area-legend-item">
-            <svg width="28" height="12" viewBox="0 0 28 12" aria-hidden="true">
-              <line x1="0" y1="6" x2="28" y2="6" stroke={s.color} strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="14" cy="6" r="4" fill={s.color} stroke="#fff" strokeWidth="1.5" />
-            </svg>
-            {s.label}
-          </span>
-        ))}
-      </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
-        <defs>
-          {series.map((s) => (
-            <linearGradient key={s.key} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={s.color} stopOpacity="0.35" />
-              <stop offset="100%" stopColor={s.color} stopOpacity="0.03" />
-            </linearGradient>
-          ))}
-        </defs>
-
-        {/* grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((f) => {
-          const y = PAD.top + iH * (1 - f);
-          return (
-            <g key={f}>
-              <line x1={PAD.left} x2={PAD.left + iW} y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8" fontWeight="700">
-                {Math.round(maxVal * f)}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* areas */}
-        {series.map((s) => (
-          <polygon key={s.key} points={polyPoints(s.key)} fill={`url(#grad-${s.key})`} />
-        ))}
-
-        {/* lines */}
-        {series.map((s) => (
-          <path key={s.key} d={linePath(s.key)} fill="none" stroke={s.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-        ))}
-
-        {/* hover vertical line */}
-        {tooltip && (
-          <line
-            x1={xOf(tooltip.i)} x2={xOf(tooltip.i)}
-            y1={PAD.top} y2={PAD.top + iH}
-            stroke="#07152f" strokeWidth="1" strokeDasharray="3 3" opacity="0.4"
-            pointerEvents="none"
-          />
-        )}
-
-        {/* dots con hover */}
-        {series.map((s) =>
-          data.map((d, i) => (
-            <circle
-              key={`${s.key}-${i}`}
-              cx={xOf(i)} cy={yOf(d[s.key] as number)}
-              r={tooltip?.i === i ? 6 : 4}
-              fill={s.color}
-              stroke="#fff"
-              strokeWidth={tooltip?.i === i ? 2 : 1.5}
-              style={{ cursor: "pointer" }}
-              onMouseEnter={() => setTooltip({ i, x: xOf(i), y: Math.min(yOf(d[s.key] as number), PAD.top + 10) })}
-              onMouseLeave={() => setTooltip(null)}
-            />
-          ))
-        )}
-
-        {/* invisible wide hover zones por columna */}
-        {data.map((d, i) => (
-          <rect
-            key={`hz-${i}`}
-            x={xOf(i) - (iW / Math.max(n - 1, 1)) / 2}
-            y={PAD.top}
-            width={iW / Math.max(n - 1, 1)}
-            height={iH}
-            fill="transparent"
-            onMouseEnter={() => setTooltip({ i, x: xOf(i), y: PAD.top })}
-            onMouseLeave={() => setTooltip(null)}
-          />
-        ))}
-
-        {/* x labels */}
-        {data.map((d, i) => (
-          <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="10" fontWeight="700"
-            fill={tooltip?.i === i ? "#07152f" : "#64748b"}>
-            {d.label}
-          </text>
-        ))}
-
-        {/* tooltip box */}
-        {tooltip && (() => {
-          const d = data[tooltip.i];
-          const tx = Math.min(tooltip.x, W - TW - 4);
-          const ty = PAD.top - 4;
-          return (
-            <g pointerEvents="none">
-              <rect x={tx} y={ty} width={TW} height={TH} rx="7" ry="7" fill="#07152f" opacity="0.92" />
-              <text x={tx + TP} y={ty + TP + 11} fontSize="11" fontWeight="900" fill="#f6bf26">{d.label}</text>
-              <circle cx={tx + TP + 5} cy={ty + TP + 24} r="4" fill="#ef4444" />
-              <text x={tx + TP + 13} y={ty + TP + 28} fontSize="10" fontWeight="700" fill="#fff">Contactos: {d.contactos}</text>
-              <circle cx={tx + TP + 5} cy={ty + TP + 38} r="4" fill="#f6bf26" />
-              <text x={tx + TP + 13} y={ty + TP + 42} fontSize="10" fontWeight="700" fill="#fff">Reuniones: {d.reuniones}</text>
-              <circle cx={tx + TP + 5} cy={ty + TP + 52} r="4" fill="#3b82f6" />
-              <text x={tx + TP + 13} y={ty + TP + 56} fontSize="10" fontWeight="700" fill="#fff">Clientes: {d.clientes}</text>
-            </g>
-          );
-        })()}
-      </svg>
-    </article>
-  );
-}
-
-// ── Dashboard Box Table ───────────────────────────────────────────────
-interface BoxRow {
-  label: string;
-  values: number[];
-  accent?: boolean;
-  editable?: boolean;
-  onEdit?: (memberIndex: number, value: number) => void;
-}
-
-function DashboardBox({ title, members, rows: tableRows, memberDots, totalDot }: { title: string; members: string[]; rows: BoxRow[]; memberDots?: string[]; totalDot?: string }) {
-  const settings = useAppSettings((s) => s.settings);
-  const lw = settings.dashboardLabelWidth || 200;
-  const mw = settings.dashboardMemberWidth || 128;
-  const tw = settings.dashboardTotalWidth || 160;
-  const fs = settings.dashboardFontSize || 17;
-
-  return (
-    <div className="box" style={{ "--dashboard-number-font-size": `${fs}px` } as React.CSSProperties}>
-      <div className="box-scroll">
-        <table>
-          <colgroup>
-            <col style={{ width: lw }} />
-            {members.map((m) => <col key={m} style={{ width: mw }} />)}
-            <col style={{ width: tw }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{title}</th>
-              {members.map((m, i) => (
-                <th key={m}>
-                  {memberDots?.[i] && (
-                    <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: "50%", background: memberDots[i], marginRight: 6, verticalAlign: "middle", flexShrink: 0 }} />
-                  )}
-                  {m}
-                </th>
-              ))}
-              <th>
-                {totalDot && (
-                  <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: "50%", background: totalDot, marginRight: 6, verticalAlign: "middle", flexShrink: 0 }} />
-                )}
-                TOTAL GRUPAL
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableRows.map((row) => {
-              const total = row.values.reduce((a, b) => a + b, 0);
-              return (
-                <tr key={row.label} className={row.accent ? "accent" : ""}>
-                  <td>{row.label}</td>
-                  {row.values.map((v, i) =>
-                    row.editable ? (
-                      <td key={i}>
-                        <input
-                          className="box-number box-goal-input"
-                          type="text"
-                          inputMode="numeric"
-                          value={v || ""}
-                          onChange={(e) => {
-                            const n = parseInt(e.target.value, 10);
-                            if (!isNaN(n) && row.onEdit) row.onEdit(i, n);
-                            else if (e.target.value === "" && row.onEdit) row.onEdit(i, 0);
-                          }}
-                        />
-                      </td>
-                    ) : (
-                      <td key={i}><span className="box-number">{v}</span></td>
-                    )
-                  )}
-                  <td><span className="box-number">{total}</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="-mx-0">
+        <ReactApexChart
+          type="area"
+          series={[{ data: series }]}
+          options={sparkOpts}
+          height={70}
+        />
       </div>
     </div>
   );
 }
 
-// ── Main View ─────────────────────────────────────────────────────────
+// ── Main area chart (bienvenida) ──────────────────────────────────────
+function WelcomeAreaChart({
+  categories, contactos, reuniones, cierres, title, dark,
+}: {
+  categories: string[]; contactos: number[]; reuniones: number[];
+  cierres: number[]; title: string; dark: boolean;
+}) {
+  const opts: ApexOptions = {
+    chart: {
+      type: "area",
+      background: "transparent",
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: true, speed: 800 },
+    },
+    theme: { mode: dark ? "dark" : "light" },
+    colors: ["#f6bf26", "#3b82f6", "#22c55e"],
+    stroke: { curve: "smooth", width: 2.5 },
+    fill: {
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.2,
+        opacityTo: 0.01,
+        stops: [0, 100],
+      },
+    },
+    dataLabels: { enabled: false },
+    markers: { size: 0, hover: { size: 5 } },
+    xaxis: {
+      categories,
+      labels: {
+        style: {
+          fontSize: "10px",
+          fontFamily: "var(--font-mono, monospace)",
+          colors: dark ? "#334155" : "#94a3b8",
+          fontWeight: 700,
+        },
+        rotate: 0,
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      tickAmount: Math.min(categories.length, 10),
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontSize: "10px",
+          fontFamily: "var(--font-mono, monospace)",
+          colors: dark ? "#334155" : "#94a3b8",
+          fontWeight: 700,
+        },
+      },
+    },
+    grid: {
+      borderColor: dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)",
+      strokeDashArray: 3,
+      padding: { left: 0, right: 0, top: -10, bottom: 0 },
+    },
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "right",
+      fontFamily: "var(--font-mono, monospace)",
+      fontSize: "11px",
+      fontWeight: 700,
+      labels: { colors: dark ? "#64748b" : "#94a3b8" },
+      markers: { size: 5 },
+    },
+    tooltip: {
+      theme: dark ? "dark" : "light",
+      shared: true,
+      intersect: false,
+      x: { formatter: (v: string | number) => `Día ${v}` },
+    },
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] p-5 pb-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.12em] font-mono">{title}</span>
+        <div className="flex gap-2">
+          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.12] dark:bg-amber/[0.1] text-amber-3 dark:text-amber rounded-full font-mono">Contactos</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-100 dark:bg-blue-500/[0.1] text-blue-600 dark:text-blue-400 rounded-full font-mono">Reuniones</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-green-100 dark:bg-green-500/[0.1] text-green-600 dark:text-green-400 rounded-full font-mono">Cierres</span>
+        </div>
+      </div>
+      <ReactApexChart
+        type="area"
+        series={[
+          { name: "Contactos", data: contactos },
+          { name: "Reuniones", data: reuniones },
+          { name: "Cierres",   data: cierres },
+        ]}
+        options={opts}
+        height={220}
+      />
+    </div>
+  );
+}
+
+// ── Bar chart por métrica ─────────────────────────────────────────────
+function MetricBarChart({
+  title, data, color, dark,
+}: {
+  title: string; data: { label: string; value: number }[];
+  color: string; dark: boolean;
+}) {
+  const opts: ApexOptions = {
+    chart: {
+      type: "bar",
+      background: "transparent",
+      toolbar: { show: false },
+      animations: { enabled: true, speed: 600 },
+    },
+    theme: { mode: dark ? "dark" : "light" },
+    colors: [color],
+    plotOptions: {
+      bar: {
+        borderRadius: 3,
+        columnWidth: "70%",
+      },
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: data.map((d) => d.label),
+      labels: {
+        show: true,
+        style: {
+          fontSize: "8px",
+          fontFamily: "var(--font-mono, monospace)",
+          colors: dark ? "#1e3a5f" : "#cbd5e1",
+          fontWeight: 700,
+        },
+        formatter: (v: string) => {
+          const n = parseInt(v);
+          return n === 1 || n % 5 === 0 ? v : "";
+        },
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: { labels: { show: false } },
+    grid: { show: false, padding: { left: -10, right: -10, top: -15, bottom: 0 } },
+    tooltip: {
+      theme: dark ? "dark" : "light",
+      x: { formatter: (v: string | number) => `Día ${v}` },
+      y: { formatter: (v: number) => String(v) },
+    },
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] p-4 pb-1">
+      <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-0.5 font-mono">{title}</div>
+      <ReactApexChart
+        type="bar"
+        series={[{ data: data.map((d) => d.value) }]}
+        options={opts}
+        height={140}
+      />
+    </div>
+  );
+}
+
+// ── shadcn Table para datos ───────────────────────────────────────────
+interface BoxRow {
+  label: string;
+  values: number[];
+  accent?: boolean;
+  editable?: boolean;
+  onEdit?: (i: number, v: number) => void;
+  valueColors?: string[];
+}
+
+function DashTable({
+  title, subtitle, members, rows: tableRows, memberDots, totalDot,
+}: {
+  title: string; subtitle?: string; members: string[]; rows: BoxRow[];
+  memberDots?: string[]; totalDot?: string;
+}) {
+  const fs = useAppSettings((s) => s.settings.dashboardFontSize) || 16;
+  return (
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+      <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
+        <span className="text-[10px] font-black text-amber tracking-[0.12em] uppercase font-mono">{title}</span>
+        {subtitle && <span className="text-[9px] font-bold text-white/[0.22] tracking-[0.08em] uppercase whitespace-nowrap font-mono">{subtitle}</span>}
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-[#07152f] border-b-0 hover:bg-[#07152f]">
+            <TableHead className="text-left bg-amber text-bio-dark min-w-[160px] border-r-black/[0.12]">MÉTRICA</TableHead>
+            {members.map((m, i) => (
+              <TableHead key={m} className="bg-[#111827]">
+                {memberDots?.[i] && <span className="inline-block w-[7px] h-[7px] rounded-full mr-1.5 align-middle" style={{ background: memberDots[i] }} />}
+                {m}
+              </TableHead>
+            ))}
+            <TableHead className="bg-[#111827]">
+              {totalDot && <span className="inline-block w-[7px] h-[7px] rounded-full mr-1.5 align-middle" style={{ background: totalDot }} />}
+              TOTAL
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tableRows.map((row) => {
+            const total = row.values.reduce((a, b) => a + b, 0);
+            return (
+              <TableRow key={row.label}>
+                <TableCell
+                  className="text-left border-r-0 px-4 whitespace-normal leading-tight"
+                  style={{ background: "#111827", color: "#f1f5f9", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "var(--font-mono, monospace)" }}
+                >
+                  {row.label}
+                </TableCell>
+                {row.values.map((v, i) => (
+                  <TableCell key={i} className={row.accent ? "bg-amber/[0.08] dark:bg-amber/[0.06]" : ""}>
+                    {row.editable ? (
+                      <input
+                        type="text" inputMode="numeric" value={v || ""}
+                        className="font-black bg-transparent border-none outline-none text-center cursor-text w-14 [font-variant-numeric:tabular-nums] text-amber-3"
+                        style={{ fontSize: fs }}
+                        onChange={(e) => {
+                          const n = parseInt(e.target.value, 10);
+                          if (!isNaN(n) && row.onEdit) row.onEdit(i, n);
+                          else if (e.target.value === "" && row.onEdit) row.onEdit(i, 0);
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="font-black [font-variant-numeric:tabular-nums] text-slate-900 dark:text-slate-200"
+                        style={{ ...(row.valueColors?.[i] ? { color: row.valueColors[i] } : {}), fontSize: fs }}
+                      >
+                        {v}
+                      </span>
+                    )}
+                  </TableCell>
+                ))}
+                <TableCell className={row.accent ? "bg-amber/[0.08] dark:bg-amber/[0.06]" : ""}>
+                  <span className="font-black [font-variant-numeric:tabular-nums] text-slate-900 dark:text-slate-200" style={{ fontSize: fs }}>{total}</span>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+// ── Dashboard View ────────────────────────────────────────────────────
 export function DashboardView() {
   const rows = useLeadsStore((s) => s.rows);
   const members = useTeamStore((s) => s.members);
@@ -310,7 +355,11 @@ export function DashboardView() {
 
   const today = todayBA();
   const currentYear = today.slice(0, 4);
-  const [selectedMonth, setSelectedMonth] = useState(settings.calendarViewMonth || currentMonthBA());
+  const [selectedMonth, setSelectedMonth] = useState(
+    settings.calendarViewMonth || currentMonthBA()
+  );
+
+  const dark = settings.darkMode ?? false;
   const memberNames = members.map((m) => m.nombre);
 
   const dailyGoals = settings.dailyGoals ?? {};
@@ -325,75 +374,85 @@ export function DashboardView() {
   const isR1R2 = (r: Lead) => r.tab === "REUNION_1" || r.tab === "REUNION_2";
   const isCli  = (r: Lead) => r.tab === "CLIENTES";
 
-  const memberDots = memberNames.map((n) => {
-    const contacts = countByMember(todayRows, n);
-    const goal = getGoal(n);
-    const pct = goal > 0 ? (contacts / goal) * 100 : 0;
-    if (pct >= 120) return "#52ff00";
-    if (pct >= 100) return "#157a4d";
-    if (pct >= 70)  return "#ffc21a";
-    return "#ff1616";
-  });
-
-  const totalTodayContacts = memberNames.reduce((sum, n) => sum + countByMember(todayRows, n), 0);
-  const totalGoal = memberNames.reduce((sum, n) => sum + getGoal(n), 0);
-  const totalPct = totalGoal > 0 ? (totalTodayContacts / totalGoal) * 100 : 0;
-  const totalDot = totalPct >= 120 ? "#52ff00" : totalPct >= 100 ? "#157a4d" : totalPct >= 70 ? "#ffc21a" : "#ff1616";
-
   const handleMonth = (m: string) => {
     setSelectedMonth(m);
     updateSettings({ calendarViewMonth: m });
   };
 
-  // Day-of-month chart data
   const [y, mo] = selectedMonth.split("-").map(Number);
   const daysInMonth = new Date(y, mo, 0).getDate();
 
-  // Monthly growth data — daily breakdown of the selected month
-  const monthlyData: MonthSerie[] = Array.from({ length: daysInMonth }, (_, i) => {
-    const day = i + 1;
-    const dateKey = `${selectedMonth}-${pad(day)}`;
-    const dRows = rows.filter((r) => r.fechaContacto?.startsWith(dateKey));
-    return {
-      label: String(day),
-      contactos: dRows.length,
-      reuniones: dRows.filter(isR1R2).length,
-      clientes:  dRows.filter(isCli).length,
-    };
-  });
+  // ── Daily series for current month ──
+  const dailySeries = useMemo(() => (
+    Array.from({ length: daysInMonth }, (_, i) => {
+      const dk = `${selectedMonth}-${pad(i + 1)}`;
+      const dr = rows.filter((r) => r.fechaContacto?.startsWith(dk));
+      return {
+        label: String(i + 1),
+        contactos: dr.length,
+        reuniones: dr.filter(isR1R2).length,
+        clientes:  dr.filter(isCli).length,
+      };
+    })
+  ), [rows, selectedMonth, daysInMonth]); // eslint-disable-line
 
-  // Yearly growth data — 12 months of the current year
-  const yearlyData: MonthSerie[] = Array.from({ length: 12 }, (_, i) => {
-    const mm = pad(i + 1);
-    const monthKey = `${currentYear}-${mm}`;
-    const mRows = rows.filter((r) => r.fechaContacto?.startsWith(monthKey));
-    return {
-      label: MONTH_NAMES[i].slice(0, 3),
-      contactos: mRows.length,
-      reuniones: mRows.filter(isR1R2).length,
-      clientes:  mRows.filter(isCli).length,
-    };
+  // ── Last month for trend ──
+  const lastMonth = shiftMonth(selectedMonth, -1);
+  const lastMonthRows = rows.filter((r) => r.fechaContacto?.startsWith(lastMonth));
+
+  const monthContacts  = monthRows.length;
+  const monthMeetings  = monthRows.filter(isR1R2).length;
+  const monthClosings  = monthRows.filter(isCli).length;
+  const lastContacts   = lastMonthRows.length;
+  const lastMeetings   = lastMonthRows.filter(isR1R2).length;
+  const lastClosings   = lastMonthRows.filter(isCli).length;
+
+  const trend = (cur: number, prev: number) =>
+    prev > 0 ? Math.round(((cur - prev) / prev) * 100) : 0;
+
+  // ── Member performance ──
+  const memberDots = memberNames.map((n) => {
+    const c = countByMember(todayRows, n);
+    const g = getGoal(n);
+    return pctColor(g > 0 ? (c / g) * 100 : 0);
   });
+  const contactColors = memberDots; // same colors for the number cells
+
+  const totalTodayC = memberNames.reduce((s, n) => s + countByMember(todayRows, n), 0);
+  const totalGoal   = memberNames.reduce((s, n) => s + getGoal(n), 0);
+  const totalDot    = pctColor(totalGoal > 0 ? (totalTodayC / totalGoal) * 100 : 0);
 
   function dayData(filter: (r: Lead) => boolean) {
-    return Array.from({ length: daysInMonth }, (_, i) => {
-      const day = i + 1;
-      const dateKey = `${selectedMonth}-${pad(day)}`;
-      return {
-        label: String(day),
-        value: rows.filter((r) => r.fechaContacto?.startsWith(dateKey) && filter(r)).length,
-      };
-    });
+    return dailySeries.map((d) => ({
+      label: d.label,
+      value: rows.filter((r) => r.fechaContacto?.startsWith(`${selectedMonth}-${pad(parseInt(d.label))}`) && filter(r)).length,
+    }));
   }
 
+  const monthShort = MONTH_NAMES[mo - 1]?.slice(0, 3) ?? "";
+  const cats = dailySeries.map((d) => d.label);
+
+  // ── Yearly area chart ──
+  const yearlyData = Array.from({ length: 12 }, (_, i) => {
+    const mk = `${currentYear}-${pad(i + 1)}`;
+    const mr = rows.filter((r) => r.fechaContacto?.startsWith(mk));
+    return {
+      label: MONTH_NAMES[i].slice(0, 3),
+      contactos: mr.length,
+      reuniones: mr.filter(isR1R2).length,
+      clientes:  mr.filter(isCli).length,
+    };
+  });
+
   const DEFAULT_LAYOUT = [
-    { id: "nav", visible: true, order: 0 },
-    { id: "hoy", visible: true, order: 1 },
-    { id: "anio", visible: true, order: 2 },
-    { id: "mes", visible: true, order: 3 },
-    { id: "barras", visible: true, order: 4 },
-    { id: "area_mensual", visible: true, order: 5 },
-    { id: "area_anual", visible: true, order: 6 },
+    { id: "nav",          visible: true, order: 0 },
+    { id: "kpi",          visible: true, order: 1 },
+    { id: "area_mensual", visible: true, order: 2 },
+    { id: "barras",       visible: true, order: 3 },
+    { id: "hoy",          visible: true, order: 4 },
+    { id: "anio",         visible: true, order: 5 },
+    { id: "mes",          visible: true, order: 6 },
+    { id: "area_anual",   visible: true, order: 7 },
   ];
   const layout = (() => {
     const saved = settings.dashboardLayout ?? [];
@@ -404,72 +463,152 @@ export function DashboardView() {
     return [...merged].sort((a, b) => a.order - b.order);
   })();
 
-  const chartH = Math.round(110 * (settings.chartScale ?? 1));
-
   const sectionMap: Record<string, React.ReactNode> = {
+    // ── Selector de mes
     nav: (
-      <div className="dashboard-month-controls-clean">
-        <button className="calendar-mini-btn" type="button" onClick={() => handleMonth(shiftMonth(selectedMonth, -1))}>‹</button>
-        <div className="calendar-month-label-v11">{monthLabel(selectedMonth)}</div>
-        <button className="calendar-mini-btn" type="button" onClick={() => handleMonth(shiftMonth(selectedMonth, 1))}>›</button>
-        <button className="month-current-btn" type="button" onClick={() => handleMonth(currentMonthBA())}>MES ACTUAL</button>
+      <div className="flex items-center justify-center gap-2.5">
+        <button
+          className="w-9 h-9 rounded-full bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center cursor-pointer text-slate-900 dark:text-slate-400 text-xl font-bold hover:bg-amber hover:text-bio-dark hover:border-amber transition-all flex-shrink-0"
+          onClick={() => handleMonth(shiftMonth(selectedMonth, -1))}
+        >‹</button>
+        <span className="text-[22px] font-black text-slate-900 dark:text-slate-200 tracking-tight min-w-[300px] text-center">
+          {monthLabel(selectedMonth)}
+        </span>
+        <button
+          className="w-9 h-9 rounded-full bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center cursor-pointer text-slate-900 dark:text-slate-400 text-xl font-bold hover:bg-amber hover:text-bio-dark hover:border-amber transition-all flex-shrink-0"
+          onClick={() => handleMonth(shiftMonth(selectedMonth, 1))}
+        >›</button>
+        <button
+          className="px-[18px] py-2 bg-amber text-bio-dark border-none text-[11px] font-black cursor-pointer hover:opacity-85 transition-opacity tracking-[0.1em]"
+          onClick={() => handleMonth(currentMonthBA())}
+        >HOY</button>
       </div>
     ),
+
+    // ── KPI Cards (welcome)
+    kpi: (
+      <div className="grid grid-cols-3 gap-3.5">
+        <KpiCard label="Contactados del mes" value={monthContacts} trend={trend(monthContacts, lastContacts)} series={dailySeries.map((d) => d.contactos)} color="#f6bf26" dark={dark} />
+        <KpiCard label="Reuniones del mes"   value={monthMeetings} trend={trend(monthMeetings, lastMeetings)} series={dailySeries.map((d) => d.reuniones)} color="#3b82f6" dark={dark} />
+        <KpiCard label="Cierres del mes"     value={monthClosings} trend={trend(monthClosings, lastClosings)} series={dailySeries.map((d) => d.clientes)} color="#22c55e" dark={dark} />
+      </div>
+    ),
+
+    // ── Área bienvenida
+    area_mensual: (
+      <WelcomeAreaChart
+        title={`CRECIMIENTO MENSUAL — ${monthLabel(selectedMonth)}`}
+        categories={cats}
+        contactos={dailySeries.map((d) => d.contactos)}
+        reuniones={dailySeries.map((d) => d.reuniones)}
+        cierres={dailySeries.map((d) => d.clientes)}
+        dark={dark}
+      />
+    ),
+
+    // ── Gráficos de barras
+    barras: (
+      <section className="flex flex-col gap-3.5">
+        <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-slate-200">{`GRÁFICOS DIARIOS (${monthShort})`}</h3>
+        <div className="grid grid-cols-3 gap-3.5">
+          <MetricBarChart title="Contactos CRM" data={dayData((r) => r.tab === "CRM")} color="#f6bf26" dark={dark} />
+          <MetricBarChart title="Reuniones"     data={dayData(isR1R2)} color="#3b82f6" dark={dark} />
+          <MetricBarChart title="Cierres"       data={dayData(isCli)}  color="#22c55e" dark={dark} />
+        </div>
+      </section>
+    ),
+
+    // ── Tabla HOY
     hoy: (
-      <DashboardBox
-        title={`HOY ${today.split("-").reverse().join("/")}`}
+      <DashTable
+        title={`REPORTE DIARIO — ${today.split("-").reverse().slice(0, 2).join("/")}`}
+        subtitle="HOY"
         members={memberNames}
         memberDots={memberDots}
         totalDot={totalDot}
         rows={[
-          { label: "TOTAL CONTACTADOS", values: memberNames.map((n) => countByMember(todayRows, n)) },
-          { label: "TOTAL DE REUNIONES", values: memberNames.map((n) => countByMember(todayRows.filter(isR1R2), n)) },
-          { label: "OBJETIVO DIARIO", values: memberNames.map((n) => getGoal(n)), accent: true, editable: true, onEdit: (i, v) => setGoal(memberNames[i], v) },
+          {
+            label: "TOTAL CONTACTADOS",
+            values: memberNames.map((n) => countByMember(todayRows, n)),
+            valueColors: contactColors,
+          },
+          {
+            label: "TOTAL REUNIONES",
+            values: memberNames.map((n) => countByMember(todayRows.filter(isR1R2), n)),
+          },
+          {
+            label: "OBJETIVO DIARIO",
+            values: memberNames.map((n) => getGoal(n)),
+            accent: true,
+            editable: true,
+            onEdit: (i, v) => setGoal(memberNames[i], v),
+          },
         ]}
       />
     ),
+
+    // ── Tabla AÑO
     anio: (
-      <DashboardBox
-        title={currentYear}
+      <DashTable
+        title={`TABLA AÑO (${currentYear})`}
+        subtitle="ACUMULADO ANUAL"
         members={memberNames}
         rows={[
           { label: "TOTAL CONTACTADOS", values: memberNames.map((n) => countByMember(yearRows, n)) },
-          { label: "TOTAL DE REUNIONES", values: memberNames.map((n) => countByMember(yearRows.filter(isR1R2), n)) },
-          { label: "TOTAL DE CIERRES", values: memberNames.map((n) => countByMember(yearRows.filter(isCli), n)), accent: true },
+          { label: "TOTAL REUNIONES",   values: memberNames.map((n) => countByMember(yearRows.filter(isR1R2), n)) },
+          { label: "TOTAL CIERRES",     values: memberNames.map((n) => countByMember(yearRows.filter(isCli), n)), accent: true },
         ]}
       />
     ),
+
+    // ── Tabla MES
     mes: (
-      <DashboardBox
-        title={monthLabel(selectedMonth)}
+      <DashTable
+        title={`TABLA MES (${monthLabel(selectedMonth)})`}
+        subtitle="TOTALES MENSUALES"
         members={memberNames}
         rows={[
           { label: "TOTAL CONTACTADOS", values: memberNames.map((n) => countByMember(monthRows, n)) },
-          { label: "TOTAL DE REUNIONES", values: memberNames.map((n) => countByMember(monthRows.filter(isR1R2), n)) },
+          { label: "TOTAL REUNIONES",   values: memberNames.map((n) => countByMember(monthRows.filter(isR1R2), n)) },
           { label: "CLIENTES CERRADOS", values: memberNames.map((n) => countByMember(monthRows.filter(isCli), n)), accent: true },
         ]}
       />
     ),
-    barras: (
-      <div className="charts-grid">
-        <DayBarChart title={`Contactos CRM - ${monthLabel(selectedMonth)}`} data={dayData((r) => r.tab === "CRM")} barH={chartH} />
-        <DayBarChart title={`Reuniones generadas - ${monthLabel(selectedMonth)}`} data={dayData(isR1R2)} barH={chartH} />
-        <DayBarChart title={`Clientes cerrados - ${monthLabel(selectedMonth)}`} data={dayData(isCli)} barH={chartH} />
-      </div>
+
+    // ── Área anual
+    area_anual: (
+      <WelcomeAreaChart
+        title={`CRECIMIENTO ANUAL — ${currentYear}`}
+        categories={yearlyData.map((d) => d.label)}
+        contactos={yearlyData.map((d) => d.contactos)}
+        reuniones={yearlyData.map((d) => d.reuniones)}
+        cierres={yearlyData.map((d) => d.clientes)}
+        dark={dark}
+      />
     ),
-    area_mensual: <MonthAreaChart title={`Crecimiento mensual ${monthLabel(selectedMonth)}`} data={monthlyData} />,
-    area_anual:   <MonthAreaChart title={`Crecimiento anual ${currentYear}`} data={yearlyData} />,
   };
 
-  return (
-    <div className="dashboard">
-      <div className="dashboard-main">
-        <div className="dashboard-left">
-          {layout.filter((s) => s.visible).map((s) => (
-            <div key={s.id}>{sectionMap[s.id]}</div>
-          ))}
+  /* Agrupar mes + anio side-by-side */
+  const visible = layout.filter((s) => s.visible);
+  const rendered: React.ReactNode[] = [];
+  let i = 0;
+  while (i < visible.length) {
+    const s = visible[i];
+    const next = visible[i + 1];
+    const isTable = (id: string) => id === "mes" || id === "anio";
+    if (isTable(s.id) && next && isTable(next.id)) {
+      rendered.push(
+        <div key="tables-pair" className="grid grid-cols-2 gap-4">
+          {sectionMap[s.id]}
+          {sectionMap[next.id]}
         </div>
-      </div>
-    </div>
-  );
+      );
+      i += 2;
+    } else {
+      rendered.push(<div key={s.id}>{sectionMap[s.id]}</div>);
+      i++;
+    }
+  }
+
+  return <div className="p-7 pb-12 flex flex-col gap-5 min-h-full">{rendered}</div>;
 }
