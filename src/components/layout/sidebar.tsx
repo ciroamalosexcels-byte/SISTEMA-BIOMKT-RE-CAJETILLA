@@ -215,6 +215,38 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
         <div className="flex-1" />
 
+        {/* Guardar */}
+        {onSave && (
+          <button
+            className={[
+              "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
+              dirty ? "text-amber" : "text-slate-600 hover:text-slate-400",
+            ].join(" ")}
+            title={saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving
+              ? <RefreshCw size={15} className="animate-spin" />
+              : dirty
+                ? <Save size={15} />
+                : <CheckCheck size={15} />
+            }
+          </button>
+        )}
+
+        {/* Sincronizar */}
+        {onSync && (
+          <button
+            className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+            title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
+            onClick={onSync}
+            disabled={syncing}
+          >
+            <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
+          </button>
+        )}
+
         <button
           className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
           title={settings.darkMode ? "Modo claro" : "Modo noche"}
@@ -330,37 +362,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-2 pb-2.5 pt-2 border-t border-white/[0.05] flex flex-col gap-0.5 flex-shrink-0 min-w-[200px]">
-          {onSave && (
-            <button
-              className={[
-                "flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer",
-                dirty ? "text-amber" : "text-white hover:text-white",
-              ].join(" ")}
-              onClick={onSave}
-              disabled={saving}
-            >
-              {saving
-                ? <RefreshCw size={13} className="animate-spin" />
-                : dirty
-                  ? <Save size={13} />
-                  : <CheckCheck size={13} />
-              }
-              <span>{saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}</span>
-            </button>
-          )}
-          {onSync && (
-            <button
-              className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-white"
-              onClick={onSync}
-              disabled={syncing}
-            >
-              <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
-              <span>{syncing ? "Sincronizando…" : "Sincronizar Sheets"}</span>
-            </button>
-          )}
-        </div>
       </aside>
 
       {/* Expand button when collapsed */}
