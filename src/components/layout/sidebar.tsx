@@ -204,9 +204,30 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
     <>
       {/* ── Rail ─────────────────────────────────────────────────── */}
       <aside className="w-[52px] bg-bio-rail flex flex-col items-center py-3 gap-1 z-50 border-r border-white/[0.04] flex-shrink-0">
-        {/* Logo */}
-        <div className="w-[34px] h-[34px] bg-amber text-bio-dark rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0">
-          B
+        {/* Logo SVG */}
+        <div className="w-[36px] h-[36px] flex items-center justify-center flex-shrink-0 mb-0.5">
+          <svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+            {/* Barra vertical izquierda */}
+            <rect x="1" y="1" width="9" height="38" rx="4" fill="#f6bf26"/>
+            {/* Anillo (donut) derecho — fill-rule evenodd crea el agujero */}
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="
+                M 26 2
+                C 17.163 2 10 9.163 10 18
+                C 10 26.837 17.163 34 26 34
+                C 34.837 34 42 26.837 42 18
+                C 42 9.163 34.837 2 26 2 Z
+                M 26 10
+                C 30.418 10 34 13.582 34 18
+                C 34 22.418 30.418 26 26 26
+                C 21.582 26 18 22.418 18 18
+                C 18 13.582 21.582 10 26 10 Z
+              "
+              fill="#f6bf26"
+            />
+          </svg>
         </div>
 
         {/* Toggle colapsar/expandir — siempre en el mismo lugar */}
