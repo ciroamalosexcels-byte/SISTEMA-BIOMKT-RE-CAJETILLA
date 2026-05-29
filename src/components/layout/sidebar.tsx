@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   TrendingUp, Users, Building2,
   Moon, Sun, RefreshCw, Upload, Save, CheckCheck,
-  ChevronLeft, ChevronRight, Bell, Settings,
+  ChevronLeft, ChevronRight, ChevronDown, Bell, Settings,
   LayoutDashboard, GitMerge, UserCheck, CalendarDays,
   ClipboardList, Map, FileText, Users2, MessageSquare,
   BriefcaseBusiness,
@@ -186,32 +186,14 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
   return (
     <>
-      {/* ── Rail ─────────────────────────────────────────────────── */}
+      {/* ── Rail — solo utilidades ───────────────────────────────── */}
       <aside className="w-[52px] bg-bio-rail flex flex-col items-center py-3 gap-1 z-50 border-r border-white/[0.04] flex-shrink-0">
-        {/* Logo */}
         <div className="w-[34px] h-[34px] bg-amber text-bio-dark rounded-lg flex items-center justify-center text-sm font-black mb-2.5 flex-shrink-0">
           B
         </div>
 
-        {WORKSPACE_CONFIGS.map(({ key, Icon, label }) => (
-          <button
-            key={key}
-            className={[
-              "w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none flex-shrink-0",
-              mode === key
-                ? "bg-amber/[0.14] text-amber"
-                : "bg-transparent text-slate-600 hover:bg-white/[0.06] hover:text-slate-400",
-            ].join(" ")}
-            onClick={() => switchWorkspace(key)}
-            title={label}
-          >
-            <Icon size={18} />
-          </button>
-        ))}
-
         <div className="flex-1" />
 
-        {/* Dark / Light toggle */}
         <button
           className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
           title={settings.darkMode ? "Modo claro" : "Modo noche"}
@@ -220,7 +202,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           {settings.darkMode ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        {/* Notifications */}
         <button
           className={[
             "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
@@ -232,7 +213,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           <Bell size={16} />
         </button>
 
-        {/* Settings */}
         <button
           ref={settingsRef}
           className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
@@ -262,8 +242,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
       >
         {/* Panel header */}
         <div className="px-3.5 pt-3.5 pb-2.5 flex items-center justify-between border-b border-white/[0.05] flex-shrink-0 whitespace-nowrap overflow-hidden">
-          <span className="text-[10px] font-black text-amber tracking-[0.1em] uppercase">
-            {WORKSPACE_TITLES[mode]}
+          <span className="text-[11px] font-black text-white tracking-[0.06em] uppercase">
+            BIOMKT
           </span>
           <button
             className="w-5 h-5 rounded flex items-center justify-center text-white/30 cursor-pointer hover:text-white/60 hover:bg-white/[0.06] transition-colors bg-transparent border-none flex-shrink-0"
@@ -273,24 +253,58 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           </button>
         </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto py-1.5 min-w-[200px]">
-          {links.map((link) => {
-            const Icon = NAV_ICONS[link.key] ?? FileText;
+        {/* Nav — workspaces como ítems padre + submenu de links */}
+        <nav className="flex-1 overflow-y-auto py-2 min-w-[200px]">
+          {WORKSPACE_CONFIGS.map(({ key, Icon }) => {
+            const isActiveWS = mode === key;
+            const wsLabel = key === "ventas" ? "Ventas" : key === "clientes" ? "Clientes" : "Equipo";
+            const wsLinks = WORKSPACE_NAV[key];
+
             return (
-              <Link
-                key={link.key}
-                href={link.href}
-                className={[
-                  "flex items-center gap-2 px-3.5 py-[7px] text-xs font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden",
-                  isActive(link.href)
-                    ? "text-amber bg-amber/[0.07] font-bold"
-                    : "text-white hover:text-white hover:bg-white/[0.08]",
-                ].join(" ")}
-              >
-                <Icon size={14} />
-                <span>{link.label}</span>
-              </Link>
+              <div key={key}>
+                {/* Workspace header */}
+                <button
+                  className={[
+                    "w-full flex items-center gap-2.5 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.06em] transition-colors border-none bg-transparent cursor-pointer",
+                    isActiveWS ? "text-amber" : "text-white/60 hover:text-white",
+                  ].join(" ")}
+                  onClick={() => switchWorkspace(key)}
+                >
+                  <Icon size={13} />
+                  <span>{wsLabel}</span>
+                  <ChevronDown
+                    size={11}
+                    className={`ml-auto transition-transform duration-200 ${isActiveWS ? "rotate-0 opacity-60" : "-rotate-90 opacity-30"}`}
+                  />
+                </button>
+
+                {/* Submenu — visible solo en el workspace activo */}
+                {isActiveWS && (
+                  <div className="pb-1">
+                    {wsLinks.map((link) => {
+                      const NavIcon = NAV_ICONS[link.key] ?? FileText;
+                      return (
+                        <Link
+                          key={link.key}
+                          href={link.href}
+                          className={[
+                            "flex items-center gap-2 pl-8 pr-3.5 py-[6px] text-[12px] font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden",
+                            isActive(link.href)
+                              ? "text-amber bg-amber/[0.07] font-bold"
+                              : "text-white hover:text-white hover:bg-white/[0.06]",
+                          ].join(" ")}
+                        >
+                          <NavIcon size={12} />
+                          <span>{link.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Separador entre workspaces */}
+                <div className="mx-3.5 my-1 border-b border-white/[0.05]" />
+              </div>
             );
           })}
         </nav>
