@@ -97,9 +97,40 @@ export const WORKSPACE_OPTION_LABELS: Record<WorkspaceMode, string> = {
 
 /* Tab keys visible per workspace mode (matches VIEW_TABS_V30 from the HTML reference) */
 export const WORKSPACE_TABS: Record<WorkspaceMode, string[]> = {
-  ventas:   ["DASHBOARD", "CRM", "REUNION_1", "REUNION_2", "SEGUIMIENTO", "BASE", "CLIENTES", "EQUIPO", "CALENDARIO"],
+  ventas:   ["DASHBOARD", "SEGUIMIENTO", "CLIENTES", "EQUIPO", "CALENDARIO"],
   clientes: ["CLIENTES", "PLANIFICACION", "PLANES", "MAPA_CLIENTES", "CALENDARIO"],
   equipo:   ["EQUIPO", "COLABORADORES", "PROCEDIMIENTOS", "REUNIONES_EQUIPO"],
+};
+
+export interface WorkspaceNavItem {
+  key: string;
+  label: string;
+  href: string;
+}
+
+export const WORKSPACE_NAV: Record<WorkspaceMode, WorkspaceNavItem[]> = {
+  ventas: [
+    { key: "DASHBOARD",    label: "Dashboard",    href: "/dashboard" },
+    { key: "SEGUIMIENTO",  label: "Seguimiento",  href: "/seguimiento" },
+    { key: "CLIENTES",     label: "Clientes",     href: "/clientes" },
+    { key: "EQUIPO",       label: "Equipo",       href: "/equipo" },
+    { key: "CALENDARIO",   label: "Calendario",   href: "/calendario" },
+  ],
+  clientes: [
+    { key: "DASHBOARD_CLIENTES", label: "Dashboard",     href: "/clientes/dashboard" },
+    { key: "CLIENTES",           label: "Clientes",      href: "/clientes" },
+    { key: "PLANIFICACION",      label: "Planificación", href: "/planificacion" },
+    { key: "PLANES",             label: "Planes",        href: "/planes" },
+    { key: "MAPA_CLIENTES",      label: "Mapa",          href: "/mapa" },
+    { key: "CALENDARIO",         label: "Calendario",    href: "/calendario" },
+  ],
+  equipo: [
+    { key: "DASHBOARD_EQUIPO",   label: "Dashboard",         href: "/equipo/dashboard" },
+    { key: "EQUIPO",             label: "Equipo",            href: "/equipo" },
+    { key: "COLABORADORES",      label: "Colaboradores",     href: "/colaboradores" },
+    { key: "PROCEDIMIENTOS",     label: "Procedimientos",    href: "/procedimientos" },
+    { key: "REUNIONES_EQUIPO",   label: "Reunión de Equipo", href: "/reuniones-equipo" },
+  ],
 };
 
 export const DEFAULT_BADGE_REQUIREMENTS = {

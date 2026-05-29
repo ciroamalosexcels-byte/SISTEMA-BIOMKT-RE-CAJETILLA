@@ -20,8 +20,10 @@ import type { WorkspaceMode } from "@/lib/constants";
 
 /* ── Icon map para nav links ─────────────────────────────────────── */
 const NAV_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
-  DASHBOARD:        LayoutDashboard,
-  SEGUIMIENTO:      GitMerge,
+  DASHBOARD:           LayoutDashboard,
+  DASHBOARD_CLIENTES:  LayoutDashboard,
+  DASHBOARD_EQUIPO:    LayoutDashboard,
+  SEGUIMIENTO:         GitMerge,
   CLIENTES:         UserCheck,
   EQUIPO:           Users2,
   CALENDARIO:       CalendarDays,
