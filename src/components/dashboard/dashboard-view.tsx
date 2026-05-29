@@ -358,13 +358,8 @@ function WelcomeAreaChart({
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       {/* Header negro */}
-      <div className="flex items-center justify-between px-5 py-2.5 bg-[#111827]">
+      <div className="px-5 py-2.5 bg-[#111827]">
         <span className="text-[10px] font-black text-white uppercase tracking-[0.12em]">{title}</span>
-        <div className="flex gap-2">
-          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.15] text-amber rounded-full">Contactos</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-500/[0.15] text-blue-400 rounded-full">Reuniones</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-green-500/[0.15] text-green-400 rounded-full">Cierres</span>
-        </div>
       </div>
       <div className="p-5 pb-3">
       <ReactApexChart
