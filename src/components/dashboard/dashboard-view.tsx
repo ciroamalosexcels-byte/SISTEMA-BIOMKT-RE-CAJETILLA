@@ -193,6 +193,8 @@ function DailyReportChart({
     },
     yaxis: {
       min: 0,
+      max: (computed: number) => Math.max(computed + 1, 10),
+      tickAmount: 5,
       labels: {
         style: {
           fontSize: "10px",
