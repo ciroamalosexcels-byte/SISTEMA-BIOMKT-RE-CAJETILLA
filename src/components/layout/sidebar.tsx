@@ -201,7 +201,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               "w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none flex-shrink-0",
               mode === key
                 ? "bg-amber/[0.14] text-amber"
-                : "bg-transparent text-slate-500 hover:bg-white/[0.06] hover:text-slate-300",
+                : "bg-transparent text-white/50 hover:bg-white/[0.06] hover:text-white",
             ].join(" ")}
             onClick={() => {
               switchWorkspace(key);
@@ -220,7 +220,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           <button
             className={[
               "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
-              dirty ? "text-amber" : "text-slate-600 hover:text-slate-400",
+              dirty ? "text-amber" : "text-white/60 hover:text-white",
             ].join(" ")}
             title={saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}
             onClick={onSave}
@@ -238,7 +238,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         {/* Sincronizar */}
         {onSync && (
           <button
-            className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
             title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
             onClick={onSync}
             disabled={syncing}
@@ -248,7 +248,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         )}
 
         <button
-          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
           title={settings.darkMode ? "Modo claro" : "Modo noche"}
           onClick={() => update({ darkMode: !settings.darkMode })}
         >
@@ -258,7 +258,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         <button
           className={[
             "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
-            hasUnread ? "text-amber" : "text-slate-600 hover:text-slate-400",
+            hasUnread ? "text-amber" : "text-white/60 hover:text-white",
           ].join(" ")}
           title="Notificaciones"
           onClick={() => setNotifOpen(true)}
@@ -268,7 +268,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
         <button
           ref={settingsRef}
-          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-slate-600 hover:text-slate-400 hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
           title="Configuración"
           onClick={() => setSettingsOpen((v) => !v)}
         >
