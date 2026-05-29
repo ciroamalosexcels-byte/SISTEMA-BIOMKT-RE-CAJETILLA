@@ -107,9 +107,10 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
 /* ── Settings popup ──────────────────────────────────────────────── */
 const MBTN = "flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer w-full text-white";
 
-function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW }: {
+function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, syncing, sidebarW }: {
   onClose: () => void; onImport: () => void;
   onApiSettings: () => void; onColWidths: () => void;
+  onSync?: () => void; syncing?: boolean;
   sidebarW: number;
 }) {
   const { settings, update } = useAppSettings();
@@ -117,10 +118,26 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
     <div style={{
       position: "fixed", left: sidebarW + 4, bottom: 44, zIndex: 300,
       background: "#07152f", border: "1px solid rgba(255,255,255,0.1)",
-      borderRadius: 14, padding: 8, width: 220,
+      borderRadius: 14, padding: 8, width: 228,
       boxShadow: "0 18px 50px rgba(0,0,0,0.6)",
       display: "flex", flexDirection: "column", gap: 1,
     }}>
+      {/* Modo noche */}
+      <button className={MBTN} onClick={() => { update({ darkMode: !settings.darkMode }); onClose(); }}>
+        {settings.darkMode ? <Sun size={17} /> : <Moon size={17} />}
+        {settings.darkMode ? "Modo claro" : "Modo noche"}
+      </button>
+
+      {/* Sincronizar */}
+      {onSync && (
+        <button className={MBTN} onClick={() => { onSync(); onClose(); }} disabled={syncing}>
+          <RefreshCw size={17} className={syncing ? "animate-spin" : ""} />
+          {syncing ? "Sincronizando…" : "Sincronizar Sheets"}
+        </button>
+      )}
+
+      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "4px 8px" }} />
+
       <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar leads</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
@@ -297,32 +314,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             </button>
           )}
 
-          {/* Sincronizar */}
-          {onSync && (
-            <button
-              className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
-              onClick={onSync} disabled={syncing}
-              title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
-            >
-              <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-                <RefreshCw size={17} className={syncing ? "animate-spin" : ""} />
-              </span>
-              <span className={lbl}>{syncing ? "Sincronizando…" : "Sincronizar"}</span>
-            </button>
-          )}
-
-          {/* Modo noche */}
-          <button
-            className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
-            onClick={() => update({ darkMode: !settings.darkMode })}
-            title={settings.darkMode ? "Modo claro" : "Modo noche"}
-          >
-            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-              {settings.darkMode ? <Sun size={17} /> : <Moon size={17} />}
-            </span>
-            <span className={lbl}>{settings.darkMode ? "Modo claro" : "Modo noche"}</span>
-          </button>
-
           {/* Notificaciones */}
           <button
             className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold transition-colors whitespace-nowrap ${hasUnread ? "text-amber hover:bg-amber/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
@@ -358,6 +349,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           onImport={() => setImportOpen(true)}
           onApiSettings={() => setApiSettingsOpen(true)}
           onColWidths={() => setColWidthsOpen(true)}
+          onSync={onSync}
+          syncing={syncing}
           sidebarW={sidebarW}
         />
       )}
