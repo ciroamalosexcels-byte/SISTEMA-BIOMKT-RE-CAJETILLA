@@ -75,13 +75,13 @@ function KpiCard({
   };
 
   return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       <div className="flex items-start justify-between px-[18px] pt-5 pb-3">
         <div>
-          <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5 font-mono">{label}</div>
+          <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">{label}</div>
           <div className="text-4xl font-black leading-none [font-variant-numeric:tabular-nums]" style={{ color }}>{value.toLocaleString("es-AR")}</div>
         </div>
-        <div className={`text-[11px] font-black px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 font-mono ${trend >= 0 ? "bg-green-100 dark:bg-green-500/[0.1] text-green-700 dark:text-green-400" : "bg-red-100 dark:bg-red-500/[0.1] text-red-700 dark:text-red-400"}`}>
+        <div className={`text-[11px] font-black px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${trend >= 0 ? "bg-green-100 dark:bg-green-500/[0.1] text-green-700 dark:text-green-400" : "bg-red-100 dark:bg-red-500/[0.1] text-red-700 dark:text-red-400"}`}>
           {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
         </div>
       </div>
@@ -92,6 +92,145 @@ function KpiCard({
           options={sparkOpts}
           height={70}
         />
+      </div>
+    </div>
+  );
+}
+
+// ── Reporte Diario — gráfico combo barras + línea objetivo ───────────
+function DailyReportChart({
+  memberNames, contactados, reuniones, objetivos, setGoal, today, dark,
+}: {
+  memberNames: string[];
+  contactados: number[];
+  reuniones: number[];
+  objetivos: number[];
+  setGoal: (name: string, val: number) => void;
+  today: string;
+  dark: boolean;
+}) {
+  const dateLabel = today.split("-").reverse().slice(0, 2).join("/");
+
+  const opts: ApexOptions = {
+    chart: {
+      type: "line",
+      background: "transparent",
+      toolbar: { show: false },
+      animations: { enabled: true, speed: 700 },
+    },
+    theme: { mode: dark ? "dark" : "light" },
+    colors: ["#f6bf26", "#3b82f6", "#94a3b8"],
+    stroke: {
+      width: [0, 0, 2.5],
+      curve: "straight",
+      dashArray: [0, 0, 6],
+    },
+    fill: { opacity: [0.85, 0.7, 1] },
+    plotOptions: {
+      bar: { borderRadius: 3, columnWidth: "50%" },
+    },
+    dataLabels: {
+      enabled: true,
+      enabledOnSeries: [0, 1],
+      style: {
+        fontSize: "10px",
+        fontWeight: "900",
+        fontFamily: "Poppins, sans-serif",
+      },
+      formatter: (val: number) => (val > 0 ? String(val) : ""),
+      background: { enabled: false },
+    },
+    xaxis: {
+      categories: memberNames,
+      labels: {
+        style: {
+          fontSize: "11px",
+          fontFamily: "Poppins, sans-serif",
+          colors: Array(memberNames.length).fill(dark ? "#4b6a8a" : "#94a3b8"),
+          fontWeight: "700",
+        },
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      min: 0,
+      labels: {
+        style: {
+          fontSize: "10px",
+          fontFamily: "Poppins, sans-serif",
+          colors: dark ? "#334155" : "#94a3b8",
+          fontWeight: "700",
+        },
+      },
+    },
+    grid: {
+      borderColor: dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)",
+      strokeDashArray: 3,
+      padding: { top: -10, bottom: 0 },
+    },
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "right",
+      fontFamily: "Poppins, sans-serif",
+      fontSize: "10px",
+      fontWeight: "700",
+      labels: { colors: dark ? "#64748b" : "#94a3b8" },
+      markers: { size: 5 },
+    },
+    tooltip: {
+      theme: dark ? "dark" : "light",
+      shared: true,
+      intersect: false,
+    },
+    markers: {
+      size: [0, 0, 5],
+      hover: { size: 7 },
+    },
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-2.5 bg-[#07152f]">
+        <span className="text-[10px] font-black text-amber uppercase tracking-[0.12em]">
+          REPORTE DIARIO — {dateLabel}
+        </span>
+        <span className="text-[9px] font-bold text-white/[0.25] uppercase tracking-[0.08em]">HOY</span>
+      </div>
+
+      <ReactApexChart
+        type="line"
+        series={[
+          { name: "Contactados", type: "bar",  data: contactados },
+          { name: "Reuniones",   type: "bar",  data: reuniones },
+          { name: "Objetivo",    type: "line", data: objetivos },
+        ]}
+        options={opts}
+        height={220}
+      />
+
+      {/* Fila editable de objetivos por miembro */}
+      <div className="px-5 py-3 border-t border-slate-100 dark:border-white/[0.04] flex items-center gap-3 flex-wrap">
+        <span className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.08em] flex-shrink-0">
+          Objetivo diario:
+        </span>
+        {memberNames.map((name, i) => (
+          <div key={name} className="flex items-center gap-1">
+            <span className="text-[9px] font-bold text-slate-400 dark:text-[#1e3a5f]">{name}</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={objetivos[i] || ""}
+              className="w-9 h-6 text-center text-[11px] font-black bg-amber/[0.08] dark:bg-amber/[0.06] border border-amber/[0.25] dark:border-amber/[0.2] outline-none text-amber-3 dark:text-amber focus:bg-amber/[0.15] transition-colors"
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                if (!isNaN(n)) setGoal(name, n);
+                else if (e.target.value === "") setGoal(name, 0);
+              }}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -131,7 +270,7 @@ function WelcomeAreaChart({
       labels: {
         style: {
           fontSize: "10px",
-          fontFamily: "var(--font-mono, monospace)",
+          fontFamily: "Poppins, sans-serif",
           colors: dark ? "#334155" : "#94a3b8",
           fontWeight: 700,
         },
@@ -145,7 +284,7 @@ function WelcomeAreaChart({
       labels: {
         style: {
           fontSize: "10px",
-          fontFamily: "var(--font-mono, monospace)",
+          fontFamily: "Poppins, sans-serif",
           colors: dark ? "#334155" : "#94a3b8",
           fontWeight: 700,
         },
@@ -160,7 +299,7 @@ function WelcomeAreaChart({
       show: true,
       position: "top",
       horizontalAlign: "right",
-      fontFamily: "var(--font-mono, monospace)",
+      fontFamily: "Poppins, sans-serif",
       fontSize: "11px",
       fontWeight: 700,
       labels: { colors: dark ? "#64748b" : "#94a3b8" },
@@ -175,13 +314,13 @@ function WelcomeAreaChart({
   };
 
   return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] p-5 pb-3">
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 pb-3">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.12em] font-mono">{title}</span>
+        <span className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.12em]">{title}</span>
         <div className="flex gap-2">
-          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.12] dark:bg-amber/[0.1] text-amber-3 dark:text-amber rounded-full font-mono">Contactos</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-100 dark:bg-blue-500/[0.1] text-blue-600 dark:text-blue-400 rounded-full font-mono">Reuniones</span>
-          <span className="text-[9px] font-black px-2 py-0.5 bg-green-100 dark:bg-green-500/[0.1] text-green-600 dark:text-green-400 rounded-full font-mono">Cierres</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-amber/[0.12] dark:bg-amber/[0.1] text-amber-3 dark:text-amber rounded-full">Contactos</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-blue-100 dark:bg-blue-500/[0.1] text-blue-600 dark:text-blue-400 rounded-full">Reuniones</span>
+          <span className="text-[9px] font-black px-2 py-0.5 bg-green-100 dark:bg-green-500/[0.1] text-green-600 dark:text-green-400 rounded-full">Cierres</span>
         </div>
       </div>
       <ReactApexChart
@@ -227,7 +366,7 @@ function MetricBarChart({
         show: true,
         style: {
           fontSize: "8px",
-          fontFamily: "var(--font-mono, monospace)",
+          fontFamily: "Poppins, sans-serif",
           colors: dark ? "#1e3a5f" : "#cbd5e1",
           fontWeight: 700,
         },
@@ -249,8 +388,8 @@ function MetricBarChart({
   };
 
   return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] p-4 pb-1">
-      <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-0.5 font-mono">{title}</div>
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-4 pb-1">
+      <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-0.5">{title}</div>
       <ReactApexChart
         type="bar"
         series={[{ data: data.map((d) => d.value) }]}
@@ -279,10 +418,10 @@ function DashTable({
 }) {
   const fs = useAppSettings((s) => s.settings.dashboardFontSize) || 16;
   return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
-        <span className="text-[10px] font-black text-amber tracking-[0.12em] uppercase font-mono">{title}</span>
-        {subtitle && <span className="text-[9px] font-bold text-white/[0.22] tracking-[0.08em] uppercase whitespace-nowrap font-mono">{subtitle}</span>}
+        <span className="text-[10px] font-black text-amber tracking-[0.12em] uppercase">{title}</span>
+        {subtitle && <span className="text-[9px] font-bold text-white/[0.22] tracking-[0.08em] uppercase whitespace-nowrap">{subtitle}</span>}
       </div>
       <Table>
         <TableHeader>
@@ -307,7 +446,7 @@ function DashTable({
               <TableRow key={row.label}>
                 <TableCell
                   className="text-left border-r-0 px-4 whitespace-normal leading-tight"
-                  style={{ background: "#111827", color: "#f1f5f9", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "var(--font-mono, monospace)" }}
+                  style={{ background: "#111827", color: "#f1f5f9", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "Poppins, sans-serif", }}
                 >
                   {row.label}
                 </TableCell>
@@ -518,32 +657,16 @@ export function DashboardView() {
       </section>
     ),
 
-    // ── Tabla HOY
+    // ── Reporte Diario — gráfico
     hoy: (
-      <DashTable
-        title={`REPORTE DIARIO — ${today.split("-").reverse().slice(0, 2).join("/")}`}
-        subtitle="HOY"
-        members={memberNames}
-        memberDots={memberDots}
-        totalDot={totalDot}
-        rows={[
-          {
-            label: "TOTAL CONTACTADOS",
-            values: memberNames.map((n) => countByMember(todayRows, n)),
-            valueColors: contactColors,
-          },
-          {
-            label: "TOTAL REUNIONES",
-            values: memberNames.map((n) => countByMember(todayRows.filter(isR1R2), n)),
-          },
-          {
-            label: "OBJETIVO DIARIO",
-            values: memberNames.map((n) => getGoal(n)),
-            accent: true,
-            editable: true,
-            onEdit: (i, v) => setGoal(memberNames[i], v),
-          },
-        ]}
+      <DailyReportChart
+        memberNames={memberNames}
+        contactados={memberNames.map((n) => countByMember(todayRows, n))}
+        reuniones={memberNames.map((n) => countByMember(todayRows.filter(isR1R2), n))}
+        objetivos={memberNames.map((n) => getGoal(n))}
+        setGoal={(name, val) => setGoal(name, val)}
+        today={today}
+        dark={dark}
       />
     ),
 
@@ -610,5 +733,5 @@ export function DashboardView() {
     }
   }
 
-  return <div className="p-7 pb-12 flex flex-col gap-5 min-h-full">{rendered}</div>;
+  return <div className="px-7 pt-7 pb-12 flex flex-col gap-5 min-h-full">{rendered}</div>;
 }

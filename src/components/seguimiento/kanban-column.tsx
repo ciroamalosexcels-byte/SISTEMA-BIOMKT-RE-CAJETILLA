@@ -48,7 +48,7 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
   return (
     <div
       ref={setNodeRef}
-      className={`flex-shrink-0 w-[220px] border flex flex-col max-h-[calc(100vh-110px)] transition-colors ${
+      className={`flex-shrink-0 w-[220px] border rounded-[14px] flex flex-col max-h-[calc(100vh-110px)] transition-colors ${
         isOver
           ? "bg-amber/[0.04] border-amber/[0.2]"
           : "bg-black/[0.03] dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.05]"

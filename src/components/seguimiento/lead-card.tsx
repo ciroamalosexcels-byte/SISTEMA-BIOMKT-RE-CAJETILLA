@@ -64,7 +64,7 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform) }}
-      className={`bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] p-[10px_11px] cursor-pointer transition-all select-none shadow-sm group ${
+      className={`bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl p-[10px_11px] cursor-pointer transition-all select-none shadow-sm group ${
         isDragging ? "opacity-40 rotate-1" : "hover:border-amber hover:-translate-y-px hover:shadow-md"
       }`}
       onClick={onClick}

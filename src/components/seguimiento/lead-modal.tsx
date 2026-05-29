@@ -86,7 +86,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const activeStage = stages.find(s => s.id === stageId);
 
   /* Shared input/select/textarea classes */
-  const inputCls = "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] focus:bg-white dark:focus:bg-white/[0.05] w-full transition-colors";
+  const inputCls = "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-md py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] focus:bg-white dark:focus:bg-white/[0.05] w-full transition-colors";
 
   return (
     <div
@@ -94,7 +94,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[680px] bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.07] max-h-[92vh] flex flex-col shadow-[0_24px_60px_rgba(15,23,42,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.65)] text-slate-900 dark:text-slate-200"
+        className="w-full max-w-[680px] bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.07] rounded-[18px] max-h-[92vh] flex flex-col shadow-[0_24px_60px_rgba(15,23,42,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.65)] text-slate-900 dark:text-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
 
