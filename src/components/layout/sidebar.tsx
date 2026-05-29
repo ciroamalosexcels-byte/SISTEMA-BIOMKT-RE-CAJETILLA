@@ -359,14 +359,14 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                 {/* Workspace header */}
                 <button
                   className={[
-                    "w-full flex items-center gap-2.5 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.06em] transition-colors border-none bg-transparent cursor-pointer",
+                    "w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-bold transition-colors border-none bg-transparent cursor-pointer",
                     isActiveWS
                       ? "text-amber"
                       : "text-white hover:bg-white/[0.06]",
                   ].join(" ")}
                   onClick={() => switchWorkspace(key)}
                 >
-                  <Icon size={13} />
+                  <Icon size={14} />
                   <span>{wsLabel}</span>
                   <ChevronDown
                     size={11}
