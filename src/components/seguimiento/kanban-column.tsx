@@ -55,7 +55,7 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
       }`}
     >
       {/* ── Header ─────────────────────────────────────── */}
-      <div className="px-3 py-2.5 flex items-center gap-[7px] border-b border-slate-200 dark:border-white/[0.04] flex-shrink-0 group">
+      <div className="px-3 py-2.5 flex items-center gap-[7px] flex-shrink-0 group bg-[#07152f]">
         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: stage.color }} />
         {editing ? (
           <>
@@ -64,11 +64,11 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
               value={editLabel}
               onChange={e => setEditLabel(e.target.value)}
               onKeyDown={e => e.key === "Enter" && saveEdit()}
-              className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded px-[7px] py-0.5 text-[11px] font-bold text-slate-200 outline-none"
+              className="flex-1 bg-white/[0.1] border border-white/[0.2] rounded px-[7px] py-0.5 text-[11px] font-bold text-white outline-none"
             />
             <div className="flex gap-1 flex-wrap" style={{ maxWidth: 80 }}>
               {["#38bdf8","#a78bfa","#f472b6","#fb923c","#4ade80","#facc15","#e879f9","#f87171","#94a3b8","#67e8f9"].map(c => (
-                <div key={c} onClick={() => setEditColor(c)} className="w-3 h-3 rounded-full cursor-pointer flex-shrink-0 ring-offset-1" style={{ background: c, outline: editColor === c ? `2px solid ${c}` : "none", outlineOffset: 1 }} />
+                <div key={c} onClick={() => setEditColor(c)} className="w-3 h-3 rounded-full cursor-pointer flex-shrink-0" style={{ background: c, outline: editColor === c ? `2px solid ${c}` : "none", outlineOffset: 1 }} />
               ))}
             </div>
             <button onClick={saveEdit} className="bg-transparent border-none cursor-pointer text-green-400 flex-shrink-0"><Check size={13} /></button>
@@ -76,9 +76,9 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
           </>
         ) : (
           <>
-            <span className="text-[11px] font-black tracking-[0.04em] uppercase flex-1 truncate" style={{ color: stage.color }}>{stage.label}</span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-600 bg-black/[0.05] dark:bg-white/[0.04] px-[7px] py-px rounded-full font-bold">{leads.length}</span>
-            <button className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-slate-400 cursor-pointer bg-transparent border-none hover:text-amber transition-all" onClick={() => setEditing(true)}>
+            <span className="text-[11px] font-black tracking-[0.04em] uppercase flex-1 truncate text-white">{stage.label}</span>
+            <span className="text-[10px] text-white/50 bg-white/[0.1] px-[7px] py-px rounded-full font-bold">{leads.length}</span>
+            <button className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-white/50 cursor-pointer bg-transparent border-none hover:text-amber transition-all" onClick={() => setEditing(true)}>
               <Pencil size={11} />
             </button>
           </>
