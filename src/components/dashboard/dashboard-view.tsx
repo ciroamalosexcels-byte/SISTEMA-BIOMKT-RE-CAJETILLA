@@ -630,9 +630,7 @@ export function DashboardView() {
     { id: "area_mensual", visible: true, order: 2 },
     { id: "barras",       visible: true, order: 3 },
     { id: "hoy",          visible: true, order: 4 },
-    { id: "anio",         visible: true, order: 5 },
-    { id: "mes",          visible: true, order: 6 },
-    { id: "area_anual",   visible: true, order: 7 },
+    { id: "area_anual",   visible: true, order: 5 },
   ];
   const layout = (() => {
     const saved = settings.dashboardLayout ?? [];
