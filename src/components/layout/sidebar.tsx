@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Bell, Settings,
   LayoutDashboard, GitMerge, UserCheck, CalendarDays,
   ClipboardList, Map, FileText, Users2, MessageSquare,
-  BriefcaseBusiness,
+  BriefcaseBusiness, BarChart3,
 } from "lucide-react";
 import { useAppSettings } from "@/store/app-settings";
 import { ApiSettingsModal } from "./api-settings-modal";
@@ -348,6 +348,22 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
         {/* Nav — workspaces como ítems padre + submenu de links */}
         <nav className="flex-1 overflow-y-auto py-2 min-w-[200px]">
+
+          {/* Dashboard General — vista transversal de las 3 áreas */}
+          <Link
+            href="/general"
+            className={[
+              "flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-bold no-underline transition-colors whitespace-nowrap",
+              isActive("/general")
+                ? "text-amber bg-amber/[0.08]"
+                : "text-white hover:bg-white/[0.06]",
+            ].join(" ")}
+          >
+            <BarChart3 size={14} />
+            <span>Dashboard General</span>
+          </Link>
+          <div className="mx-3.5 my-1.5 border-b border-white/[0.08]" />
+
           {WORKSPACE_CONFIGS.map(({ key, Icon }) => {
             const isActiveWS = mode === key;
             const wsLabel = key === "ventas" ? "Ventas" : key === "clientes" ? "Clientes" : "Equipo";
