@@ -138,6 +138,32 @@ function SettingsMenu({
   );
 }
 
+/* ── Íconos de disquete ──────────────────────────────────────────── */
+function FloppyIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+    </svg>
+  );
+}
+
+function FloppyCheckIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {/* Disquete */}
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+      {/* Check en el área inferior del disquete */}
+      <path d="M9.5 17l1.5 1.5 3-3" strokeWidth="2.2"/>
+    </svg>
+  );
+}
+
 /* ── Sidebar ─────────────────────────────────────────────────────── */
 interface SidebarProps {
   onSync?: () => void;
@@ -189,9 +215,18 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
       {/* ── Rail ─────────────────────────────────────────────────── */}
       <aside className="w-[52px] bg-bio-rail flex flex-col items-center py-3 gap-1 z-50 border-r border-white/[0.04] flex-shrink-0">
         {/* Logo */}
-        <div className="w-[34px] h-[34px] bg-amber text-bio-dark rounded-lg flex items-center justify-center text-sm font-black mb-2.5 flex-shrink-0">
+        <div className="w-[34px] h-[34px] bg-amber text-bio-dark rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0">
           B
         </div>
+
+        {/* Toggle colapsar/expandir — siempre en el mismo lugar */}
+        <button
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white hover:bg-white/[0.08] transition-colors border-none bg-transparent flex-shrink-0 mb-1"
+          title={collapsed ? "Expandir panel" : "Colapsar panel"}
+          onClick={() => setCollapsed((v) => !v)}
+        >
+          {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+        </button>
 
         {/* Íconos de workspace — siempre visibles para navegar cuando el panel está colapsado */}
         {WORKSPACE_CONFIGS.map(({ key, Icon, label }) => (
@@ -201,7 +236,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
               "w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none flex-shrink-0",
               mode === key
                 ? "bg-amber/[0.14] text-amber"
-                : "bg-transparent text-white/50 hover:bg-white/[0.06] hover:text-white",
+                : "bg-transparent text-white hover:bg-white/[0.08] hover:text-white",
             ].join(" ")}
             onClick={() => {
               switchWorkspace(key);
@@ -220,7 +255,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           <button
             className={[
               "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
-              dirty ? "text-amber" : "text-white/60 hover:text-white",
+              dirty ? "text-amber" : "text-white hover:text-white",
             ].join(" ")}
             title={saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}
             onClick={onSave}
@@ -229,8 +264,8 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             {saving
               ? <RefreshCw size={15} className="animate-spin" />
               : dirty
-                ? <Save size={15} />
-                : <CheckCheck size={15} />
+                ? <FloppyIcon size={15} />
+                : <FloppyCheckIcon size={15} />
             }
           </button>
         )}
@@ -238,7 +273,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         {/* Sincronizar */}
         {onSync && (
           <button
-            className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white hover:bg-white/[0.08] transition-colors border-none bg-transparent flex-shrink-0"
             title={syncing ? "Sincronizando…" : "Sincronizar Sheets"}
             onClick={onSync}
             disabled={syncing}
@@ -248,7 +283,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         )}
 
         <button
-          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white hover:bg-white/[0.08] transition-colors border-none bg-transparent flex-shrink-0"
           title={settings.darkMode ? "Modo claro" : "Modo noche"}
           onClick={() => update({ darkMode: !settings.darkMode })}
         >
@@ -258,7 +293,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         <button
           className={[
             "w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0",
-            hasUnread ? "text-amber" : "text-white/60 hover:text-white",
+            hasUnread ? "text-amber" : "text-white hover:text-white",
           ].join(" ")}
           title="Notificaciones"
           onClick={() => setNotifOpen(true)}
@@ -268,7 +303,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
         <button
           ref={settingsRef}
-          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors border-none bg-transparent flex-shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer text-white hover:bg-white/[0.08] transition-colors border-none bg-transparent flex-shrink-0"
           title="Configuración"
           onClick={() => setSettingsOpen((v) => !v)}
         >
@@ -293,17 +328,11 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           collapsed ? "w-0" : "w-[200px]",
         ].join(" ")}
       >
-        {/* Panel header */}
-        <div className="px-3.5 pt-3.5 pb-2.5 flex items-center justify-between border-b border-white/[0.05] flex-shrink-0 whitespace-nowrap overflow-hidden">
+        {/* Panel header — solo título */}
+        <div className="px-3.5 pt-3.5 pb-2.5 border-b border-white/[0.05] flex-shrink-0 whitespace-nowrap overflow-hidden">
           <span className="text-[11px] font-black text-white tracking-[0.06em] uppercase">
             BIOMKT
           </span>
-          <button
-            className="w-5 h-5 rounded flex items-center justify-center text-white/30 cursor-pointer hover:text-white/60 hover:bg-white/[0.06] transition-colors bg-transparent border-none flex-shrink-0"
-            onClick={() => setCollapsed(true)}
-          >
-            <ChevronLeft size={14} />
-          </button>
         </div>
 
         {/* Nav — workspaces como ítems padre + submenu de links */}
@@ -319,7 +348,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                 <button
                   className={[
                     "w-full flex items-center gap-2.5 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.06em] transition-colors border-none bg-transparent cursor-pointer",
-                    isActiveWS ? "text-amber" : "text-white/60 hover:text-white",
+                    isActiveWS ? "text-amber" : "text-white hover:text-white",
                   ].join(" ")}
                   onClick={() => switchWorkspace(key)}
                 >
@@ -364,15 +393,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
       </aside>
 
-      {/* Expand button when collapsed */}
-      {collapsed && (
-        <button
-          className="fixed left-[52px] top-1/2 -translate-y-1/2 w-4 h-10 bg-bio-panel rounded-r-md flex items-center justify-center cursor-pointer text-slate-600 z-[48] border border-white/[0.05] border-l-0 hover:text-amber transition-colors"
-          onClick={() => setCollapsed(false)}
-        >
-          <ChevronRight size={14} />
-        </button>
-      )}
 
       {/* ── Modales ───────────────────────────────────────────────── */}
       {notifOpen      && <NotificationCenter onClose={() => setNotifOpen(false)} />}
