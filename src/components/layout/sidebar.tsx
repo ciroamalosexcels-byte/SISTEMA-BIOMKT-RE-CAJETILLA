@@ -182,14 +182,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
     if (first) router.push(first.href);
   }
 
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [settingsOpen]);
+  // El cierre del menú se maneja con un backdrop (ver más abajo)
 
   /* Clase base para ítems de nav */
   const navItem = (active: boolean) =>
@@ -344,15 +337,22 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
 
       {/* Popups y modales */}
       {settingsOpen && (
-        <SettingsMenu
-          onClose={() => setSettingsOpen(false)}
-          onImport={() => setImportOpen(true)}
-          onApiSettings={() => setApiSettingsOpen(true)}
-          onColWidths={() => setColWidthsOpen(true)}
-          onSync={onSync}
-          syncing={syncing}
-          sidebarW={sidebarW}
-        />
+        <>
+          {/* Backdrop invisible — click fuera del menú lo cierra */}
+          <div
+            className="fixed inset-0 z-[299]"
+            onClick={() => setSettingsOpen(false)}
+          />
+          <SettingsMenu
+            onClose={() => setSettingsOpen(false)}
+            onImport={() => setImportOpen(true)}
+            onApiSettings={() => setApiSettingsOpen(true)}
+            onColWidths={() => setColWidthsOpen(true)}
+            onSync={onSync}
+            syncing={syncing}
+            sidebarW={sidebarW}
+          />
+        </>
       )}
       {notifOpen       && <NotificationCenter onClose={() => setNotifOpen(false)} />}
       {apiSettingsOpen && <ApiSettingsModal onClose={() => setApiSettingsOpen(false)} />}
