@@ -266,7 +266,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             {WORKSPACE_TITLES[mode]}
           </span>
           <button
-            className="w-5 h-5 rounded flex items-center justify-center text-slate-600 cursor-pointer hover:text-slate-400 hover:bg-white/[0.06] transition-colors bg-transparent border-none flex-shrink-0"
+            className="w-5 h-5 rounded flex items-center justify-center text-white/30 cursor-pointer hover:text-white/60 hover:bg-white/[0.06] transition-colors bg-transparent border-none flex-shrink-0"
             onClick={() => setCollapsed(true)}
           >
             <ChevronLeft size={14} />
@@ -285,7 +285,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
                   "flex items-center gap-2 px-3.5 py-[7px] text-xs font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden",
                   isActive(link.href)
                     ? "text-amber bg-amber/[0.07] font-bold"
-                    : "text-[#2d4a6b] hover:text-[#6b8db5] hover:bg-white/[0.03]",
+                    : "text-white/50 hover:text-white hover:bg-white/[0.06]",
                 ].join(" ")}
               >
                 <Icon size={14} />
@@ -301,7 +301,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             <button
               className={[
                 "flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer",
-                dirty ? "text-amber" : "text-[#1e3a5f] hover:text-[#4b7ab5]",
+                dirty ? "text-amber" : "text-white/40 hover:text-white/70",
               ].join(" ")}
               onClick={onSave}
               disabled={saving}
@@ -317,7 +317,7 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
           )}
           {onSync && (
             <button
-              className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.04] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-[#1e3a5f] hover:text-[#4b7ab5]"
+              className="flex items-center gap-2 px-2 py-[7px] text-[11px] font-semibold rounded-md hover:bg-white/[0.06] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer text-white/40 hover:text-white/70"
               onClick={onSync}
               disabled={syncing}
             >
