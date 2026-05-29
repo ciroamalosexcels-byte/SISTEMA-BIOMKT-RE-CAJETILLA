@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { Pencil, Check, X, Trash2 } from "lucide-react";
+import { Pencil, Check, X, Plus } from "lucide-react";
 import { usePipelineStore } from "@/store/pipeline";
 import { useLeadsStore } from "@/store/leads";
 import { todayBA } from "@/lib/dates";
@@ -64,15 +64,11 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanColumnProps) {
-  const { updateStage, removeStage } = usePipelineStore();
-  const { moveLeadTo } = useLeadsStore();
-  const stages = usePipelineStore((s) => s.stages);
+  const { updateStage } = usePipelineStore();
 
   const [editing, setEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(stage.label);
   const [editColor, setEditColor] = useState(stage.color);
-  const [showDelete, setShowDelete] = useState(false);
-  const [moveTo, setMoveTo] = useState("");
 
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
@@ -82,14 +78,6 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
   function saveEdit() {
     if (editLabel.trim()) updateStage(stage.id, { label: editLabel.trim(), color: editColor });
     setEditing(false);
-  }
-
-  function handleDelete() {
-    const target = moveTo || stages.find(s => s.id !== stage.id)?.id || "";
-    if (!target) return;
-    leads.forEach(l => moveLeadTo(l.id, target));
-    removeStage(stage.id);
-    setShowDelete(false);
   }
 
   return (
@@ -128,6 +116,14 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
             <button className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-white/50 cursor-pointer bg-transparent border-none hover:text-amber transition-all" onClick={() => setEditing(true)}>
               <Pencil size={11} />
             </button>
+            {/* + Agregar lead en el header */}
+            <button
+              className="w-6 h-6 rounded-md bg-amber flex items-center justify-center cursor-pointer border-none flex-shrink-0 hover:opacity-85 transition-opacity"
+              onClick={() => onAddLead(stage.id)}
+              title="Agregar lead"
+            >
+              <Plus size={13} className="text-bio-dark" style={{ color: "#07152f" }} />
+            </button>
           </>
         )}
       </div>
@@ -149,52 +145,6 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
         ))}
       </div>
 
-      {/* ── Footer ─────────────────────────────────────── */}
-      <button className="mx-2 mb-2 py-1.5 border border-dashed border-slate-300 dark:border-white/[0.06] bg-transparent text-slate-400 dark:text-[#1e3a5f] text-[11px] cursor-pointer text-center hover:border-amber hover:text-slate-500 font-semibold transition-colors" onClick={() => onAddLead(stage.id)}>
-        + Agregar lead
-      </button>
-
-      {/* ── Delete stage (inline confirm) ──────────────── */}
-      {showDelete && (
-        <div className="px-2 pb-2 flex flex-col gap-1.5">
-          <div className="text-[10px] text-red-500 font-bold">
-            ¿Mover {leads.length} leads a?
-          </div>
-          <select
-            className="lm-select text-[11px]"
-            value={moveTo}
-            onChange={e => setMoveTo(e.target.value)}
-          >
-            <option value="">— elegir etapa —</option>
-            {stages.filter(s => s.id !== stage.id).map(s => (
-              <option key={s.id} value={s.id}>{s.label}</option>
-            ))}
-          </select>
-          <div className="flex gap-1.5">
-            <button
-              onClick={handleDelete}
-              disabled={leads.length > 0 && !moveTo}
-              className={`flex-1 py-1 rounded text-[11px] font-bold text-white border-none cursor-pointer ${leads.length > 0 && !moveTo ? "bg-slate-800 cursor-not-allowed" : "bg-red-500 cursor-pointer"}`}
-            >
-              Eliminar
-            </button>
-            <button
-              onClick={() => setShowDelete(false)}
-              className="px-2.5 py-1 bg-white/[0.05] text-slate-500 border-none rounded text-[11px] cursor-pointer"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-      {!editing && !showDelete && (
-        <button
-          onClick={() => setShowDelete(true)}
-          className="mx-2 mb-2 flex items-center justify-center gap-1 text-[10px] text-[#1e3a5f] hover:text-red-500 bg-transparent border-none cursor-pointer transition-colors"
-        >
-          <Trash2 size={10} /> eliminar etapa
-        </button>
-      )}
     </div>
   );
 }
