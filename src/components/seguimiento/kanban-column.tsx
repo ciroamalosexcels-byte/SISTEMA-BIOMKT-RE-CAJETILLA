@@ -13,11 +13,25 @@ import type { Lead } from "@/types";
 /* ── Divisor de fecha ────────────────────────────────────────────── */
 function DateDivider({ dateStr }: { dateStr: string }) {
   const today = todayBA();
+
+  if (!dateStr || dateStr.length < 10) {
+    return (
+      <div className="flex items-center gap-2 py-1 px-1">
+        <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
+        <span className="text-[9px] font-black text-slate-400 dark:text-white/25 tracking-wide uppercase">Sin fecha</span>
+        <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
+      </div>
+    );
+  }
+
   const [y, m, d] = dateStr.split("-");
   const yesterday = (() => {
-    const dt = new Date(`${dateStr}T12:00:00`);
-    dt.setDate(dt.getDate() - 1);
-    return dt.toISOString().slice(0, 10);
+    try {
+      const dt = new Date(`${dateStr}T12:00:00`);
+      if (isNaN(dt.getTime())) return "";
+      dt.setDate(dt.getDate() - 1);
+      return dt.toISOString().slice(0, 10);
+    } catch { return ""; }
   })();
 
   let label = `${d}/${m}/${y}`;
