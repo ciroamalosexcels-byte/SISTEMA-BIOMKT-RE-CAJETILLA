@@ -15,6 +15,43 @@ interface LeadModalProps {
 
 const TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
 
+/* ── Campo de fecha con placeholder sutil ────────────────────────── */
+function DateField({
+  label, value, onChange, withTime, inputCls,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  withTime?: boolean; inputCls: string;
+}) {
+  const formatted = value
+    ? (() => {
+        const raw = withTime ? value.slice(0, 16) : value.slice(0, 10);
+        const [date, time] = raw.split("T");
+        if (!date) return value;
+        const [y, m, d] = date.split("-");
+        return `${d ?? "--"}/${m ?? "--"}/${y ?? "----"}${withTime && time ? " " + time : ""}`;
+      })()
+    : null;
+
+  const placeholder = withTime ? "--/--/---- --:--" : "--/--/----";
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">{label}</label>
+      <div className={`${inputCls} relative flex items-center min-h-[33px]`}>
+        <span className={formatted ? "text-slate-900 dark:text-slate-200" : "text-slate-300 dark:text-white/[0.2]"}>
+          {formatted ?? placeholder}
+        </span>
+        <input
+          type={withTime ? "datetime-local" : "date"}
+          value={value ? (withTime ? value.slice(0, 16) : value.slice(0, 10)) : ""}
+          onChange={e => onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 w-full cursor-pointer"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const { addLead, updateLead, deleteLead } = useLeadsStore();
   const stages = usePipelineStore((s) => s.stages);
@@ -215,40 +252,9 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
                   {EMPRESA_BIO_OPTS.map(e => <option key={e}>{e}</option>)}
                 </select>
               </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Próximo seguimiento</label>
-                <input className={inputCls} type="date" value={form.proximoSeguimientoFecha ?? ""} onChange={e => set("proximoSeguimientoFecha", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha reunión</label>
-                <input className={inputCls} type="datetime-local" value={form.meetingDatetime ?? ""} onChange={e => set("meetingDatetime", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha y hora de contacto</label>
-                {/* Mostrar valor formateado + input oculto para editar */}
-                <div className="relative">
-                  <div className={`${inputCls} min-h-[33px] flex items-center justify-between cursor-text`}>
-                    <span className={fechaContacto ? "text-slate-900 dark:text-slate-200" : "text-slate-300 dark:text-white/20"}>
-                      {fechaContacto
-                        ? (() => {
-                            const raw = fechaContacto.slice(0, 16); // YYYY-MM-DDTHH:MM
-                            const [date, time] = raw.split("T");
-                            if (!date) return fechaContacto;
-                            const [y, m, d] = date.split("-");
-                            return `${d}/${m}/${y}${time ? " " + time : ""}`;
-                          })()
-                        : "Sin fecha"}
-                    </span>
-                    <input
-                      type="datetime-local"
-                      value={fechaContacto ? fechaContacto.slice(0, 16) : ""}
-                      onChange={e => setFechaContacto(e.target.value)}
-                      className="absolute inset-0 opacity-0 w-full cursor-pointer"
-                      style={{ colorScheme: "light" }}
-                    />
-                  </div>
-                </div>
-              </div>
+              <DateField label="Próximo seguimiento" value={form.proximoSeguimientoFecha ?? ""} onChange={v => set("proximoSeguimientoFecha", v)} inputCls={inputCls} />
+              <DateField label="Fecha reunión" value={form.meetingDatetime ?? ""} onChange={v => set("meetingDatetime", v)} withTime inputCls={inputCls} />
+              <DateField label="Fecha y hora de contacto" value={fechaContacto} onChange={setFechaContacto} withTime inputCls={inputCls} />
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Servicio</label>
                 <input className={inputCls} value={form.servicio ?? ""} onChange={e => set("servicio", e.target.value)} />
