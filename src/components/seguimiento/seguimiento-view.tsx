@@ -29,6 +29,9 @@ export function SeguimientoView() {
   const [selectedLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
   const [draggingLead, setDraggingLead] = useState<Lead | null>(null);
+  /* Prompt de fecha de reunión */
+  const [meetingPrompt, setMeetingPrompt] = useState<{ leadId: string; targetStage: string } | null>(null);
+  const [meetingDate, setMeetingDate] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -48,23 +51,41 @@ export function SeguimientoView() {
     if (lead) setDraggingLead(lead);
   }
 
+  const isReunionStage = (id: string) => id === "REUNION_1" || id === "REUNION_2";
+
+  function moveTo(leadId: string, targetStage: string) {
+    if (isReunionStage(targetStage)) {
+      setMeetingDate("");
+      setMeetingPrompt({ leadId, targetStage });
+    } else {
+      moveLeadTo(leadId, targetStage);
+    }
+  }
+
+  function confirmMeeting() {
+    if (!meetingPrompt) return;
+    moveLeadTo(meetingPrompt.leadId, meetingPrompt.targetStage);
+    if (meetingDate) {
+      const { updateLead } = useLeadsStore.getState();
+      updateLead(meetingPrompt.leadId, { meetingDatetime: meetingDate });
+    }
+    setMeetingPrompt(null);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     setDraggingLead(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const targetId = String(over.id);
-
-    /* Over could be a column or a card */
     const isColumn = stages.some((s) => s.id === targetId);
     if (isColumn) {
-      moveLeadTo(String(active.id), targetId);
+      moveTo(String(active.id), targetId);
       return;
     }
-    /* If over a card, find its stage */
     const overLead = rows.find((r) => r.id === targetId);
     if (overLead && overLead.tab !== active.data.current?.stageId) {
-      moveLeadTo(String(active.id), overLead.tab);
+      moveTo(String(active.id), overLead.tab);
     }
   }
 
@@ -171,6 +192,67 @@ export function SeguimientoView() {
 
       {selectedLead !== undefined && (
         <LeadModal lead={selectedLead} defaultStageId={defaultStageId} onClose={closeModal} />
+      )}
+
+      {/* ── Prompt fecha de reunión ─────────────────────────── */}
+      {meetingPrompt && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center"
+          style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => setMeetingPrompt(null)}
+        >
+          <div
+            className="bg-white dark:bg-[#0b1628] rounded-[18px] border border-slate-200 dark:border-white/[0.07] p-6 w-[340px] shadow-[0_24px_60px_rgba(0,0,0,0.25)]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full" style={{ background: stages.find(s => s.id === meetingPrompt.targetStage)?.color ?? "#f97316" }} />
+              <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.08em]">
+                {stages.find(s => s.id === meetingPrompt.targetStage)?.label}
+              </span>
+            </div>
+            <h3 className="text-[16px] font-black text-slate-900 dark:text-white mb-1">¿Cuándo es la reunión?</h3>
+            <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-4">Podés dejarlo vacío si todavía no tenés fecha.</p>
+
+            <div className="relative mb-4">
+              <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-slate-900 dark:text-slate-200 flex items-center min-h-[44px]">
+                <span className={meetingDate ? "text-slate-900 dark:text-slate-200" : "text-slate-300 dark:text-white/20"}>
+                  {meetingDate
+                    ? (() => { const [d,t] = meetingDate.split("T"); const [y,m,dd] = d.split("-"); return `${dd}/${m}/${y}${t ? " " + t : ""}`; })()
+                    : "--/--/---- --:--"
+                  }
+                </span>
+                <input
+                  type="datetime-local"
+                  value={meetingDate}
+                  onChange={e => setMeetingDate(e.target.value)}
+                  className="absolute inset-0 opacity-0 w-full cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-4 py-2 text-[12px] font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors bg-transparent border-none cursor-pointer"
+                onClick={() => setMeetingPrompt(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-4 py-2 text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors bg-transparent border-none cursor-pointer"
+                onClick={confirmMeeting}
+              >
+                Sin fecha
+              </button>
+              <button
+                className="px-5 py-2 text-[12px] font-black bg-amber text-bio-dark rounded-lg hover:opacity-90 transition-opacity border-none cursor-pointer"
+                onClick={confirmMeeting}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

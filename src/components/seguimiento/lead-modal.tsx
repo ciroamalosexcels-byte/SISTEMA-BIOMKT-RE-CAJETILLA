@@ -125,6 +125,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
 
   /* Shared input/select/textarea classes */
   const inputCls = "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-md py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] focus:bg-white dark:focus:bg-white/[0.05] w-full transition-colors";
+  const lbl = "text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]";
 
   return (
     <div
@@ -198,87 +199,79 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
         </div>
 
         {/* ── Fields ──────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-[22px] py-3.5 flex flex-col gap-3.5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e3a5f] [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="flex-1 overflow-y-auto px-[22px] py-3.5 flex flex-col gap-2.5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e3a5f] [&::-webkit-scrollbar-track]:bg-transparent">
 
-          <div>
-            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Contacto</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Nombre *</label>
-                <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Nombre y apellido" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Empresa</label>
-                <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Teléfono</label>
-                <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Instagram</label>
-                <input className={inputCls} value={form.instagram ?? ""} onChange={e => set("instagram", e.target.value)} placeholder="@usuario" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Email</label>
-                <input className={inputCls} type="email" value={form.email ?? ""} onChange={e => set("email", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Rubro</label>
-                <input className={inputCls} value={form.rubro ?? ""} onChange={e => set("rubro", e.target.value)} />
-              </div>
+          {/* Fila 1: Empresa + Nombre */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Nombre negocio / Empresa</label>
+              <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} placeholder="Empresa o negocio" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Nombre contacto *</label>
+              <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Nombre y apellido" />
             </div>
           </div>
 
-          <div>
-            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Gestión</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Responsable</label>
-                <select className={inputCls} value={form.responsable1} onChange={e => set("responsable1", e.target.value)}>
-                  {TEAM.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Medio</label>
-                <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
-                  <option value="">—</option>
-                  {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Empresa Bio</label>
-                <select className={inputCls} value={form.empresaBio} onChange={e => set("empresaBio", e.target.value)}>
-                  {EMPRESA_BIO_OPTS.map(e => <option key={e}>{e}</option>)}
-                </select>
-              </div>
-              <DateField label="Próximo seguimiento" value={form.proximoSeguimientoFecha ?? ""} onChange={v => set("proximoSeguimientoFecha", v)} inputCls={inputCls} />
-              <DateField label="Fecha reunión" value={form.meetingDatetime ?? ""} onChange={v => set("meetingDatetime", v)} withTime inputCls={inputCls} />
-              <DateField label="Fecha y hora de contacto" value={fechaContacto} onChange={setFechaContacto} withTime inputCls={inputCls} />
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Servicio</label>
-                <input className={inputCls} value={form.servicio ?? ""} onChange={e => set("servicio", e.target.value)} />
-              </div>
-              <div className="col-span-2 flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Observaciones</label>
-                <textarea className={`${inputCls} resize-y min-h-[68px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} rows={3} />
-              </div>
+          {/* Fila 2: Dirección */}
+          <div className="flex flex-col gap-0.5">
+            <label className={lbl}>Dirección</label>
+            <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} placeholder="Ciudad, dirección..." />
+          </div>
+
+          {/* Fila 3: Teléfono */}
+          <div className="flex flex-col gap-0.5">
+            <label className={lbl}>Teléfono</label>
+            <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} placeholder="+54 9 11..." />
+          </div>
+
+          {/* Fila 4: Observaciones */}
+          <div className="flex flex-col gap-0.5">
+            <label className={lbl}>Observaciones</label>
+            <textarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} placeholder="Notas, comentarios..." />
+          </div>
+
+          {/* Fila 5: Responsable 1 + Responsable 2 */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Responsable 1</label>
+              <select className={inputCls} value={form.responsable1} onChange={e => set("responsable1", e.target.value)}>
+                {TEAM.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Responsable 2</label>
+              <select className={inputCls} value={form.responsable2 || ""} onChange={e => set("responsable2", e.target.value)}>
+                <option value="">—</option>
+                {TEAM.map(t => <option key={t}>{t}</option>)}
+              </select>
             </div>
           </div>
 
-          <div>
-            <div className="text-[9px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">Información adicional</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Dirección</label>
-                <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Objetivos</label>
-                <input className={inputCls} value={form.objetivos ?? ""} onChange={e => set("objetivos", e.target.value)} />
-              </div>
+          {/* Fila 6: Medio + Empresa Bio */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Medio de contacto</label>
+              <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
+                <option value="">—</option>
+                {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Empresa Bio</label>
+              <select className={inputCls} value={form.empresaBio} onChange={e => set("empresaBio", e.target.value)}>
+                {EMPRESA_BIO_OPTS.map(e => <option key={e}>{e}</option>)}
+              </select>
             </div>
           </div>
+
+          {/* Fechas */}
+          <div className="grid grid-cols-2 gap-2">
+            <DateField label="Próximo seguimiento" value={form.proximoSeguimientoFecha ?? ""} onChange={v => set("proximoSeguimientoFecha", v)} inputCls={inputCls} />
+            <DateField label="Fecha reunión" value={form.meetingDatetime ?? ""} onChange={v => set("meetingDatetime", v)} withTime inputCls={inputCls} />
+            <DateField label="Fecha y hora de contacto" value={fechaContacto} onChange={setFechaContacto} withTime inputCls={inputCls} />
+          </div>
+
         </div>
 
         {/* ── Footer ──────────────────────────────────────── */}
