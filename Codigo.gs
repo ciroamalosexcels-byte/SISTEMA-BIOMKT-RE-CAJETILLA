@@ -414,7 +414,7 @@ function normalizeLeadRows_(rows) {
       responsable1: r1, responsable2: r2,
       responsables: row.responsables || (r1 && r2 ? r1 + " Y " + r2 : r1 || r2 || ""),
       direccion: row.direccion || "", fechaContacto: row.fechaContacto || "",
-      empresaBio: row.empresaBio || "", medio: row.medio || "", etapa: row.etapa || "CRM",
+      empresaBio: row.empresaBio || "", medio: row.medio || "", etapa: row.etapa || row.tab || "CRM",
       seguimiento: row.seguimiento || "", proximaFecha: row.proximaFecha || "",
       rowOrder: row.rowOrder || index + 1, email: row.email || "", instagram: row.instagram || "",
       mesEntrada: row.mesEntrada || "", objetivos: row.objetivos || "", rubro: row.rubro || "",

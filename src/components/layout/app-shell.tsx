@@ -103,8 +103,14 @@ export function AppShell({ children }: AppShellProps) {
     let loaded = false;
     const { storage } = await import("@/lib/storage");
     if (Array.isArray(data.rows) && data.rows.length > 0) {
-      useLeadsStore.setState({ rows: deduplicateLeads(data.rows), dirty: false });
-      storage.setLeads(data.rows);
+      // Sheets usa "etapa", el frontend usa "tab" — mapear al leer
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mappedRows = (data.rows as any[]).map((r: any) => ({
+        ...r,
+        tab: r.tab || r.etapa || "CRM",
+      }));
+      useLeadsStore.setState({ rows: deduplicateLeads(mappedRows), dirty: false });
+      storage.setLeads(mappedRows);
       loaded = true;
     }
     if (Array.isArray(data.team) && data.team.length > 0) {
