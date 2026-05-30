@@ -72,8 +72,8 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
       {...attributes}
       {...listeners}
     >
-      <div className="text-xs font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight">{lead.nombre}</div>
-      {lead.empresa && <div className="text-[10px] text-slate-400 dark:text-slate-600 mb-[7px]">{lead.empresa}</div>}
+      <div className="text-xs font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight">{lead.empresa || lead.nombre}</div>
+      {lead.empresa && <div className="text-[10px] text-slate-400 dark:text-slate-600 mb-[7px]">{lead.nombre}</div>}
 
       <div className="flex gap-1 flex-wrap mb-[7px]">
         {MedioIcon && (() => {
