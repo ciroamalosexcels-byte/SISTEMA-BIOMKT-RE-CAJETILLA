@@ -122,16 +122,10 @@ export function SeguimientoView() {
 
       {viewMode === "kanban" ? (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex-1 overflow-x-auto overflow-y-hidden px-5 py-4 flex gap-3 items-start">
+          <div className="flex-1 overflow-hidden px-5 py-4 flex gap-3 items-start h-full">
             {sortedStages.map((stage) => (
               <KanbanColumn key={stage.id} stage={stage} leads={leadsForStage(stage.id)} onCardClick={openEditLead} onAddLead={openNewLead} />
             ))}
-            <button className="flex-shrink-0 w-12 flex flex-col items-center pt-3 gap-1 cursor-pointer opacity-30 hover:opacity-70 bg-transparent border-none transition-opacity" onClick={handleAddStage}>
-              <div className="w-9 h-9 border-2 border-dashed border-slate-300 dark:border-[#1e293b] flex items-center justify-center text-slate-400 dark:text-[#334155]">
-                <Plus size={16} />
-              </div>
-              <div className="text-[9px] text-slate-400 dark:text-[#334155] text-center leading-tight">Nueva<br />etapa</div>
-            </button>
           </div>
           <DragOverlay>
             {draggingLead && (
