@@ -65,7 +65,7 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform) }}
-      className={`bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl p-[10px_11px] cursor-pointer transition-all select-none shadow-sm group ${
+      className={`bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl p-[10px_11px] cursor-pointer transition-all select-none shadow-sm group overflow-hidden h-[118px] flex flex-col ${
         isDragging ? "opacity-40 rotate-1" : "hover:border-amber hover:-translate-y-px hover:shadow-md"
       }`}
       onClick={onClick}
@@ -75,7 +75,7 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
       <div className="text-xs font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight">{lead.empresa || lead.nombre}</div>
       {lead.empresa && <div className="text-[10px] text-slate-400 dark:text-slate-600 mb-[7px]">{lead.nombre}</div>}
 
-      <div className="flex gap-1 flex-wrap mb-[7px]">
+      <div className="flex gap-1 flex-wrap flex-1 content-start mb-[7px] overflow-hidden">
         {MedioIcon && (() => {
           const c = MEDIO_COLOR[lead.medio ?? ""] ?? "#94a3b8";
           return (
