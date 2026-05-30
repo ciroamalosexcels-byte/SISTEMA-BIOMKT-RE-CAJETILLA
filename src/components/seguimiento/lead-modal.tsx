@@ -225,12 +225,29 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
               </div>
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha y hora de contacto</label>
-                <input
-                  className={inputCls}
-                  type="datetime-local"
-                  value={fechaContacto ? fechaContacto.slice(0, 16) : ""}
-                  onChange={e => setFechaContacto(e.target.value)}
-                />
+                {/* Mostrar valor formateado + input oculto para editar */}
+                <div className="relative">
+                  <div className={`${inputCls} min-h-[33px] flex items-center justify-between cursor-text`}>
+                    <span className={fechaContacto ? "text-slate-900 dark:text-slate-200" : "text-slate-300 dark:text-white/20"}>
+                      {fechaContacto
+                        ? (() => {
+                            const raw = fechaContacto.slice(0, 16); // YYYY-MM-DDTHH:MM
+                            const [date, time] = raw.split("T");
+                            if (!date) return fechaContacto;
+                            const [y, m, d] = date.split("-");
+                            return `${d}/${m}/${y}${time ? " " + time : ""}`;
+                          })()
+                        : "Sin fecha"}
+                    </span>
+                    <input
+                      type="datetime-local"
+                      value={fechaContacto ? fechaContacto.slice(0, 16) : ""}
+                      onChange={e => setFechaContacto(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full cursor-pointer"
+                      style={{ colorScheme: "light" }}
+                    />
+                  </div>
+                </div>
               </div>
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Servicio</label>
