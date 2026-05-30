@@ -112,33 +112,34 @@ export function SeguimientoView() {
 
   return (
     <div className="flex flex-col h-full min-h-screen bg-bio-bg dark:bg-[#080f1e] text-slate-900 dark:text-slate-200">
-      {/* Topbar */}
-      <div className="h-[54px] flex items-center px-5 gap-3 border-b border-black/[0.05] dark:border-white/[0.05] bg-white dark:bg-[#080f1e] flex-shrink-0">
-        <div>
-          <span className="text-[15px] font-black text-slate-900 dark:text-slate-200">Seguimiento</span>
-          <span className="text-[11px] text-slate-400 dark:text-slate-600 ml-2.5">{totalActive} leads activos</span>
+      {/* Header — mismo estilo que calendario */}
+      <div className="bio-page-head">
+        <div className="bio-page-title-row">
+          <h2 className="bio-page-title">LEADS</h2>
+          <div className="bio-page-subtitle">{totalActive} ACTIVOS</div>
         </div>
-        <div className="flex-1" />
-        <div className="flex gap-0.5 bg-black/[0.05] dark:bg-white/[0.05] p-0.5 rounded-lg">
+        <div className="bio-page-actions">
+          <div className="flex gap-0.5 bg-black/[0.05] dark:bg-white/[0.05] p-0.5 rounded-lg">
+            <button
+              className={`px-[11px] py-1 rounded-md text-[11px] font-bold cursor-pointer border-none transition-colors ${viewMode === "kanban" ? "bg-white dark:bg-white/[0.1] text-slate-900 dark:text-slate-200 shadow-sm" : "bg-transparent text-slate-400 dark:text-slate-600 hover:text-slate-500"}`}
+              onClick={() => setViewMode("kanban")}
+            >
+              <LayoutGrid size={13} className="inline mr-1 align-middle" />Kanban
+            </button>
+            <button
+              className={`px-[11px] py-1 rounded-md text-[11px] font-bold cursor-pointer border-none transition-colors ${viewMode === "table" ? "bg-white dark:bg-white/[0.1] text-slate-900 dark:text-slate-200 shadow-sm" : "bg-transparent text-slate-400 dark:text-slate-600 hover:text-slate-500"}`}
+              onClick={() => setViewMode("table")}
+            >
+              <List size={13} className="inline mr-1 align-middle" />Tabla
+            </button>
+          </div>
           <button
-            className={`px-[11px] py-1 rounded-md text-[11px] font-bold cursor-pointer border-none transition-colors ${viewMode === "kanban" ? "bg-white dark:bg-white/[0.1] text-slate-900 dark:text-slate-200 shadow-sm" : "bg-transparent text-slate-400 dark:text-slate-600 hover:text-slate-500"}`}
-            onClick={() => setViewMode("kanban")}
+            className="px-4 py-2 bg-[var(--dark)] text-white rounded-xl text-[12px] font-bold border-none cursor-pointer hover:opacity-90 transition-all"
+            onClick={() => openNewLead(sortedStages[0]?.id ?? "CRM")}
           >
-            <LayoutGrid size={13} className="inline mr-1 align-middle" />Kanban
-          </button>
-          <button
-            className={`px-[11px] py-1 rounded-md text-[11px] font-bold cursor-pointer border-none transition-colors ${viewMode === "table" ? "bg-white dark:bg-white/[0.1] text-slate-900 dark:text-slate-200 shadow-sm" : "bg-transparent text-slate-400 dark:text-slate-600 hover:text-slate-500"}`}
-            onClick={() => setViewMode("table")}
-          >
-            <List size={13} className="inline mr-1 align-middle" />Tabla
+            + Nuevo lead
           </button>
         </div>
-        <button
-          className="px-3.5 py-1.5 bg-amber text-bio-dark rounded-none text-xs font-black border-none cursor-pointer hover:opacity-90 transition-opacity"
-          onClick={() => openNewLead(sortedStages[0]?.id ?? "CRM")}
-        >
-          + Nuevo lead
-        </button>
       </div>
 
       {viewMode === "kanban" ? (

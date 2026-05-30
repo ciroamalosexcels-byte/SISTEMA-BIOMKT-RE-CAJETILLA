@@ -643,22 +643,33 @@ export function DashboardView() {
   const sectionMap: Record<string, React.ReactNode> = {
     // ── Selector de mes
     nav: (
-      <div className="flex items-center justify-center gap-2.5">
-        <button
-          className="w-9 h-9 rounded-full bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center cursor-pointer text-slate-900 dark:text-slate-400 text-xl font-bold hover:bg-amber hover:text-bio-dark hover:border-amber transition-all flex-shrink-0"
-          onClick={() => handleMonth(shiftMonth(selectedMonth, -1))}
-        >‹</button>
-        <span className="text-[22px] font-black text-slate-900 dark:text-slate-200 tracking-tight min-w-[300px] text-center">
-          {monthLabel(selectedMonth)}
-        </span>
-        <button
-          className="w-9 h-9 rounded-full bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center cursor-pointer text-slate-900 dark:text-slate-400 text-xl font-bold hover:bg-amber hover:text-bio-dark hover:border-amber transition-all flex-shrink-0"
-          onClick={() => handleMonth(shiftMonth(selectedMonth, 1))}
-        >›</button>
-        <button
-          className="px-[18px] py-2 bg-amber text-bio-dark border-none text-[11px] font-black cursor-pointer hover:opacity-85 transition-opacity tracking-[0.1em]"
-          onClick={() => handleMonth(currentMonthBA())}
-        >HOY</button>
+      <div className="bio-page-head">
+        <div className="bio-page-title-row">
+          <h2 className="bio-page-title">DASHBOARD</h2>
+          <div className="bio-page-subtitle">VENTAS BIOMARKETING</div>
+        </div>
+        <div className="bio-page-actions">
+          <button
+            className="calendar-mini-btn"
+            onClick={() => handleMonth(shiftMonth(selectedMonth, -1))}
+          >‹</button>
+          <div style={{
+            color: "var(--dark)", background: "#f8fafc",
+            border: "1px solid var(--slate-200)", borderRadius: 12,
+            padding: "4px 16px", minWidth: 170, textAlign: "center",
+            fontSize: 13, fontWeight: 900,
+          }}>
+            {monthLabel(selectedMonth).toUpperCase()}
+          </div>
+          <button
+            className="calendar-mini-btn"
+            onClick={() => handleMonth(shiftMonth(selectedMonth, 1))}
+          >›</button>
+          <button
+            className="month-current-btn"
+            onClick={() => handleMonth(currentMonthBA())}
+          >HOY</button>
+        </div>
       </div>
     ),
 

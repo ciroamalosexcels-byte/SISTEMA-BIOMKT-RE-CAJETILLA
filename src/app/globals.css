@@ -1486,3 +1486,34 @@ body.dark-mode .cd-filter-menu { background: #0b1220; border-color: #243044; }
 .stage-color-swatch.selected { border-color: #fff; transform: scale(1.15); }
 .stage-edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   HEADER UNIVERSAL DE PÁGINA — mismo estilo que el calendario
+   ═══════════════════════════════════════════════════════════════════ */
+.bio-page-head {
+  padding: 16px 20px;
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.bio-page-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.bio-page-title {
+  margin: 0; font-size: 27px; line-height: 1;
+  font-weight: 900; letter-spacing: -0.03em;
+  text-transform: uppercase; color: var(--dark);
+}
+.bio-page-subtitle {
+  font-size: 12px; line-height: 1.1;
+  font-weight: 800; color: #102a56;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.bio-page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+body.dark-mode .bio-page-head { background: #111827; border-bottom-color: rgba(255,255,255,0.07); }
+body.dark-mode .bio-page-title { color: #fff; }
+body.dark-mode .bio-page-subtitle { color: rgba(255,255,255,0.35); }
