@@ -145,7 +145,7 @@ export function KanbanColumn({ stage, leads, onCardClick, onAddLead }: KanbanCol
       {/* ── Cards con divisores de fecha ───────────────── */}
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e293b]">
         {groupByDate(leads).map(({ date, leads: group }) => (
-          <div key={date}>
+          <div key={date} className="flex flex-col gap-3">
             <DateDivider dateStr={date} />
             {group.map(lead => (
               <LeadCard
