@@ -23,6 +23,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const initialStage = lead?.tab ?? defaultStageId ?? stages[0]?.id ?? "CRM";
 
   const [stageId, setStageId] = useState(initialStage);
+  const [fechaContacto, setFechaContacto] = useState(lead?.fechaContacto ?? "");
   const [form, setForm] = useState<Omit<LeadFormData, "empresaBio" | "medio"> & { empresaBio: string; medio: string }>({
     nombre:          lead?.nombre ?? "",
     nombre2:         lead?.nombre2 ?? "",
@@ -60,7 +61,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
     if (isNew) {
       addLead(form as LeadFormData, stageId);
     } else {
-      updateLead(lead!.id, { ...form, tab: stageId } as Partial<Lead>);
+      updateLead(lead!.id, { ...form, tab: stageId, fechaContacto: fechaContacto || lead!.fechaContacto } as Partial<Lead>);
     }
     onClose();
   }
@@ -221,6 +222,15 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha reunión</label>
                 <input className={inputCls} type="datetime-local" value={form.meetingDatetime ?? ""} onChange={e => set("meetingDatetime", e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Fecha y hora de contacto</label>
+                <input
+                  className={inputCls}
+                  type="datetime-local"
+                  value={fechaContacto ? fechaContacto.slice(0, 16) : ""}
+                  onChange={e => setFechaContacto(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">Servicio</label>
