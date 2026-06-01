@@ -253,7 +253,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Medio de contacto</label>
               <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
-                
+                <option value="">— Sin medio —</option>
                 {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>

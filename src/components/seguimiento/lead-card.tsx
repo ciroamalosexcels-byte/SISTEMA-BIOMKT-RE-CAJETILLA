@@ -77,20 +77,17 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
 
       {/* Badges — siempre visibles */}
       <div className="flex gap-1 items-center mt-auto mb-1.5 flex-shrink-0">
-        {lead.medio ? (() => {
-          const c = MEDIO_COLOR[lead.medio.trim().toUpperCase()] ?? "#94a3b8";
-          const Icon = MEDIO_ICONS[lead.medio.trim().toUpperCase()];
+        {lead.medio && (() => {
+          const key = lead.medio.trim().toUpperCase();
+          const c = MEDIO_COLOR[key] ?? "#94a3b8";
+          const Icon = MEDIO_ICONS[key];
           return (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px]"
               style={{ background: `${c}18`, color: c }}>
               {Icon && <Icon size={9} />} {lead.medio}
             </span>
           );
-        })() : (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-400 dark:text-slate-600">
-            Sin medio
-          </span>
-        )}
+        })()}
         {displayDate && (
           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
             <Calendar size={9} /> {displayDate}
