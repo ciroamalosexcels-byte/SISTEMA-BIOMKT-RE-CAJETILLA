@@ -401,6 +401,39 @@ function jsonResponse(payload) { return ContentService.createTextOutput(JSON.str
 
 // ─── Lead / Client normalization ────────────────────────────────────────────
 
+/* Convierte fechaContacto de cualquier formato a ISO string */
+function normalizeSheetDate_(raw) {
+  if (!raw && raw !== 0) return "";
+  // Ya es string ISO (YYYY-MM-DD...)
+  if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}/.test(raw)) return raw;
+  // Objeto Date de Apps Script
+  if (Object.prototype.toString.call(raw) === "[object Date]") {
+    return Utilities.formatDate(raw, "America/Argentina/Buenos_Aires", "yyyy-MM-dd'T'HH:mm:ss");
+  }
+  // Número serial de Excel/Sheets (días desde 1/1/1900)
+  if (typeof raw === "number" && raw > 40000 && raw < 70000) {
+    var unixMs = (raw - 25569) * 86400 * 1000;
+    var d = new Date(unixMs);
+    if (!isNaN(d.getTime())) {
+      var y = d.getUTCFullYear();
+      var m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      var dd = String(d.getUTCDate()).padStart(2, "0");
+      return y + "-" + m + "-" + dd;
+    }
+  }
+  // Formato DD/MM/YYYY
+  if (typeof raw === "string") {
+    var ddmm = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (ddmm) {
+      var d2 = ddmm[1].padStart(2,"0"), m2 = ddmm[2].padStart(2,"0"), y2 = ddmm[3];
+      return y2 + "-" + m2 + "-" + d2;
+    }
+    var d3 = new Date(raw);
+    if (!isNaN(d3.getTime())) return d3.toISOString().slice(0, 10);
+  }
+  return String(raw);
+}
+
 function normalizeLeadRows_(rows) {
   return (rows || []).map(function(row, index) {
     row = row || {};
@@ -413,7 +446,7 @@ function normalizeLeadRows_(rows) {
       observaciones: row.observaciones || "", telefono: row.telefono || "",
       responsable1: r1, responsable2: r2,
       responsables: row.responsables || (r1 && r2 ? r1 + " Y " + r2 : r1 || r2 || ""),
-      direccion: row.direccion || "", fechaContacto: row.fechaContacto || "",
+      direccion: row.direccion || "", fechaContacto: normalizeSheetDate_(row.fechaContacto),
       empresaBio: row.empresaBio || "", medio: row.medio || "", etapa: row.etapa || row.tab || "CRM",
       seguimiento: row.seguimiento || "", proximaFecha: row.proximaFecha || "",
       rowOrder: row.rowOrder || index + 1, email: row.email || "", instagram: row.instagram || "",

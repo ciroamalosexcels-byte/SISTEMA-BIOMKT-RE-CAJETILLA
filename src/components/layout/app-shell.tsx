@@ -10,6 +10,7 @@ import { useColumnWidthsStore } from "@/store/column-widths";
 import { usePlansStore } from "@/store/plans";
 import { usePipelineStore } from "@/store/pipeline";
 import { fetchFromSheets, saveToSheets } from "@/lib/sheets";
+import { normalizeISODate } from "@/lib/dates";
 import { todayBA } from "@/lib/dates";
 import type { WorkspaceMode } from "@/lib/constants";
 
@@ -104,11 +105,14 @@ export function AppShell({ children }: AppShellProps) {
     const { storage } = await import("@/lib/storage");
     if (Array.isArray(data.rows) && data.rows.length > 0) {
       // Sheets usa "etapa", el frontend usa "tab" — mapear al leer
+      // También normalizar fechaContacto (puede venir como serial Excel o ISO)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mappedRows = (data.rows as any[]).map((r: any) => ({
-        ...r,
-        tab: r.tab || r.etapa || "CRM",
-      }));
+      const mappedRows = (data.rows as any[]).map((r: any) => {
+        const fc = r.fechaContacto;
+        const needsNorm = fc && !/^\d{4}-\d{2}-\d{2}/.test(String(fc));
+        const fcNorm = needsNorm ? (normalizeISODate(String(fc)) || String(fc)) : fc;
+        return { ...r, tab: r.tab || r.etapa || "CRM", fechaContacto: fcNorm };
+      });
       useLeadsStore.setState({ rows: deduplicateLeads(mappedRows), dirty: false });
       storage.setLeads(mappedRows);
       loaded = true;

@@ -56,8 +56,23 @@ export function currentMonthBA(): string {
  * Convierte cualquier formato de fecha a YYYY-MM-DD[THH:MM:SS].
  * Maneja: YYYY-MM-DD, DD/MM/YYYY, "Thu Oct 16 2025 00:00:00 GMT-0300...", ISO completo.
  */
-export function normalizeISODate(raw: string | undefined | null): string {
-  if (!raw) return "";
+export function normalizeISODate(raw: string | number | undefined | null): string {
+  if (raw === null || raw === undefined || raw === "") return "";
+
+  // Número serial de Excel/Sheets (ej: 46168 = fecha como días desde 1/1/1900)
+  const numVal = typeof raw === "number" ? raw : (typeof raw === "string" && /^\d+(\.\d+)?$/.test(raw.trim()) ? Number(raw) : NaN);
+  if (!isNaN(numVal) && numVal > 40000 && numVal < 70000) {
+    // 25569 = serial de Excel para el 1/1/1970 (epoch Unix)
+    const unixMs = (numVal - 25569) * 86400 * 1000;
+    const d = new Date(unixMs);
+    if (!isNaN(d.getTime())) {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
+    }
+  }
+
   const s = String(raw).trim();
   if (!s) return "";
 

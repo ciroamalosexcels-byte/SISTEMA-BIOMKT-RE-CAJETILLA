@@ -53,8 +53,11 @@ export const useLeadsStore = create<LeadsStore>((set, get) => ({
   load() {
     const rawRows = deduplicateById(storage.getLeads());
     const rows = rawRows.map((r) => {
-      if (!r.fechaContacto || /^\d{4}-\d{2}-\d{2}/.test(r.fechaContacto)) return r;
-      return { ...r, fechaContacto: normalizeISODate(r.fechaContacto) || todayBA() };
+      // Skip si ya es ISO correcto
+      if (r.fechaContacto && /^\d{4}-\d{2}-\d{2}/.test(String(r.fechaContacto))) return r;
+      // Normalizar: convierte seriales Excel, DD/MM/YYYY, etc.
+      const normalized = normalizeISODate(r.fechaContacto as string);
+      return { ...r, fechaContacto: normalized || todayBA() };
     });
     if (rows.some((r, i) => r !== rawRows[i])) storage.setLeads(rows);
     set({ rows });
