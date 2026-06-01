@@ -205,30 +205,30 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Nombre negocio / Empresa</label>
-              <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} placeholder="Empresa o negocio" />
+              <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} />
             </div>
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Nombre contacto *</label>
-              <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Nombre y apellido" />
+              <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} />
             </div>
           </div>
 
           {/* Fila 2: Dirección */}
           <div className="flex flex-col gap-0.5">
             <label className={lbl}>Dirección</label>
-            <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} placeholder="Ciudad, dirección..." />
+            <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
           </div>
 
           {/* Fila 3: Teléfono */}
           <div className="flex flex-col gap-0.5">
             <label className={lbl}>Teléfono</label>
-            <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} placeholder="+54 9 11..." />
+            <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} />
           </div>
 
           {/* Fila 4: Observaciones */}
           <div className="flex flex-col gap-0.5">
             <label className={lbl}>Observaciones</label>
-            <textarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} placeholder="Notas, comentarios..." />
+            <textarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} />
           </div>
 
           {/* Fila 5: Responsable 1 + Responsable 2 */}
@@ -242,7 +242,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Responsable 2</label>
               <select className={inputCls} value={form.responsable2 || ""} onChange={e => set("responsable2", e.target.value)}>
-                <option value="">—</option>
+                
                 {TEAM.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
@@ -253,7 +253,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Medio de contacto</label>
               <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
-                <option value="">—</option>
+                
                 {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
