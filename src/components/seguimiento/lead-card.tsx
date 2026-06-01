@@ -72,8 +72,8 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
       {...attributes}
       {...listeners}
     >
-      <div className="text-xs font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight truncate">{lead.empresa || lead.nombre}</div>
-      {lead.empresa && <div className="text-[10px] text-slate-400 dark:text-slate-600 mb-1.5 truncate">{lead.nombre}</div>}
+      <div className="text-[13px] font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight truncate">{lead.empresa || lead.nombre}</div>
+      {lead.empresa && <div className="text-[11px] text-slate-400 dark:text-slate-600 mb-1.5 truncate">{lead.nombre}</div>}
 
       {/* Badges — siempre visibles */}
       <div className="flex gap-1 items-center mt-auto mb-1.5 flex-shrink-0">
@@ -81,23 +81,23 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
           const c = MEDIO_COLOR[lead.medio.trim().toUpperCase()] ?? "#94a3b8";
           const Icon = MEDIO_ICONS[lead.medio.trim().toUpperCase()];
           return (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px]"
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px]"
               style={{ background: `${c}18`, color: c }}>
               {Icon && <Icon size={9} />} {lead.medio}
             </span>
           );
         })() : (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-400 dark:text-slate-600">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-400 dark:text-slate-600">
             Sin medio
           </span>
         )}
         {displayDate && (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
             <Calendar size={9} /> {displayDate}
           </span>
         )}
         {(isFollowUpToday || isFollowUpLate) && (
-          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-[3px] bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
             <RefreshCw size={9} /> {isFollowUpToday ? "hoy" : "atrasado"}
           </span>
         )}
@@ -106,7 +106,7 @@ export function LeadCard({ lead, stageColor: _stageColor, onClick }: LeadCardPro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-[5px]">
           {lead.responsable1 && (
-            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60">
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60">
               {lead.responsable1}
             </span>
           )}
