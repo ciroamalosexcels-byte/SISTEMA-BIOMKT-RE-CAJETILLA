@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cards + Popup</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+
+/* ── PAGE ── */
+.page { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.rail { width: 52px; background: #020817; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; flex-shrink: 0; }
+.ws-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: background .15s; }
+.ws-icon.active { background: #f6bf26; }
+.ws-icon:not(.active) { opacity: .35; }
+.ws-icon:hover:not(.active) { opacity: .65; background: rgba(255,255,255,.07); }
+.rail-spacer { flex: 1; }
+.rail-util { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; opacity: .4; cursor: pointer; }
+.rail-util:hover { opacity: .7; }
+
+.nav-panel { width: 200px; background: #07152f; display: flex; flex-direction: column; flex-shrink: 0; }
+.nav-header { padding: 16px 14px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.nav-workspace { font-size: 13px; font-weight: 800; color: #f6bf26; letter-spacing: .02em; }
+.nav-links { padding: 8px 0; flex: 1; overflow-y: auto; }
+.nav-link { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 12px; color: #64748b; cursor: pointer; border-radius: 0; transition: all .15s; }
+.nav-link:hover { color: #cbd5e1; background: rgba(255,255,255,.04); }
+.nav-link.active { color: #f6bf26; background: rgba(246,191,38,.10); font-weight: 700; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.nav-footer { padding: 10px 8px; border-top: 1px solid rgba(255,255,255,.06); display: flex; flex-direction: column; gap: 3px; }
+.nav-footer-btn { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 11px; color: #475569; border-radius: 6px; cursor: pointer; }
+.nav-footer-btn:hover { background: rgba(255,255,255,.05); color: #94a3b8; }
+.collapse-btn { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; background: rgba(255,255,255,.04); color: #475569; font-size: 10px; cursor: pointer; margin-left: auto; }
+
+/* ── MAIN CONTENT ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0f172a; }
+
+/* topbar */
+.topbar { height: 52px; display: flex; align-items: center; padding: 0 20px; gap: 12px; border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0; }
+.topbar-title { font-size: 15px; font-weight: 800; color: #e2e8f0; }
+.topbar-sub { font-size: 12px; color: #475569; }
+.topbar-spacer { flex: 1; }
+.view-toggle { display: flex; gap: 2px; background: #1e293b; padding: 3px; border-radius: 7px; }
+.view-btn { padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; color: #64748b; }
+.view-btn.active { background: #334155; color: #e2e8f0; }
+.add-btn { padding: 6px 14px; background: #f6bf26; color: #07152f; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
+
+/* kanban board */
+.board { flex: 1; overflow-x: auto; padding: 16px 20px; display: flex; gap: 12px; align-items: flex-start; }
+
+.col { flex-shrink: 0; width: 220px; background: #1a2540; border-radius: 12px; display: flex; flex-direction: column; max-height: calc(100vh - 120px); }
+.col-head { padding: 10px 12px 8px; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+.col-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.col-name { font-size: 12px; font-weight: 700; flex: 1; }
+.col-n { font-size: 11px; color: #475569; background: rgba(255,255,255,.05); padding: 1px 7px; border-radius: 10px; }
+.col-edit { opacity: 0; font-size: 11px; color: #475569; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+.col-head:hover .col-edit { opacity: 1; }
+.col-edit:hover { color: #f6bf26; }
+
+.col-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+
+/* ── LEAD CARD ── */
+.lead-card {
+  background: #0f1f38; border: 1px solid rgba(255,255,255,.07); border-radius: 10px;
+  padding: 11px 12px; cursor: pointer; transition: all .15s;
+  position: relative;
+}
+.lead-card:hover { border-color: rgba(246,191,38,.3); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+.lead-card:hover .card-actions { opacity: 1; }
+
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; }
+.card-name { font-size: 13px; font-weight: 700; color: #e2e8f0; line-height: 1.3; }
+.card-empresa { font-size: 11px; color: #64748b; margin-bottom: 8px; }
+
+.card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+.tag-medio { background: rgba(56,189,248,.12); color: #38bdf8; }
+.tag-fecha { background: rgba(251,146,60,.12); color: #fb923c; }
+.tag-bio { background: rgba(246,191,38,.10); color: #f6bf26; }
+.tag-warn { background: rgba(239,68,68,.12); color: #ef4444; }
+
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-resp { display: flex; align-items: center; gap: 5px; }
+.avatar { width: 20px; height: 20px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #94a3b8; }
+.card-resp-name { font-size: 10px; color: #64748b; }
+
+.card-actions { display: flex; gap: 3px; opacity: 0; transition: opacity .15s; }
+.action-btn { width: 24px; height: 24px; border-radius: 5px; background: rgba(255,255,255,.06); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+.action-btn:hover { background: rgba(246,191,38,.15); }
+
+.col-add { margin: 0 8px 8px; padding: 6px; border-radius: 7px; border: 1px dashed rgba(255,255,255,.08); background: transparent; color: #334155; font-size: 11px; cursor: pointer; text-align: center; transition: all .15s; }
+.col-add:hover { border-color: rgba(246,191,38,.3); color: #64748b; }
+
+/* ── ADD COLUMN btn ── */
+.add-col { flex-shrink: 0; width: 48px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12px; gap: 5px; cursor: pointer; opacity: .35; transition: opacity .15s; }
+.add-col:hover { opacity: .7; }
+.add-col-icon { width: 36px; height: 36px; border: 2px dashed #334155; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #475569; }
+.add-col-label { font-size: 9px; color: #475569; text-align: center; }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(2,8,23,.8); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-backdrop.hidden { display: none; }
+
+.modal {
+  width: 100%; max-width: 680px; background: #0f1f38; border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08); max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0,0,0,.6);
+}
+.modal-top { padding: 20px 24px 0; display: flex; align-items: flex-start; gap: 14px; flex-shrink: 0; }
+.modal-stage-dot { width: 10px; height: 10px; border-radius: 50%; background: #a78bfa; margin-top: 5px; flex-shrink: 0; }
+.modal-title-area { flex: 1; }
+.modal-name { font-size: 20px; font-weight: 800; color: #e2e8f0; margin-bottom: 2px; }
+.modal-empresa { font-size: 13px; color: #64748b; }
+.modal-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,.05); border: none; color: #64748b; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+
+.modal-stage-row { display: flex; gap: 4px; padding: 14px 24px 12px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; overflow-x: auto; }
+.stage-pill {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer;
+  white-space: nowrap; border: 1px solid transparent; transition: all .15s;
+}
+.stage-pill.active { background: rgba(167,139,250,.15); color: #a78bfa; border-color: rgba(167,139,250,.3); }
+.stage-pill:not(.active) { background: rgba(255,255,255,.03); color: #475569; }
+.stage-pill:hover:not(.active) { background: rgba(255,255,255,.07); color: #94a3b8; }
+
+.modal-body { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.field-section { display: flex; flex-direction: column; gap: 8px; }
+.field-section-title { font-size: 10px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .08em; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 10px; color: #475569; font-weight: 600; }
+.field input, .field select, .field textarea {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 7px; padding: 7px 10px; font-size: 12px; color: #e2e8f0;
+  font-family: inherit; transition: border-color .15s; outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: rgba(246,191,38,.4); background: rgba(255,255,255,.06);
+}
+.field textarea { resize: vertical; min-height: 64px; }
+.field-full { grid-column: 1 / -1; }
+
+.modal-footer { padding: 14px 24px; border-top: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-primary { padding: 8px 18px; background: #f6bf26; color: #07152f; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+.btn-outline { padding: 8px 14px; background: transparent; color: #64748b; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; font-size: 12px; cursor: pointer; }
+.btn-outline:hover { color: #94a3b8; border-color: rgba(255,255,255,.15); }
+.btn-danger { padding: 8px 14px; background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,.2); border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: auto; }
+.btn-danger:hover { background: rgba(239,68,68,.08); }
+
+.quick-actions { display: flex; gap: 6px; padding: 10px 24px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+.qa-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,.08); background: transparent; color: #64748b; transition: all .15s; }
+.qa-btn:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+.qa-btn.green:hover { background: rgba(74,222,128,.1); color: #4ade80; border-color: rgba(74,222,128,.2); }
+.qa-btn.blue:hover { background: rgba(56,189,248,.1); color: #38bdf8; border-color: rgba(56,189,248,.2); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- RAIL -->
+  <div class="rail">
+    <div class="ws-icon active" title="Ventas">📈</div>
+    <div class="ws-icon" title="Clientes">👥</div>
+    <div class="ws-icon" title="Equipo">🏢</div>
+    <div class="rail-spacer"></div>
+    <div class="rail-util">🌙</div>
+    <div class="rail-util">⚙️</div>
+  </div>
+
+  <!-- NAV PANEL -->
+  <div class="nav-panel">
+    <div class="nav-header">
+      <div class="nav-workspace">VENTAS</div>
+    </div>
+    <div class="nav-links">
+      <div class="nav-link"><div class="nav-dot" style="background:#38bdf8"></div>Dashboard</div>
+      <div class="nav-link active"><div class="nav-dot" style="background:#f6bf26"></div>Pipeline</div>
+      <div class="nav-link"><div class="nav-dot" style="background:#64748b"></div>Calendario</div>
+    </div>
+    <div class="nav-footer">
+      <div class="nav-footer-btn">🔄 Sincronizar</div>
+      <div class="nav-footer-btn">↑ Importar leads</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Pipeline de ventas</div>
+      </div>
+      <span style="font-size:11px;color:#334155;margin-left:4px">23 leads activos</span>
+      <div class="topbar-spacer"></div>
+      <div class="view-toggle">
+        <div class="view-btn active">Kanban</div>
+        <div class="view-btn">Tabla</div>
+      </div>
+      <button class="add-btn" onclick="document.getElementById('modal').classList.remove('hidden')">+ Nuevo lead</button>
+    </div>
+
+    <div class="board">
+
+      <!-- Col 1 -->
+      <div class="col">
+        <div class="col-head">
+          <div class="col-color" style="background:#38bdf8"></div>
+          <div class="col-name" style="color:#38bdf8">Prospecto</div>
+          <div class="col-n">4</div>
+          <div class="col-edit" title="Editar columna">✏️</div>
+        </div>
+        <div class="col-body">
+          <div class="lead-card" onclick="document.getElementById('modal').classList.remove('hidden')">
+            <div class="card-header">
+              <div class="card-name">Florencia Ríos</div>
+            </div>
+            <div class="card-empresa">Óptica Visión Clara</div>
+            <div class="card-tags">
+              <span class="tag tag-medio">WS</span>
+              <span class="tag tag-bio">BIOMKT</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp">
+                <div class="avatar">T</div>
+                <span class="card-resp-name">TINCHO</span>
+              </div>
+              <div class="card-actions">
+                <div class="action-btn" title="WhatsApp">💬</div>
+                <div class="action-btn" title="Ver perfil">👤</div>
+              </div>
+            </div>
+          </div>
+          <div class="lead-card">
+            <div class="card-name">Martín Pérez</div>
+            <div class="card-empresa">Mueblería El Centro</div>
+            <div class="card-tags">
+              <span class="tag tag-medio">IG</span>
+              <span class="tag tag-warn">🔔 hoy</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">M</div><span class="card-resp-name">MATE</span></div>
+              <div class="card-actions">
+                <div class="action-btn">💬</div>
+                <div class="action-btn">👤</div>
+              </div>
+            </div>
+          </div>
+          <div class="lead-card">
+            <div class="card-name">Laura González</div>
+            <div class="card-empresa">Gym Fit+</div>
+            <div class="card-tags"><span class="tag tag-medio">Presencial</span></div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">C</div><span class="card-resp-name">CIRO</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="col-add">+ Agregar lead</button>
+      </div>
+
+      <!-- Col 2 -->
+      <div class="col">
+        <div class="col-head">
+          <div class="col-color" style="background:#a78bfa"></div>
+          <div class="col-name" style="color:#a78bfa">Reunión 1</div>
+          <div class="col-n">2</div>
+          <div class="col-edit">✏️</div>
+        </div>
+        <div class="col-body">
+          <div class="lead-card">
+            <div class="card-name">Carlos Suárez</div>
+            <div class="card-empresa">Ferretería Norte</div>
+            <div class="card-tags">
+              <span class="tag tag-fecha">📅 15/06</span>
+              <span class="tag tag-bio">BIOMKT</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">L</div><span class="card-resp-name">LOREN</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+          <div class="lead-card">
+            <div class="card-name">Silvia Torres</div>
+            <div class="card-empresa">Estudio Contable</div>
+            <div class="card-tags"><span class="tag tag-fecha">📅 18/06</span></div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">T</div><span class="card-resp-name">TINCHO</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="col-add">+ Agregar lead</button>
+      </div>
+
+      <!-- Col 3 -->
+      <div class="col">
+        <div class="col-head">
+          <div class="col-color" style="background:#f472b6"></div>
+          <div class="col-name" style="color:#f472b6">Reunión 2</div>
+          <div class="col-n">1</div>
+          <div class="col-edit">✏️</div>
+        </div>
+        <div class="col-body">
+          <div class="lead-card">
+            <div class="card-name">Roberto Díaz</div>
+            <div class="card-empresa">Agro San Luis</div>
+            <div class="card-tags">
+              <span class="tag" style="background:rgba(74,222,128,.1);color:#4ade80">💰 Propuesta enviada</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">C</div><span class="card-resp-name">CIRO</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="col-add">+ Agregar lead</button>
+      </div>
+
+      <!-- Col 4 -->
+      <div class="col">
+        <div class="col-head">
+          <div class="col-color" style="background:#fb923c"></div>
+          <div class="col-name" style="color:#fb923c">Seguimiento</div>
+          <div class="col-n">3</div>
+          <div class="col-edit">✏️</div>
+        </div>
+        <div class="col-body">
+          <div class="lead-card">
+            <div class="card-name">Ana Morales</div>
+            <div class="card-empresa">Boutique Alma</div>
+            <div class="card-tags">
+              <span class="tag tag-fecha">🔁 en 3 días</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">M</div><span class="card-resp-name">MATE</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+          <div class="lead-card">
+            <div class="card-name">Diego Blanco</div>
+            <div class="card-empresa">Taller Mecánico BR</div>
+            <div class="card-tags">
+              <span class="tag tag-warn">🔔 seguir hoy</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">L</div><span class="card-resp-name">LOREN</span></div>
+              <div class="card-actions"><div class="action-btn">💬</div><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="col-add">+ Agregar lead</button>
+      </div>
+
+      <!-- Col 5 -->
+      <div class="col">
+        <div class="col-head">
+          <div class="col-color" style="background:#4ade80"></div>
+          <div class="col-name" style="color:#4ade80">Cliente ✓</div>
+          <div class="col-n">12</div>
+          <div class="col-edit">✏️</div>
+        </div>
+        <div class="col-body">
+          <div class="lead-card">
+            <div class="card-name">Panadería Sol</div>
+            <div class="card-empresa">desde Ene 2025</div>
+            <div class="card-tags"><span class="tag" style="background:rgba(74,222,128,.1);color:#4ade80">Activo</span></div>
+            <div class="card-footer">
+              <div class="card-resp"><div class="avatar">T</div><span class="card-resp-name">TINCHO</span></div>
+              <div class="card-actions"><div class="action-btn">👤</div></div>
+            </div>
+          </div>
+        </div>
+        <button class="col-add">+ Agregar cliente</button>
+      </div>
+
+      <!-- Add column -->
+      <div class="add-col">
+        <div class="add-col-icon">+</div>
+        <div class="add-col-label">Nueva<br>etapa</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-backdrop hidden" id="modal" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="modal">
+
+    <div class="modal-top">
+      <div class="modal-stage-dot"></div>
+      <div class="modal-title-area">
+        <div class="modal-name">Florencia Ríos</div>
+        <div class="modal-empresa">Óptica Visión Clara · BIOMARKETING</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.add('hidden')">✕</button>
+    </div>
+
+    <!-- Stage selector -->
+    <div class="modal-stage-row">
+      <div class="stage-pill">Prospecto</div>
+      <div class="stage-pill active">Reunión 1</div>
+      <div class="stage-pill">Reunión 2</div>
+      <div class="stage-pill">Seguimiento</div>
+      <div class="stage-pill">Cliente ✓</div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="quick-actions">
+      <button class="qa-btn green">💬 WhatsApp</button>
+      <button class="qa-btn blue">📞 Llamar</button>
+      <button class="qa-btn">📧 Mail</button>
+      <button class="qa-btn">📅 Agendar reunión</button>
+    </div>
+
+    <!-- Fields -->
+    <div class="modal-body">
+      <div class="field-section">
+        <div class="field-section-title">Contacto</div>
+        <div class="field-grid">
+          <div class="field"><label>Nombre</label><input value="Florencia Ríos"></div>
+          <div class="field"><label>Empresa</label><input value="Óptica Visión Clara"></div>
+          <div class="field"><label>Teléfono</label><input value="+54 9 351 555-1234"></div>
+          <div class="field"><label>Instagram</label><input value="@opticavisionclara"></div>
+          <div class="field"><label>Email</label><input value="florencia@optica.com"></div>
+          <div class="field"><label>Rubro</label><input value="Óptica / Salud visual"></div>
+        </div>
+      </div>
+      <div class="field-section">
+        <div class="field-section-title">Gestión</div>
+        <div class="field-grid">
+          <div class="field"><label>Responsable</label>
+            <select><option>TINCHO</option><option>MATE</option><option>LOREN</option><option>CIRO</option></select>
+          </div>
+          <div class="field"><label>Medio de contacto</label>
+            <select><option>WHATSAPP</option><option>LLAMADA</option><option>INSTAGRAM</option></select>
+          </div>
+          <div class="field"><label>Fecha reunión</label><input type="datetime-local" value="2025-06-15T15:00"></div>
+          <div class="field"><label>Próximo seguimiento</label><input type="date"></div>
+          <div class="field field-full"><label>Observaciones</label>
+            <textarea>Le interesa el servicio de contenido audiovisual. Tiene presupuesto para junio. Mencionó que ya trabajó con otra agencia pero quedó disconforme.</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="field-section">
+        <div class="field-section-title">Información adicional</div>
+        <div class="field-grid">
+          <div class="field"><label>Servicio de interés</label><input value="Contenido Audiovisual"></div>
+          <div class="field"><label>Empresa Bio</label>
+            <select><option>BIOMARKETING</option><option>BIOESTRATEGIA</option></select>
+          </div>
+          <div class="field"><label>Objetivos</label><input placeholder="Ej: aumentar ventas en redes"></div>
+          <div class="field"><label>Dirección</label><input value="Av. Colón 1200, Córdoba"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary">Guardar cambios</button>
+      <button class="btn-outline" onclick="document.getElementById('modal').classList.add('hidden')">Cancelar</button>
+      <button class="btn-danger">🗑 Eliminar lead</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 28px 32px; }
+  h1 { font-size: 18px; font-weight: 700; color: #f6bf26; margin-bottom: 6px; }
+  .sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+
+  .pipeline {
+    display: flex; align-items: center; gap: 0; margin-bottom: 32px;
+  }
+  .stage {
+    flex: 1; text-align: center; padding: 14px 10px;
+    position: relative; background: #1e293b;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+  }
+  .stage:first-child {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+    border-radius: 8px 0 0 8px;
+  }
+  .stage:last-child {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 14px 50%);
+    border-radius: 0 8px 8px 0;
+  }
+  .stage.active { background: #1d3a5f; }
+  .stage-num { font-size: 10px; color: #475569; margin-bottom: 3px; }
+  .stage-name { font-size: 12px; font-weight: 700; }
+  .stage-old { font-size: 10px; color: #475569; margin-top: 3px; font-style: italic; }
+
+  .s1 .stage-name { color: #38bdf8; }
+  .s2 .stage-name { color: #a78bfa; }
+  .s3 .stage-name { color: #f472b6; }
+  .s4 .stage-name { color: #fb923c; }
+  .s5 .stage-name { color: #4ade80; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .option-card {
+    background: #1e293b; border: 2px solid #334155; border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: border-color .2s;
+  }
+  .option-card:hover { border-color: #f6bf26; }
+  .option-card.selected { border-color: #f6bf26; background: #1d2f1a; }
+
+  .opt-title { font-size: 13px; font-weight: 700; color: #f6bf26; margin-bottom: 10px; }
+  .stage-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 12px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .arrow-sm { color: #334155; font-size: 10px; }
+  .desc { font-size: 11px; color: #64748b; margin-top: 10px; line-height: 1.5; }
+
+  .note {
+    margin-top: 20px; background: #1e293b; border-radius: 8px; padding: 12px 16px;
+    border-left: 3px solid #f6bf26; font-size: 12px; color: #94a3b8; line-height: 1.6;
+  }
+  .note strong { color: #e2e8f0; }
+</style>
+</head>
+<body>
+  <h1>Renombrar las etapas del pipeline</h1>
+  <p class="sub">El sistema es un CRM. Las etapas del Kanban deben reflejar el proceso de venta, no ser tabs técnicos.</p>
+
+  <!-- Pipeline visual -->
+  <div class="pipeline">
+    <div class="stage s1">
+      <div class="stage-num">01</div>
+      <div class="stage-name">¿?</div>
+      <div class="stage-old">antes: "CRM General"</div>
+    </div>
+    <div class="stage s2">
+      <div class="stage-num">02</div>
+      <div class="stage-name">Reunión 1</div>
+      <div class="stage-old">Auditoría</div>
+    </div>
+    <div class="stage s3">
+      <div class="stage-num">03</div>
+      <div class="stage-name">Reunión 2</div>
+      <div class="stage-old">Propuesta / cierre</div>
+    </div>
+    <div class="stage s4">
+      <div class="stage-num">04</div>
+      <div class="stage-name">Seguimiento</div>
+      <div class="stage-old">Reactivación</div>
+    </div>
+    <div class="stage s5">
+      <div class="stage-num">05</div>
+      <div class="stage-name">Cliente ✓</div>
+      <div class="stage-old">Cerrado</div>
+    </div>
+  </div>
+
+  <p style="font-size:12px;color:#64748b;margin-bottom:16px">La etapa 01 es la más importante de renombrar. ¿Cuál de estas opciones describe mejor lo que pasa ahí?</p>
+
+  <div class="options-grid">
+
+    <div class="option-card" onclick="select(this,'prospecto')">
+      <div class="opt-title">A — Prospecto</div>
+      <div class="stage-row"><div class="dot" style="background:#38bdf8"></div> Prospecto <span class="arrow-sm">→ contacto inicial</span></div>
+      <div class="stage-row"><div class="dot" style="background:#a78bfa"></div> Reunión 1</div>
+      <div class="stage-row"><div class="dot" style="background:#f472b6"></div> Reunión 2</div>
+      <div class="stage-row"><div class="dot" style="background:#fb923c"></div> Seguimiento</div>
+      <div class="stage-row"><div class="dot" style="background:#4ade80"></div> Cliente ✓</div>
+      <div class="desc">Vocabulario clásico de ventas. Claro y universal.</div>
+    </div>
+
+    <div class="option-card" onclick="select(this,'captacion')">
+      <div class="opt-title">B — Captación</div>
+      <div class="stage-row"><div class="dot" style="background:#38bdf8"></div> Captación <span class="arrow-sm">→ primer contacto</span></div>
+      <div class="stage-row"><div class="dot" style="background:#a78bfa"></div> Reunión 1</div>
+      <div class="stage-row"><div class="dot" style="background:#f472b6"></div> Reunión 2</div>
+      <div class="stage-row"><div class="dot" style="background:#fb923c"></div> Seguimiento</div>
+      <div class="stage-row"><div class="dot" style="background:#4ade80"></div> Cliente ✓</div>
+      <div class="desc">Más orientado a acción. Capta / atrae / genera.</div>
+    </div>
+
+    <div class="option-card" onclick="select(this,'contacto')">
+      <div class="opt-title">C — Primer Contacto</div>
+      <div class="stage-row"><div class="dot" style="background:#38bdf8"></div> Contacto <span class="arrow-sm">→ en diálogo</span></div>
+      <div class="stage-row"><div class="dot" style="background:#a78bfa"></div> Reunión 1</div>
+      <div class="stage-row"><div class="dot" style="background:#f472b6"></div> Reunión 2</div>
+      <div class="stage-row"><div class="dot" style="background:#fb923c"></div> Seguimiento</div>
+      <div class="stage-row"><div class="dot" style="background:#4ade80"></div> Cliente ✓</div>
+      <div class="desc">Describe exactamente qué pasó: se estableció contacto.</div>
+    </div>
+
+    <div class="option-card" onclick="select(this,'lead')">
+      <div class="opt-title">D — Lead / Interesado</div>
+      <div class="stage-row"><div class="dot" style="background:#38bdf8"></div> Lead <span class="arrow-sm">→ interés confirmado</span></div>
+      <div class="stage-row"><div class="dot" style="background:#a78bfa"></div> Reunión 1</div>
+      <div class="stage-row"><div class="dot" style="background:#f472b6"></div> Reunión 2</div>
+      <div class="stage-row"><div class="dot" style="background:#fb923c"></div> Seguimiento</div>
+      <div class="stage-row"><div class="dot" style="background:#4ade80"></div> Cliente ✓</div>
+      <div class="desc">Inglés pero muy reconocible en contexto comercial.</div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <strong>¿Y "Base de Datos"?</strong> Desaparece como página separada — pasa a ser una vista de tabla dentro del mismo pipeline (toggle Kanban ↔ Lista). Todos los leads siempre visibles en ambas vistas.
+  </div>
+
+<script>
+function select(el, val) {
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (window.recordChoice) window.recordChoice(val, el.querySelector('.opt-title').textContent);
+}
+</script>
+</body>
+</html>

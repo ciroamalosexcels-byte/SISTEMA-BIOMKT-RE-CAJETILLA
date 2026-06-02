@@ -1,10 +1,5 @@
-export type TabKey =
-  | "CRM"
-  | "REUNION_1"
-  | "REUNION_2"
-  | "SEGUIMIENTO"
-  | "BASE"
-  | "CLIENTES";
+/** Alias legacy — Lead.tab es ahora string dinámico (id de PipelineStage) */
+export type TabKey = string;
 
 export type EmpresaBio = "BIOMARKETING" | "BIOESTRATEGIA";
 export type Medio = "PRESENCIAL" | "LLAMADA" | "WHATSAPP" | "INSTAGRAM" | "MAIL";

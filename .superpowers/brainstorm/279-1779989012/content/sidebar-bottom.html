@@ -1,0 +1,114 @@
+<h2>¿Qué va en la parte inferior del sidebar?</h2>
+<p class="subtitle">Actualmente el engranaje tiene: Modo noche, Sincronizar Sheets, Importar leads, Configuración especial. ¿Dónde van en el nuevo sidebar?</p>
+
+<div class="cards">
+
+  <!-- Opción A: iconos en el rail -->
+  <div class="card" data-choice="rail-icons" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;height:220px;background:#f1f5f9;border-radius:8px;overflow:hidden;font-family:sans-serif;font-size:11px;">
+        <div style="width:48px;background:#020817;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:5px;">
+          <!-- top: workspaces -->
+          <div style="width:32px;height:32px;background:#f6bf26;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">📈</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">👥</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">🏢</div>
+          <!-- spacer -->
+          <div style="flex:1"></div>
+          <!-- bottom: utilities -->
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.5;cursor:pointer" title="Modo noche">🌙</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.5;cursor:pointer" title="Sincronizar">🔄</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.5;cursor:pointer" title="Configuración">⚙️</div>
+        </div>
+        <div style="width:148px;background:#07152f;padding:10px 0;">
+          <div style="color:#f6bf26;font-weight:700;font-size:12px;padding:0 12px 10px;">Ventas</div>
+          <div style="margin:2px 8px;padding:5px 10px;background:rgba(246,191,38,0.15);color:#f6bf26;border-radius:5px;font-size:10px">Dashboard</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">CRM General</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Reunión 1</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Reunión 2</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Seguimiento</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Base de Datos</div>
+        </div>
+        <div style="flex:1;background:#dbe1e7;padding:10px;">
+          <div style="background:#fff;border-radius:5px;height:25px;margin-bottom:6px;opacity:.6"></div>
+          <div style="background:#fff;border-radius:5px;height:55px;opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Íconos de utilidad en el rail</h3>
+      <p>🌙 modo noche · 🔄 sync · ⚙️ config se ubican al pie del rail angosto, siempre visibles.</p>
+    </div>
+  </div>
+
+  <!-- Opción B: footer en el panel expandido -->
+  <div class="card" data-choice="panel-footer" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;height:220px;background:#f1f5f9;border-radius:8px;overflow:hidden;font-family:sans-serif;font-size:11px;">
+        <div style="width:48px;background:#020817;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:5px;">
+          <div style="width:32px;height:32px;background:#f6bf26;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">📈</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">👥</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">🏢</div>
+        </div>
+        <div style="width:148px;background:#07152f;display:flex;flex-direction:column;padding:10px 0;">
+          <div style="color:#f6bf26;font-weight:700;font-size:12px;padding:0 12px 10px;">Ventas</div>
+          <div style="margin:2px 8px;padding:5px 10px;background:rgba(246,191,38,0.15);color:#f6bf26;border-radius:5px;font-size:10px">Dashboard</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">CRM General</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Reunión 1</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Reunión 2</div>
+          <!-- spacer -->
+          <div style="flex:1"></div>
+          <!-- footer utilidades -->
+          <div style="border-top:1px solid rgba(255,255,255,0.08);padding:8px 8px 0;display:flex;flex-direction:column;gap:3px;">
+            <div style="padding:4px 10px;color:#64748b;font-size:10px;border-radius:5px;display:flex;align-items:center;gap:6px;cursor:pointer">🌙 <span>Modo noche</span></div>
+            <div style="padding:4px 10px;color:#64748b;font-size:10px;border-radius:5px;display:flex;align-items:center;gap:6px;cursor:pointer">🔄 <span>Sincronizar</span></div>
+            <div style="padding:4px 10px;color:#64748b;font-size:10px;border-radius:5px;display:flex;align-items:center;gap:6px;cursor:pointer">⚙️ <span>Configuración</span></div>
+          </div>
+        </div>
+        <div style="flex:1;background:#dbe1e7;padding:10px;">
+          <div style="background:#fff;border-radius:5px;height:25px;margin-bottom:6px;opacity:.6"></div>
+          <div style="background:#fff;border-radius:5px;height:55px;opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Footer con texto en el panel</h3>
+      <p>Las utilidades aparecen al pie del panel expandido con íconos + etiqueta. Se ocultan cuando el panel se colapsa.</p>
+    </div>
+  </div>
+
+  <!-- Opción C: ambos -->
+  <div class="card" data-choice="both" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;height:220px;background:#f1f5f9;border-radius:8px;overflow:hidden;font-family:sans-serif;font-size:11px;">
+        <div style="width:48px;background:#020817;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:5px;">
+          <div style="width:32px;height:32px;background:#f6bf26;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px">📈</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">👥</div>
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35">🏢</div>
+          <div style="flex:1"></div>
+          <!-- solo modo noche en el rail -->
+          <div style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.5">🌙</div>
+        </div>
+        <div style="width:148px;background:#07152f;display:flex;flex-direction:column;padding:10px 0;">
+          <div style="color:#f6bf26;font-weight:700;font-size:12px;padding:0 12px 10px;">Ventas</div>
+          <div style="margin:2px 8px;padding:5px 10px;background:rgba(246,191,38,0.15);color:#f6bf26;border-radius:5px;font-size:10px">Dashboard</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">CRM General</div>
+          <div style="margin:2px 8px;padding:5px 10px;color:#94a3b8;font-size:10px">Reunión 1</div>
+          <div style="flex:1"></div>
+          <div style="border-top:1px solid rgba(255,255,255,0.08);padding:8px 8px 0;display:flex;flex-direction:column;gap:3px;">
+            <div style="padding:4px 10px;color:#64748b;font-size:10px;display:flex;align-items:center;gap:6px;">🔄 <span>Sincronizar</span></div>
+            <div style="padding:4px 10px;color:#64748b;font-size:10px;display:flex;align-items:center;gap:6px;">⚙️ <span>Configuración</span></div>
+          </div>
+        </div>
+        <div style="flex:1;background:#dbe1e7;padding:10px;">
+          <div style="background:#fff;border-radius:5px;height:25px;margin-bottom:6px;opacity:.6"></div>
+          <div style="background:#fff;border-radius:5px;height:55px;opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Combinado</h3>
+      <p>🌙 modo noche en el rail (siempre accesible), resto en el footer del panel. Máxima accesibilidad.</p>
+    </div>
+  </div>
+
+</div>

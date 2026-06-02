@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, MessageCircle, Phone, ExternalLink, CalendarDays, Trash2 } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
+import { nowDatetimeBA } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
@@ -15,39 +16,23 @@ interface LeadModalProps {
 
 const TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
 
-/* ── Campo de fecha con placeholder sutil ────────────────────────── */
+/* ── Campo de fecha ──────────────────────────────────────────────── */
 function DateField({
   label, value, onChange, withTime, inputCls,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   withTime?: boolean; inputCls: string;
 }) {
-  const formatted = value
-    ? (() => {
-        const raw = withTime ? value.slice(0, 16) : value.slice(0, 10);
-        const [date, time] = raw.split("T");
-        if (!date) return value;
-        const [y, m, d] = date.split("-");
-        return `${d ?? "--"}/${m ?? "--"}/${y ?? "----"}${withTime && time ? " " + time : ""}`;
-      })()
-    : null;
-
-  const placeholder = withTime ? "--/--/---- --:--" : "--/--/----";
-
   return (
     <div className="flex flex-col gap-0.5">
-      <label className="text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">{label}</label>
-      <div className={`${inputCls} relative flex items-center min-h-[33px]`}>
-        <span className={formatted ? "text-slate-900 dark:text-slate-200" : "text-slate-300 dark:text-white/[0.2]"}>
-          {formatted ?? placeholder}
-        </span>
-        <input
-          type={withTime ? "datetime-local" : "date"}
-          value={value ? (withTime ? value.slice(0, 16) : value.slice(0, 10)) : ""}
-          onChange={e => onChange(e.target.value)}
-          className="absolute inset-0 opacity-0 w-full cursor-pointer"
-        />
-      </div>
+      <label className="text-[13px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]">{label}</label>
+      <input
+        type={withTime ? "datetime-local" : "date"}
+        value={value ? (withTime ? (value.includes("T") ? value.slice(0, 16) : value.slice(0, 10) + "T00:00") : value.slice(0, 10)) : ""}
+        onChange={e => onChange(e.target.value)}
+        className={inputCls}
+        style={!value ? { color: "transparent" } : undefined}
+      />
     </div>
   );
 }
@@ -60,7 +45,8 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const initialStage = lead?.tab ?? defaultStageId ?? stages[0]?.id ?? "CRM";
 
   const [stageId, setStageId] = useState(initialStage);
-  const [fechaContacto, setFechaContacto] = useState(lead?.fechaContacto ?? "");
+  const [fechaContacto, setFechaContacto] = useState(lead?.fechaContacto ?? (isNew ? nowDatetimeBA() : ""));
+  const [show2ndContact, setShow2ndContact] = useState(!!(lead?.nombre2 || lead?.telefono2));
   const [form, setForm] = useState<Omit<LeadFormData, "empresaBio" | "medio"> & { empresaBio: string; medio: string }>({
     nombre:          lead?.nombre ?? "",
     nombre2:         lead?.nombre2 ?? "",
@@ -70,10 +56,10 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
     email:           lead?.email ?? "",
     instagram:       lead?.instagram ?? "",
     direccion:       lead?.direccion ?? "",
-    responsable1:    lead?.responsable1 ?? TEAM[0],
+    responsable1:    lead?.responsable1 ?? "",
     responsable2:    lead?.responsable2 ?? "",
     empresaBio:      lead?.empresaBio ?? "BIOMARKETING",
-    medio:           lead?.medio ?? "",
+    medio:           lead?.medio ?? "PRESENCIAL",
     observaciones:   lead?.observaciones ?? "",
     rubro:           lead?.rubro ?? "",
     servicio:        lead?.servicio ?? "",
@@ -110,22 +96,12 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
     onClose();
   }
 
-  function openWhatsApp() {
-    const phone = form.telefono.replace(/\D/g, "");
-    if (phone) window.open(`https://wa.me/${phone}`, "_blank");
-  }
-
-  function openInstagram() {
-    const ig = form.instagram?.replace("@", "");
-    if (ig) window.open(`https://instagram.com/${ig}`, "_blank");
-  }
-
   /* Active stage color */
   const activeStage = stages.find(s => s.id === stageId);
 
   /* Shared input/select/textarea classes */
   const inputCls = "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-md py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] focus:bg-white dark:focus:bg-white/[0.05] w-full transition-colors";
-  const lbl = "text-[9px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]";
+  const lbl = "text-[13px] text-slate-400 dark:text-[#1e3a5f] font-bold uppercase tracking-[0.05em]";
 
   return (
     <div
@@ -141,8 +117,8 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
         <div className="pt-5 px-[22px] flex items-start gap-3 flex-shrink-0">
           <div className="w-2.5 h-2.5 rounded-full mt-[6px] flex-shrink-0" style={{ background: activeStage?.color ?? "#94a3b8" }} />
           <div className="flex-1 min-w-0">
-            <div className="text-[19px] font-black text-slate-900 dark:text-slate-100 mb-0.5 truncate">{form.nombre || (isNew ? "Nuevo lead" : "—")}</div>
-            <div className="text-xs text-slate-400 dark:text-[#334155]">{form.empresa || "Sin empresa"} · {form.empresaBio}</div>
+            <div className="text-[19px] font-black text-slate-900 dark:text-slate-100 mb-0.5 truncate">{form.empresa || (isNew ? "Nuevo lead" : "—")}</div>
+            <div className="text-xs text-slate-400 dark:text-[#334155]">{form.empresaBio}</div>
           </div>
           <button
             className="w-[30px] h-[30px] bg-slate-100 dark:bg-white/[0.04] border-none text-slate-400 dark:text-[#475569] cursor-pointer flex items-center justify-center flex-shrink-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/[0.1] dark:hover:text-red-400 transition-colors"
@@ -152,98 +128,76 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
           </button>
         </div>
 
-        {/* ── Stage pills ─────────────────────────────────── */}
-        <div className="flex gap-1 px-[22px] py-3 border-b border-slate-200 dark:border-white/[0.05] flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden">
-          {stages.map(s => (
-            <button
-              key={s.id}
-              className={
-                stageId === s.id
-                  ? "px-3 py-1 rounded-full text-[10px] font-black cursor-pointer whitespace-nowrap border transition-all"
-                  : "px-3 py-1 rounded-full text-[10px] font-black cursor-pointer whitespace-nowrap border transition-all bg-slate-50 dark:bg-white/[0.03] text-slate-400 dark:text-[#334155] border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-500 dark:hover:text-slate-400"
-              }
-              style={stageId === s.id ? { background: `${s.color}18`, color: s.color, borderColor: `${s.color}40` } : {}}
-              onClick={() => setStageId(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Quick actions ────────────────────────────────── */}
-        <div className="flex gap-1 px-[22px] py-2 border-b border-slate-100 dark:border-white/[0.04] flex-shrink-0 flex-wrap">
-          <button
-            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-green-50 dark:hover:bg-green-500/[0.08] hover:text-green-600 dark:hover:text-green-400 hover:border-green-200 dark:hover:border-green-500/[0.2]"
-            onClick={openWhatsApp}
-          >
-            <MessageCircle size={13} /> WhatsApp
-          </button>
-          <button
-            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-500/[0.2]"
-            onClick={() => form.telefono && window.open(`tel:${form.telefono}`)}
-          >
-            <Phone size={13} /> Llamar
-          </button>
-          <button
-            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-purple-50 dark:hover:bg-purple-500/[0.08] hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-500/[0.2]"
-            onClick={openInstagram}
-          >
-            <ExternalLink size={13} /> Instagram
-          </button>
-          <button
-            className="flex items-center gap-1 px-[11px] py-[5px] border border-slate-200 dark:border-white/[0.06] bg-transparent text-slate-500 dark:text-[#475569] text-[11px] font-bold cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-white/[0.06]"
-            onClick={() => set("meetingDatetime", "")}
-          >
-            <CalendarDays size={13} /> Reunión
-          </button>
-        </div>
 
         {/* ── Fields ──────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-[22px] py-3.5 flex flex-col gap-2.5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e3a5f] [&::-webkit-scrollbar-track]:bg-transparent">
 
-          {/* Fila 1: Empresa + Nombre */}
+          {/* Fila 1: Nombre + Empresa */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-0.5">
-              <label className={lbl}>Nombre negocio / Empresa</label>
-              <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} />
-            </div>
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Nombre contacto *</label>
               <input className={inputCls} value={form.nombre} onChange={e => set("nombre", e.target.value)} />
             </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Nombre negocio / Empresa</label>
+              <input className={inputCls} value={form.empresa} onChange={e => set("empresa", e.target.value)} />
+            </div>
           </div>
 
-          {/* Fila 2: Dirección */}
-          <div className="flex flex-col gap-0.5">
-            <label className={lbl}>Dirección</label>
-            <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
-          </div>
+          {/* 2do contacto */}
+          {show2ndContact ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-0.5">
+                <label className={lbl}>Nombre 2do contacto</label>
+                <input className={inputCls} value={form.nombre2} onChange={e => set("nombre2", e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <label className={lbl}>Teléfono 2do contacto</label>
+                <input className={inputCls} value={form.telefono2} onChange={e => set("telefono2", e.target.value)} />
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="self-start text-[10px] font-black text-slate-400 dark:text-slate-600 hover:text-amber dark:hover:text-amber bg-transparent border-none cursor-pointer px-0 py-0 flex items-center gap-1 transition-colors"
+              onClick={() => setShow2ndContact(true)}
+            >
+              + 2do contacto
+            </button>
+          )}
 
-          {/* Fila 3: Teléfono */}
-          <div className="flex flex-col gap-0.5">
-            <label className={lbl}>Teléfono</label>
-            <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} />
-          </div>
-
-          {/* Fila 4: Observaciones */}
+          {/* Observaciones */}
           <div className="flex flex-col gap-0.5">
             <label className={lbl}>Observaciones</label>
             <textarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} />
+          </div>
+
+          {/* Dirección + Teléfono */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Dirección</label>
+              <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Teléfono</label>
+              <input className={inputCls} value={form.telefono} onChange={e => set("telefono", e.target.value)} />
+            </div>
           </div>
 
           {/* Fila 5: Responsable 1 + Responsable 2 */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Responsable 1</label>
-              <select className={inputCls} value={form.responsable1} onChange={e => set("responsable1", e.target.value)}>
-                {TEAM.map(t => <option key={t}>{t}</option>)}
+              <select className={inputCls} value={form.responsable1 || ""} onChange={e => set("responsable1", e.target.value)}>
+                <option value=""></option>
+                {TEAM.filter(t => t !== form.responsable2).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Responsable 2</label>
               <select className={inputCls} value={form.responsable2 || ""} onChange={e => set("responsable2", e.target.value)}>
-                
-                {TEAM.map(t => <option key={t}>{t}</option>)}
+                <option value=""></option>
+                {TEAM.filter(t => t !== form.responsable1).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
           </div>
@@ -253,7 +207,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Medio de contacto</label>
               <select className={inputCls} value={form.medio} onChange={e => set("medio", e.target.value)}>
-                <option value="">— Sin medio —</option>
+                <option value=""></option>
                 {MEDIO_OPTS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
@@ -267,32 +221,21 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
 
           {/* Fechas */}
           <div className="grid grid-cols-2 gap-2">
+            <DateField label="Fecha y hora de contacto" value={fechaContacto} onChange={setFechaContacto} withTime inputCls={inputCls} />
             <DateField label="Próximo seguimiento" value={form.proximoSeguimientoFecha ?? ""} onChange={v => set("proximoSeguimientoFecha", v)} inputCls={inputCls} />
             <DateField label="Fecha reunión" value={form.meetingDatetime ?? ""} onChange={v => set("meetingDatetime", v)} withTime inputCls={inputCls} />
-            <DateField label="Fecha y hora de contacto" value={fechaContacto} onChange={setFechaContacto} withTime inputCls={inputCls} />
           </div>
 
         </div>
 
         {/* ── Footer ──────────────────────────────────────── */}
         <div className="px-[22px] py-3 border-t border-slate-200 dark:border-white/[0.05] flex items-center gap-2 flex-shrink-0">
-          <button
-            className="px-[18px] py-2 bg-amber text-bio-dark border-none font-black text-xs cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={handleSave}
-          >
+          <button className="btn btn-sm btn-amber" onClick={handleSave}>
             {isNew ? "Crear lead" : "Guardar cambios"}
           </button>
-          <button
-            className="px-[13px] py-2 bg-transparent text-slate-500 dark:text-[#334155] border border-slate-200 dark:border-white/[0.06] text-xs cursor-pointer hover:text-slate-700 dark:hover:text-slate-400 transition-colors"
-            onClick={onClose}
-          >
-            Cancelar
-          </button>
+          <button className="btn btn-sm btn-outline" onClick={onClose}>Cancelar</button>
           {!isNew && (
-            <button
-              className="ml-auto px-[13px] py-2 bg-transparent text-red-700 dark:text-[#7f1d1d] border border-red-200 dark:border-red-500/[0.1] text-xs cursor-pointer flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-500/[0.08] hover:text-red-600 dark:hover:text-red-400 transition-colors"
-              onClick={handleDelete}
-            >
+            <button className="btn btn-sm btn-danger ml-auto flex items-center gap-1" onClick={handleDelete}>
               <Trash2 size={13} /> Eliminar
             </button>
           )}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abstracción del pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  .page { padding: 28px 32px; }
+  h1 { font-size: 18px; font-weight: 700; color: #f6bf26; margin-bottom: 6px; }
+  .sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+
+  /* ── BEFORE ──────────────────── */
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    color: #475569; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .tabs-before {
+    display: flex; gap: 4px; background: #1e293b; padding: 6px; border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .tab-item {
+    padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    background: transparent; color: #64748b; cursor: pointer;
+  }
+  .tab-item.active { background: #f6bf26; color: #07152f; }
+  .tab-content {
+    background: #1e293b; border-radius: 10px; padding: 12px; height: 90px;
+    display: flex; align-items: center; justify-content: center;
+    color: #334155; font-size: 12px; font-style: italic;
+    border: 1px dashed #334155;
+  }
+
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px 0; gap: 12px; color: #f6bf26; font-size: 13px; font-weight: 700;
+  }
+  .arrow-line {
+    flex: 1; height: 2px; background: linear-gradient(90deg, #1e293b, #f6bf26);
+  }
+
+  /* ── AFTER: KANBAN ───────────── */
+  .kanban {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
+  }
+  .col {
+    flex-shrink: 0; width: 175px; background: #1e293b; border-radius: 10px; padding: 10px;
+  }
+  .col-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 2px solid;
+  }
+  .col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .col-count {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+    background: rgba(255,255,255,0.07); color: #94a3b8;
+  }
+
+  .col-crm .col-header      { border-color: #38bdf8; }
+  .col-crm .col-title       { color: #38bdf8; }
+  .col-r1 .col-header       { border-color: #a78bfa; }
+  .col-r1 .col-title        { color: #a78bfa; }
+  .col-r2 .col-header       { border-color: #f472b6; }
+  .col-r2 .col-title        { color: #f472b6; }
+  .col-seg .col-header      { border-color: #fb923c; }
+  .col-seg .col-title       { color: #fb923c; }
+  .col-cli .col-header      { border-color: #4ade80; }
+  .col-cli .col-title       { color: #4ade80; }
+
+  .card {
+    background: #0f172a; border-radius: 8px; padding: 8px 10px;
+    margin-bottom: 6px; border: 1px solid #334155; cursor: grab;
+    transition: transform .15s, border-color .15s;
+  }
+  .card:hover { border-color: #475569; transform: translateY(-1px); }
+  .card-name { font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 3px; }
+  .card-empresa { font-size: 10px; color: #64748b; margin-bottom: 5px; }
+  .card-meta { display: flex; gap: 5px; align-items: center; }
+  .badge {
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    background: rgba(246,191,38,0.12); color: #f6bf26;
+  }
+  .badge.blue { background: rgba(56,189,248,0.12); color: #38bdf8; }
+  .badge.green { background: rgba(74,222,128,0.12); color: #4ade80; }
+  .card-resp { font-size: 9px; color: #475569; margin-left: auto; }
+
+  .add-card {
+    width: 100%; padding: 6px; border-radius: 6px; border: 1px dashed #334155;
+    background: transparent; color: #475569; font-size: 11px; cursor: pointer;
+    text-align: center; margin-top: 2px;
+  }
+  .add-card:hover { border-color: #f6bf26; color: #f6bf26; }
+
+  .insight {
+    margin-top: 20px; background: #1e293b; border-radius: 10px; padding: 14px 18px;
+    border-left: 3px solid #f6bf26;
+  }
+  .insight-title { font-size: 11px; font-weight: 700; color: #f6bf26; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+  .insight-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .insight-item { font-size: 12px; color: #94a3b8; }
+  .insight-item strong { color: #e2e8f0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Abstracción del pipeline de ventas</h1>
+  <p class="sub">Todos los leads tienen un campo <code style="background:#1e293b;padding:1px 6px;border-radius:4px;color:#38bdf8">tab</code> que define su etapa. Hoy eso se traduce en 5 páginas separadas. Podría ser 1 tablero Kanban.</p>
+
+  <!-- BEFORE -->
+  <div class="section-label">Estado actual — 5 páginas separadas</div>
+  <div class="tabs-before">
+    <div class="tab-item active">CRM General</div>
+    <div class="tab-item">Reunión 1</div>
+    <div class="tab-item">Reunión 2</div>
+    <div class="tab-item">Seguimiento</div>
+    <div class="tab-item">Base de Datos</div>
+  </div>
+  <div class="tab-content">Solo ves los leads de esta etapa. Para ver otro estado tenés que cambiar de página.</div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <span>→ unificar en Kanban</span>
+    <div class="arrow-line" style="background:linear-gradient(90deg,#f6bf26,#1e293b)"></div>
+  </div>
+
+  <!-- KANBAN -->
+  <div class="section-label">Propuesta — 1 tablero, todo el pipeline visible</div>
+  <div class="kanban">
+
+    <div class="col col-crm">
+      <div class="col-header">
+        <span class="col-title">CRM</span>
+        <span class="col-count">4</span>
+      </div>
+      <div class="card">
+        <div class="card-name">Florencia Ríos</div>
+        <div class="card-empresa">Óptica Visión</div>
+        <div class="card-meta"><span class="badge">WS</span><span class="card-resp">TINCHO</span></div>
+      </div>
+      <div class="card">
+        <div class="card-name">Martín Pérez</div>
+        <div class="card-empresa">Mueblería Central</div>
+        <div class="card-meta"><span class="badge blue">IG</span><span class="card-resp">MATE</span></div>
+      </div>
+      <div class="card">
+        <div class="card-name">Laura González</div>
+        <div class="card-empresa">Gym Fit+</div>
+        <div class="card-meta"><span class="badge">WS</span><span class="card-resp">CIRO</span></div>
+      </div>
+      <button class="add-card">+ Agregar lead</button>
+    </div>
+
+    <div class="col col-r1">
+      <div class="col-header">
+        <span class="col-title">Reunión 1</span>
+        <span class="col-count">2</span>
+      </div>
+      <div class="card">
+        <div class="card-name">Carlos Suárez</div>
+        <div class="card-empresa">Ferretería Norte</div>
+        <div class="card-meta"><span class="badge">📅 15/06</span><span class="card-resp">LOREN</span></div>
+      </div>
+      <div class="card">
+        <div class="card-name">Silvia Torres</div>
+        <div class="card-empresa">Estudio Contable</div>
+        <div class="card-meta"><span class="badge blue">📅 18/06</span><span class="card-resp">TINCHO</span></div>
+      </div>
+      <button class="add-card">+ Agregar lead</button>
+    </div>
+
+    <div class="col col-r2">
+      <div class="col-header">
+        <span class="col-title">Reunión 2</span>
+        <span class="col-count">1</span>
+      </div>
+      <div class="card">
+        <div class="card-name">Roberto Díaz</div>
+        <div class="card-empresa">Agro San Luis</div>
+        <div class="card-meta"><span class="badge">💰 $85k</span><span class="card-resp">CIRO</span></div>
+      </div>
+      <button class="add-card">+ Agregar lead</button>
+    </div>
+
+    <div class="col col-seg">
+      <div class="col-header">
+        <span class="col-title">Seguimiento</span>
+        <span class="col-count">3</span>
+      </div>
+      <div class="card">
+        <div class="card-name">Ana Morales</div>
+        <div class="card-empresa">Boutique Alma</div>
+        <div class="card-meta"><span class="badge">🔁 3 días</span><span class="card-resp">MATE</span></div>
+      </div>
+      <div class="card">
+        <div class="card-name">Diego Blanco</div>
+        <div class="card-empresa">Taller Mecánico</div>
+        <div class="card-meta"><span class="badge blue">🔁 hoy</span><span class="card-resp">LOREN</span></div>
+      </div>
+      <button class="add-card">+ Agregar lead</button>
+    </div>
+
+    <div class="col col-cli">
+      <div class="col-header">
+        <span class="col-title">Cliente ✓</span>
+        <span class="col-count">12</span>
+      </div>
+      <div class="card">
+        <div class="card-name">Panadería Sol</div>
+        <div class="card-empresa">desde Ene 2025</div>
+        <div class="card-meta"><span class="badge green">Activo</span><span class="card-resp">TINCHO</span></div>
+      </div>
+      <div class="card">
+        <div class="card-name">Clínica Médica</div>
+        <div class="card-empresa">desde Mar 2025</div>
+        <div class="card-meta"><span class="badge green">Activo</span><span class="card-resp">CIRO</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Insight box -->
+  <div class="insight">
+    <div class="insight-title">Lo que se puede unificar</div>
+    <div class="insight-row">
+      <div class="insight-item">🗂️ <strong>CRM + R1 + R2 + Seguimiento + Base</strong> → un Kanban de pipeline</div>
+      <div class="insight-item">👤 <strong>Detalle del lead</strong> → modal o panel lateral al hacer clic en una card</div>
+      <div class="insight-item">🏢 <strong>Equipo + Colaboradores + Procedimientos + Reuniones</strong> → hub de equipo con pestañas internas</div>
+      <div class="insight-item">📋 <strong>Clientes + Planes + Mapa</strong> → ya está unificado en /clientes/[id]</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

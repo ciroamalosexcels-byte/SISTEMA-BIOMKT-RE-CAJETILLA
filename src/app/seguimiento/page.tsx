@@ -1,5 +1,5 @@
-import { CrmView } from "@/components/crm/crm-view";
+import { SeguimientoView } from "@/components/seguimiento/seguimiento-view";
 
 export default function SeguimientoPage() {
-  return <CrmView tab="SEGUIMIENTO" />;
+  return <SeguimientoView />;
 }
