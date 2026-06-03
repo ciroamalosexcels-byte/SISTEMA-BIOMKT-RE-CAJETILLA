@@ -103,3 +103,6 @@ Two layers, same as the legacy app:
 - **CSS patches**: Numbered V1–V14+ blocks at end of `<style>`, use `!important` to override
 - **Google Sheets sync**: POST with `Content-Type:"text/plain;charset=utf-8"` (same constraint as above)
 - **No real data in HTML**: `initialRowsLegacy` is intentionally empty (line 1109)
+
+
+

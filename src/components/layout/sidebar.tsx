@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronDown, Bell, Settings,
   LayoutDashboard, GitMerge, UserCheck, CalendarDays,
   ClipboardList, Map, FileText, Users2, MessageSquare,
-  BriefcaseBusiness, BarChart3,
+  BriefcaseBusiness, BarChart3, Database, LogOut, LogIn,
 } from "lucide-react";
 import { useAppSettings } from "@/store/app-settings";
 import { ApiSettingsModal } from "./api-settings-modal";
@@ -17,6 +17,7 @@ import { ColumnWidthsModal } from "./column-widths-modal";
 import { ImportLeadsModal } from "@/components/ui/import-leads-modal";
 import { WORKSPACE_NAV } from "@/lib/constants";
 import type { WorkspaceMode } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 /* ── Icon map ────────────────────────────────────────────────────── */
 const NAV_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
@@ -107,10 +108,9 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
 /* ── Settings popup ──────────────────────────────────────────────── */
 const MBTN = "flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer w-full text-white";
 
-function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, syncing, sidebarW }: {
+function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW }: {
   onClose: () => void; onImport: () => void;
   onApiSettings: () => void; onColWidths: () => void;
-  onSync?: () => void; syncing?: boolean;
   sidebarW: number;
 }) {
   const { settings, update } = useAppSettings();
@@ -127,14 +127,6 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, s
         {settings.darkMode ? <Sun size={17} /> : <Moon size={17} />}
         {settings.darkMode ? "Modo claro" : "Modo noche"}
       </button>
-
-      {/* Sincronizar */}
-      {onSync && (
-        <button className={MBTN} onClick={() => { onSync(); onClose(); }} disabled={syncing}>
-          <RefreshCw size={17} className={syncing ? "animate-spin" : ""} />
-          {syncing ? "Sincronizando…" : "Sincronizar Sheets"}
-        </button>
-      )}
 
       <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "4px 8px" }} />
 
@@ -171,12 +163,9 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, s
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────── */
-interface SidebarProps {
-  onSync?: () => void; syncing?: boolean;
-  onSave?: () => void; saving?: boolean; dirty?: boolean;
-}
+interface SidebarProps {}
 
-export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps) {
+export function Sidebar(_props: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { settings, update } = useAppSettings();
@@ -188,6 +177,62 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
   const [colWidthsOpen, setColWidthsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const settingsRef = useRef<HTMLButtonElement>(null);
+
+  // ── Usuario actual (Supabase Auth) ──────────────────────────────
+  const [user, setUser] = useState<{ name: string; avatar: string | null; role: string } | null>(null);
+  const [dbSyncing, setDbSyncing] = useState(false);
+
+  useEffect(() => {
+    // Usa API route server-side — evita el problema de cookies httpOnly en browser client
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data: { name: string; avatar: string | null; role: string } | null) => {
+        if (data) setUser(data);
+      })
+      .catch(() => {});
+
+    // onAuthStateChange para detectar login/logout en tiempo real
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        fetch("/api/auth/me")
+          .then((r) => r.json())
+          .then((data: { name: string; avatar: string | null; role: string } | null) => {
+            if (data) setUser(data);
+          })
+          .catch(() => {});
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleDbSync() {
+    setDbSyncing(true);
+    try {
+      const res = await fetch("/api/google-sheets/sync", { method: "POST" });
+      const data = await res.json() as { status: string; summary?: { created: number; updated: number } };
+      const msg = data.status === "success" || data.status === "partial"
+        ? `Sync OK — ${data.summary?.created ?? 0} nuevos, ${data.summary?.updated ?? 0} actualizados`
+        : "Error en el sync";
+      // Reutiliza el sistema de notificaciones existente
+      const { useAppSettings: s } = await import("@/store/app-settings");
+      s.getState().addNotification(msg);
+    } catch {
+      const { useAppSettings: s } = await import("@/store/app-settings");
+      s.getState().addNotification("Error al conectar con el sync");
+    } finally {
+      setDbSyncing(false);
+    }
+  }
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+  }
 
   const mode: WorkspaceMode = settings.workspaceMode ?? "ventas";
   const hasUnread = settings.notificationsLog.length > (settings.notifLastSeenCount ?? 0);
@@ -308,25 +353,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         {/* Utilidades — columna vertical igual que el nav */}
         <div className="border-t border-white/[0.05] py-1 flex-shrink-0">
 
-          {/* Guardar */}
-          {onSave && (
-            <button
-              className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold transition-colors whitespace-nowrap ${
-                dirty ? "text-amber hover:bg-amber/[0.06]" : "text-white hover:bg-white/[0.06]"
-              }`}
-              onClick={onSave} disabled={saving}
-              title={saving ? "Guardando…" : dirty ? "Guardar en Sheets" : "Todo guardado"}
-            >
-              <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
-                {saving
-                  ? <RefreshCw size={17} className="animate-spin" />
-                  : dirty ? <FloppyIcon size={17} /> : <FloppyCheckIcon size={17} />
-                }
-              </span>
-              <span className={lbl}>{saving ? "Guardando…" : dirty ? "Guardar" : "Guardado"}</span>
-            </button>
-          )}
-
           {/* Notificaciones */}
           <button
             className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold transition-colors whitespace-nowrap ${hasUnread ? "text-amber hover:bg-amber/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
@@ -352,6 +378,51 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             <span className={lbl}>Configuración</span>
           </button>
 
+          {/* ── Usuario / Auth ───────────────────────────────────── */}
+          <div className="mx-3 my-1 border-b border-white/[0.06]" />
+
+          {user ? (
+            <>
+              {/* Avatar + nombre + cerrar sesión */}
+              <div className="flex items-center gap-2.5 px-3 py-2 overflow-hidden">
+                <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-[20px] h-[20px] rounded-full object-cover" />
+                  ) : (
+                    <div className="w-[20px] h-[20px] rounded-full bg-amber/30 flex items-center justify-center text-[9px] font-black text-amber">
+                      {user.name[0].toUpperCase()}
+                    </div>
+                  )}
+                </span>
+                <span className={`text-[11px] text-white/60 font-semibold truncate flex-1 ${lbl}`}>
+                  {user.name}
+                </span>
+              </div>
+
+              {/* Cerrar sesión — botón propio */}
+              <button
+                className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white/40 hover:text-red-400 hover:bg-red-400/[0.06] transition-colors whitespace-nowrap"
+                onClick={handleLogout}
+                title="Cerrar sesión"
+              >
+                <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+                  <LogOut size={15} />
+                </span>
+                <span className={lbl}>Cerrar sesión</span>
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="flex items-center gap-2.5 px-3 py-2 w-full text-[11px] font-semibold text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap no-underline"
+            >
+              <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+                <LogIn size={17} />
+              </span>
+              <span className={lbl}>Iniciar sesión</span>
+            </Link>
+          )}
+
         </div>
       </aside>
 
@@ -368,8 +439,6 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
             onImport={() => setImportOpen(true)}
             onApiSettings={() => setApiSettingsOpen(true)}
             onColWidths={() => setColWidthsOpen(true)}
-            onSync={onSync}
-            syncing={syncing}
             sidebarW={sidebarW}
           />
         </>

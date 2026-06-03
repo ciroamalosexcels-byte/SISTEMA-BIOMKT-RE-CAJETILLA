@@ -10,6 +10,8 @@ import { useColumnWidthsStore } from "@/store/column-widths";
 import { usePlansStore } from "@/store/plans";
 import { usePipelineStore } from "@/store/pipeline";
 import { fetchFromSheets, saveToSheets } from "@/lib/sheets";
+import { loadLeadsFromSupabase, loadTeamFromSupabase } from "@/lib/supabase/loaders";
+import { storage } from "@/lib/storage";
 import { normalizeISODate } from "@/lib/dates";
 import { todayBA } from "@/lib/dates";
 import type { WorkspaceMode } from "@/lib/constants";
@@ -26,62 +28,12 @@ export function AppShell({ children }: AppShellProps) {
   const dismissToast = useAppSettings((s) => s.dismissToast);
   const addNotification = useAppSettings((s) => s.addNotification);
 
-  const { load: loadLeads, rows, dirty, saving, save } = useLeadsStore();
+  const { load: loadLeads } = useLeadsStore();
   const loadTeam = useTeamStore((s) => s.load);
-  const teamMembers = useTeamStore((s) => s.members);
-  const teamDirty = useTeamStore((s) => s.dirty);
-  const teamSave = useTeamStore((s) => s.save);
   const loadEvents = useContentEventsStore((s) => s.load);
-  const contentEvents    = useContentEventsStore((s) => s.contentEvents);
-  const managementEvents = useContentEventsStore((s) => s.managementEvents);
-  const contentDirty     = useContentEventsStore((s) => s.dirty);
   const loadColumnWidths = useColumnWidthsStore((s) => s.load);
   const loadPlans   = usePlansStore((s) => s.load);
   const loadPipeline = usePipelineStore((s) => s.load);
-  const plans       = usePlansStore((s) => s.plans);
-  const planEvents  = usePlansStore((s) => s.planEvents);
-  const plansDirty  = usePlansStore((s) => s.dirty);
-
-  /* ─── 10-second debounce auto-save for leads ──────────────────── */
-  const leadsSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!dirty) return;
-    if (leadsSaveTimer.current) clearTimeout(leadsSaveTimer.current);
-    leadsSaveTimer.current = setTimeout(() => { save(); }, 10_000);
-    return () => { if (leadsSaveTimer.current) clearTimeout(leadsSaveTimer.current); };
-  // rows reference changes on every lead mutation — that resets the timer correctly
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
-
-  /* ─── 10-second debounce auto-save for team ───────────────────── */
-  const teamSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!teamDirty) return;
-    if (teamSaveTimer.current) clearTimeout(teamSaveTimer.current);
-    teamSaveTimer.current = setTimeout(() => { teamSave(); }, 10_000);
-    return () => { if (teamSaveTimer.current) clearTimeout(teamSaveTimer.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamMembers]);
-
-  /* ─── 10-second debounce auto-save for content events ─────────── */
-  const contentSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!contentDirty) return;
-    if (contentSaveTimer.current) clearTimeout(contentSaveTimer.current);
-    contentSaveTimer.current = setTimeout(() => { void saveAllToSheets(true); }, 10_000);
-    return () => { if (contentSaveTimer.current) clearTimeout(contentSaveTimer.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentEvents, managementEvents]);
-
-  /* ─── 10-second debounce auto-save for plans ──────────────────── */
-  const plansSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!plansDirty) return;
-    if (plansSaveTimer.current) clearTimeout(plansSaveTimer.current);
-    plansSaveTimer.current = setTimeout(() => { void saveAllToSheets(true); }, 10_000);
-    return () => { if (plansSaveTimer.current) clearTimeout(plansSaveTimer.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plans, planEvents]);
 
   useEffect(() => {
     loadSettings();
@@ -92,36 +44,32 @@ export function AppShell({ children }: AppShellProps) {
     loadPlans();
     loadPipeline();
 
+    // Supabase: fuente primaria para leads + team (cuando hay datos sincronizados)
+    Promise.all([loadLeadsFromSupabase(), loadTeamFromSupabase()])
+      .then(([supaLeads, supaTeam]) => {
+        if (supaLeads.length > 0) {
+          useLeadsStore.setState({ rows: deduplicateLeads(supaLeads), dirty: false });
+          storage.setLeads(supaLeads);
+        }
+        if (supaTeam.length > 0) {
+          useTeamStore.setState({ members: supaTeam });
+          storage.setTeam(supaTeam);
+        }
+      })
+      .catch(() => {
+        // Supabase no configurado o sin datos — no rompe nada, localStorage ya está cargado
+      });
+
+    // AppScript: fuente para content events, plans, columnWidths y leads/team como fallback
     fetchFromSheets()
       .then((data) => applyFetchedData(data, false))
       .catch((err) => { console.error("[Sheets] fetch inicial fallido, usando caché local:", err); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [syncing, setSyncing] = useState(false);
-
   async function applyFetchedData(data: Awaited<ReturnType<typeof fetchFromSheets>>, notify = false): Promise<boolean> {
     let loaded = false;
-    const { storage } = await import("@/lib/storage");
-    if (Array.isArray(data.rows) && data.rows.length > 0) {
-      // Sheets usa "etapa", el frontend usa "tab" — mapear al leer
-      // También normalizar fechaContacto (puede venir como serial Excel o ISO)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mappedRows = (data.rows as any[]).map((r: any) => {
-        const fc = r.fechaContacto;
-        const needsNorm = fc && !/^\d{4}-\d{2}-\d{2}/.test(String(fc));
-        const fcNorm = needsNorm ? (normalizeISODate(String(fc)) || String(fc)) : fc;
-        return { ...r, tab: r.tab || r.etapa || "CRM", fechaContacto: fcNorm };
-      });
-      useLeadsStore.setState({ rows: deduplicateLeads(mappedRows), dirty: false });
-      storage.setLeads(mappedRows);
-      loaded = true;
-    }
-    if (Array.isArray(data.team) && data.team.length > 0) {
-      useTeamStore.setState({ members: data.team });
-      storage.setTeam(data.team);
-      loaded = true;
-    }
+    // leads y team vienen de Supabase — AppScript solo aporta content/plans/widths
     if (Array.isArray(data.contentEvents)) {
       useContentEventsStore.setState({ contentEvents: data.contentEvents, dirty: false });
       storage.setContentEvents(data.contentEvents);
@@ -154,93 +102,8 @@ export function AppShell({ children }: AppShellProps) {
         loaded = true;
       } catch {}
     }
-    if (notify) {
-      addNotification(loaded
-        ? `Sincronizado: ${Array.isArray(data.rows) ? data.rows.length : 0} leads, ${Array.isArray(data.team) ? data.team.length : 0} integrantes`
-        : "Sheets conectado pero sin datos nuevos"
-      );
-    }
+    if (notify && loaded) addNotification("Contenido sincronizado desde Sheets");
     return loaded;
-  }
-
-  async function syncFromSheets() {
-    setSyncing(true);
-    try {
-      const data = await fetchFromSheets();
-      await applyFetchedData(data, true);
-    } catch (err) {
-      addNotification(`Error al sincronizar: ${err instanceof Error ? err.message : "Sin respuesta"}`);
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  const [isSaving, setIsSaving] = useState(false);
-
-  async function saveAllToSheets(silent = false) {
-    setIsSaving(true);
-    try {
-      const leadsState   = useLeadsStore.getState();
-      const teamState    = useTeamStore.getState();
-      const eventsState  = useContentEventsStore.getState();
-      const plansState   = usePlansStore.getState();
-      const widthsState  = useColumnWidthsStore.getState();
-      const { settings: s } = useAppSettings.getState();
-
-      const MAX_PASOS = 30;
-      let procedimientos: Array<Record<string, unknown>> = [];
-      try {
-        const raw = localStorage.getItem("biomarketing_procedures_v3");
-        if (raw) {
-          const now = new Date().toISOString();
-          const procs = JSON.parse(raw) as Array<{ id: string; name: string; steps: Array<{ id: string; title: string; description: string; done: boolean }> }>;
-          procedimientos = procs.map((p) => {
-            const row: Record<string, unknown> = {
-              id: p.id, titulo: p.name, categoria: "",
-              totalPasos: (p.steps ?? []).length, creadoEn: "", actualizadoEn: now,
-            };
-            for (let i = 1; i <= MAX_PASOS; i++) {
-              const st = (p.steps ?? [])[i - 1];
-              row[`paso_${i}`]      = st?.title       ?? "";
-              row[`paso_${i}_desc`] = st?.description ?? "";
-              row[`paso_${i}_done`] = st?.done ? "SI" : "";
-            }
-            return row;
-          });
-        }
-      } catch {}
-
-      let colaboradores: Array<Record<string, unknown>> = [];
-      try {
-        const rawColabs = localStorage.getItem("biomarketing_collaborators_v1");
-        if (rawColabs) colaboradores = JSON.parse(rawColabs);
-      } catch {}
-
-      await saveToSheets({
-        action:           "saveAll",
-        rows:             leadsState.rows,
-        team:             teamState.members,
-        contentEvents:    eventsState.contentEvents,
-        managementEvents: eventsState.managementEvents,
-        plans:            plansState.plans,
-        planEvents:       plansState.planEvents,
-        columnWidths:     widthsState.widths,
-        appSettings:      s,
-        notificationsLog: s.notificationsLog ?? [],
-        procedimientos,
-        collaborators:    colaboradores,
-      });
-
-      useLeadsStore.setState({ dirty: false });
-      useTeamStore.setState({ dirty: false });
-      useContentEventsStore.setState({ dirty: false });
-      usePlansStore.setState({ dirty: false });
-      if (!silent) addNotification("Todo guardado en Sheets");
-    } catch (err) {
-      addNotification(`Error al guardar: ${err instanceof Error ? err.message : "Sin respuesta"}`);
-    } finally {
-      setIsSaving(false);
-    }
   }
 
   /* ─── Ctrl+Z / Ctrl+Y global undo/redo ───────────────────────── */
@@ -266,6 +129,19 @@ export function AppShell({ children }: AppShellProps) {
   /* ─── Auto-sync every 5 minutes (silent) ──────────────────────── */
   useEffect(() => {
     const id = setInterval(() => {
+      // Supabase primero (leads + team), AppScript para el resto
+      Promise.all([loadLeadsFromSupabase(), loadTeamFromSupabase()])
+        .then(([supaLeads, supaTeam]) => {
+          if (supaLeads.length > 0) {
+            useLeadsStore.setState({ rows: deduplicateLeads(supaLeads), dirty: false });
+            storage.setLeads(supaLeads);
+          }
+          if (supaTeam.length > 0) {
+            useTeamStore.setState({ members: supaTeam });
+            storage.setTeam(supaTeam);
+          }
+        })
+        .catch(() => {});
       fetchFromSheets()
         .then((data) => applyFetchedData(data, false))
         .catch(() => {});
@@ -274,20 +150,12 @@ export function AppShell({ children }: AppShellProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const anyDirty = dirty || teamDirty || contentDirty || plansDirty;
-
   return (
     <div
       className="flex h-screen overflow-hidden bg-bio-bg dark:bg-[#060e1c]"
       style={{ zoom: settings.systemScale }}
     >
-      <Sidebar
-        onSync={syncFromSheets}
-        syncing={syncing}
-        onSave={() => void saveAllToSheets()}
-        saving={isSaving}
-        dirty={anyDirty}
-      />
+      <Sidebar />
       <div className="flex-1 overflow-y-auto flex flex-col min-w-0 bg-bio-bg dark:bg-[#060e1c] [scrollbar-width:thin]">
         {children}
       </div>

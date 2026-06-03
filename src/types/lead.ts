@@ -5,7 +5,8 @@ export type EmpresaBio = "BIOMARKETING" | "BIOESTRATEGIA";
 export type Medio = "PRESENCIAL" | "LLAMADA" | "WHATSAPP" | "INSTAGRAM" | "MAIL";
 
 export interface Lead {
-  id: string;
+  id: string;        // UUID de Supabase — identidad canónica única
+  sheetId?: string;  // ID original del Sheet — referencia de auditoría
   nombre: string;
   nombre2?: string;
   empresa: string;
