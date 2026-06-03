@@ -636,6 +636,24 @@ export function ClientDetailView({ clientId }: Props) {
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
 
+  /* estado del cliente (carita) */
+  const ESTADO_FACES = [
+    { emoji: "😄", label: "Excelente", color: "#16a34a" },
+    { emoji: "😊", label: "Bien",      color: "#22c55e" },
+    { emoji: "😐", label: "Regular",   color: "#f59e0b" },
+    { emoji: "😟", label: "Mal",       color: "#f97316" },
+    { emoji: "😢", label: "Muy mal",   color: "#ef4444" },
+  ];
+  const ESTADO_KEY = `biomarketing_client_estado_${clientId}`;
+  const [estadoIdx, setEstadoIdx] = useState<number>(() => {
+    try { const v = localStorage.getItem(ESTADO_KEY); return v !== null ? Number(v) : 1; } catch { return 1; }
+  });
+  function cycleEstado() {
+    const next = (estadoIdx + 1) % ESTADO_FACES.length;
+    setEstadoIdx(next);
+    try { localStorage.setItem(ESTADO_KEY, String(next)); } catch {}
+  }
+
   /* timer tick every second */
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 1000);
@@ -718,6 +736,14 @@ export function ClientDetailView({ clientId }: Props) {
               <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(1)}  style={{ fontSize: 16, padding: "4px 10px" }}>›</button>
             </div>
           )}
+          <button
+            type="button"
+            onClick={cycleEstado}
+            title={ESTADO_FACES[estadoIdx].label}
+            style={{ fontSize: 28, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
+          >
+            {ESTADO_FACES[estadoIdx].emoji}
+          </button>
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
               <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>

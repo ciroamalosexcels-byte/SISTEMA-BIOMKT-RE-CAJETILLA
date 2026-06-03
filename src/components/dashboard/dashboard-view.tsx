@@ -4,8 +4,10 @@ import { useState, useMemo } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
+import { usePipelineStore } from "@/store/pipeline";
 import { todayBA, currentMonthBA } from "@/lib/dates";
 import { ReactApexChart } from "@/components/ui/apex-chart";
+import { WelcomeAreaChart } from "@/components/ui/welcome-area-chart";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
@@ -78,11 +80,14 @@ function KpiCard({
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       <div className="flex items-start justify-between px-[18px] pt-5 pb-3">
         <div>
-          <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">{label}</div>
+          <div className="text-[13px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-1.5">{label}</div>
           <div className="text-4xl font-black leading-none [font-variant-numeric:tabular-nums]" style={{ color }}>{value.toLocaleString("es-AR")}</div>
         </div>
-        <div className={`text-[11px] font-black px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${trend >= 0 ? "bg-green-100 dark:bg-green-500/[0.1] text-green-700 dark:text-green-400" : "bg-red-100 dark:bg-red-500/[0.1] text-red-700 dark:text-red-400"}`}>
-          {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
+        <div className="flex flex-col items-end gap-0.5">
+          <div className={`text-[11px] font-black px-2.5 py-1 rounded-full whitespace-nowrap ${trend >= 0 ? "bg-green-100 dark:bg-green-500/[0.1] text-green-700 dark:text-green-400" : "bg-red-100 dark:bg-red-500/[0.1] text-red-700 dark:text-red-400"}`}>
+            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
+          </div>
+          <div className="text-[9px] text-slate-300 dark:text-slate-600 whitespace-nowrap">vs mes anterior</div>
         </div>
       </div>
       <div className="-mx-0">
@@ -228,7 +233,7 @@ function DailyReportChart({
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-2.5 bg-[#111827]">
-        <span className="text-[10px] font-black text-white uppercase tracking-[0.12em]">
+        <span className="text-[13px] font-black text-white uppercase tracking-[0.12em]">
           REPORTE DIARIO — {dateLabel}
         </span>
         <div className="flex items-center gap-3 text-[9px] font-bold text-white/[0.45] uppercase tracking-[0.06em]">
@@ -277,105 +282,6 @@ function DailyReportChart({
   );
 }
 
-// ── Main area chart (bienvenida) ──────────────────────────────────────
-function WelcomeAreaChart({
-  categories, contactos, reuniones, cierres, title, dark,
-}: {
-  categories: string[]; contactos: number[]; reuniones: number[];
-  cierres: number[]; title: string; dark: boolean;
-}) {
-  const opts: ApexOptions = {
-    chart: {
-      type: "area",
-      background: "transparent",
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      animations: { enabled: true, speed: 800 },
-    },
-    theme: { mode: dark ? "dark" : "light" },
-    colors: ["#f6bf26", "#3b82f6", "#22c55e"],
-    stroke: { curve: "smooth", width: 2.5 },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.2,
-        opacityTo: 0.01,
-        stops: [0, 100],
-      },
-    },
-    dataLabels: { enabled: false },
-    markers: { size: 0, hover: { size: 5 } },
-    xaxis: {
-      categories,
-      labels: {
-        style: {
-          fontSize: "9px",
-          fontFamily: "Poppins, sans-serif",
-          colors: dark ? "#334155" : "#94a3b8",
-          fontWeight: 700,
-        },
-        rotate: 0,
-        hideOverlappingLabels: false,
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      tickAmount: categories.length,
-    },
-    yaxis: {
-      labels: {
-        style: {
-          fontSize: "10px",
-          fontFamily: "Poppins, sans-serif",
-          colors: dark ? "#334155" : "#94a3b8",
-          fontWeight: 700,
-        },
-      },
-    },
-    grid: {
-      borderColor: dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)",
-      strokeDashArray: 3,
-      padding: { left: 0, right: 0, top: -10, bottom: 0 },
-    },
-    legend: {
-      show: true,
-      position: "top",
-      horizontalAlign: "right",
-      fontFamily: "Poppins, sans-serif",
-      fontSize: "11px",
-      fontWeight: 700,
-      labels: { colors: dark ? "#64748b" : "#94a3b8" },
-      markers: { size: 5 },
-    },
-    tooltip: {
-      theme: dark ? "dark" : "light",
-      shared: true,
-      intersect: false,
-      x: { formatter: (v: string | number) => `Día ${v}` },
-    },
-  };
-
-  return (
-    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
-      {/* Header negro */}
-      <div className="px-5 py-2.5 bg-[#111827]">
-        <span className="text-[10px] font-black text-white uppercase tracking-[0.12em]">{title}</span>
-      </div>
-      <div className="p-5 pb-3">
-      <ReactApexChart
-        type="area"
-        series={[
-          { name: "Contactos", data: contactos },
-          { name: "Reuniones", data: reuniones },
-          { name: "Cierres",   data: cierres },
-        ]}
-        options={opts}
-        height={220}
-      />
-      </div>
-    </div>
-  );
-}
 
 // ── Bar chart por métrica ─────────────────────────────────────────────
 function MetricBarChart({
@@ -429,7 +335,7 @@ function MetricBarChart({
 
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-4 pb-1">
-      <div className="text-[10px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-0.5">{title}</div>
+      <div className="text-[13px] font-black text-slate-400 dark:text-[#1e3a5f] uppercase tracking-[0.1em] mb-0.5">{title}</div>
       <ReactApexChart
         type="bar"
         series={[{ data: data.map((d) => d.value) }]}
@@ -460,7 +366,7 @@ function DashTable({
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
       <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
-        <span className="text-[10px] font-black text-amber tracking-[0.12em] uppercase">{title}</span>
+        <span className="text-[13px] font-black text-amber tracking-[0.12em] uppercase">{title}</span>
         {subtitle && <span className="text-[9px] font-bold text-white/[0.22] tracking-[0.08em] uppercase whitespace-nowrap">{subtitle}</span>}
       </div>
       <Table>
@@ -525,6 +431,16 @@ function DashTable({
   );
 }
 
+function Separator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-px flex-1 bg-slate-200 dark:bg-white/[0.06]" />
+      <span className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.1em] whitespace-nowrap">{label}</span>
+      <div className="h-px flex-1 bg-slate-200 dark:bg-white/[0.06]" />
+    </div>
+  );
+}
+
 // ── Dashboard View ────────────────────────────────────────────────────
 export function DashboardView() {
   const rows = useLeadsStore((s) => s.rows);
@@ -545,6 +461,8 @@ export function DashboardView() {
   const getGoal = (name: string) => dailyGoals[name] ?? 9;
   const setGoal = (name: string, val: number) =>
     updateSettings({ dailyGoals: { ...dailyGoals, [name]: val } });
+
+  const stages = usePipelineStore((s) => s.stages);
 
   const todayRows  = rows.filter((r) => r.fechaContacto?.startsWith(today));
   const yearRows   = rows.filter((r) => r.fechaContacto?.startsWith(currentYear));
@@ -611,6 +529,26 @@ export function DashboardView() {
   const monthShort = MONTH_NAMES[mo - 1]?.slice(0, 3) ?? "";
   const cats = dailySeries.map((d) => d.label);
 
+  // ── Conversión
+  const convR1 = monthContacts  > 0 ? Math.round((monthMeetings / monthContacts)  * 100) : 0;
+  const convCli = monthMeetings > 0 ? Math.round((monthClosings  / monthMeetings)  * 100) : 0;
+
+  // ── Pipeline actual (todos los leads activos)
+  const activeRows = rows.filter((r) => r.activo !== false);
+  const sortedStages = [...stages].sort((a, b) => a.order - b.order);
+  const pipelineCounts = sortedStages.map((s) => activeRows.filter((r) => r.tab === s.id).length);
+  const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0);
+
+  // ── Seguimientos pendientes
+  const overdue = activeRows.filter((r) => r.proximoSeguimientoFecha && r.proximoSeguimientoFecha < today).length;
+  const dueToday = activeRows.filter((r) => r.proximoSeguimientoFecha?.startsWith(today)).length;
+
+  // ── Proyección del mes
+  const currentDay = parseInt(today.slice(8, 10));
+  const projContacts  = currentDay > 0 ? Math.round((monthContacts  / currentDay) * daysInMonth) : 0;
+  const projMeetings  = currentDay > 0 ? Math.round((monthMeetings  / currentDay) * daysInMonth) : 0;
+  const projClosings  = currentDay > 0 ? Math.round((monthClosings  / currentDay) * daysInMonth) : 0;
+
   // ── Yearly area chart ──
   const yearlyData = Array.from({ length: 12 }, (_, i) => {
     const mk = `${currentYear}-${pad(i + 1)}`;
@@ -624,12 +562,13 @@ export function DashboardView() {
   });
 
   const DEFAULT_LAYOUT = [
-    { id: "nav",          visible: true, order: 0 },
-    { id: "kpi",          visible: true, order: 1 },
-    { id: "area_mensual", visible: true, order: 2 },
-    { id: "barras",       visible: true, order: 3 },
-    { id: "hoy",          visible: true, order: 4 },
-    { id: "area_anual",   visible: true, order: 5 },
+    { id: "nav",           visible: true, order: 0 },
+    { id: "kpi",           visible: true, order: 1 },
+    { id: "conversion",    visible: true, order: 2 },
+    { id: "estado_actual", visible: true, order: 3 },
+    { id: "pipeline",      visible: true, order: 4 },
+    { id: "area_mensual",  visible: true, order: 5 },
+    { id: "area_anual",    visible: true, order: 6 },
   ];
   const layout = (() => {
     const saved = settings.dashboardLayout ?? [];
@@ -645,7 +584,7 @@ export function DashboardView() {
     nav: (
       <div className="bio-page-head">
         <div className="bio-page-title-row">
-          <h2 className="bio-page-title">DASHBOARD</h2>
+          <h2 className="bio-page-title">PANEL DE CONTROL</h2>
           <div className="bio-page-subtitle">VENTAS BIOMARKETING</div>
         </div>
         <div className="bio-page-actions">
@@ -673,12 +612,15 @@ export function DashboardView() {
       </div>
     ),
 
-    // ── KPI Cards (welcome)
+    // ── KPI Cards
     kpi: (
-      <div className="grid grid-cols-3 gap-3.5">
-        <KpiCard label="Contactados del mes" value={monthContacts} trend={trend(monthContacts, lastContacts)} series={dailySeries.map((d) => d.contactos)} color="#f6bf26" dark={dark} />
-        <KpiCard label="Reuniones del mes"   value={monthMeetings} trend={trend(monthMeetings, lastMeetings)} series={dailySeries.map((d) => d.reuniones)} color="#3b82f6" dark={dark} />
-        <KpiCard label="Cierres del mes"     value={monthClosings} trend={trend(monthClosings, lastClosings)} series={dailySeries.map((d) => d.clientes)} color="#22c55e" dark={dark} />
+      <div className="flex flex-col gap-2">
+        <Separator label={`📅 ${monthLabel(selectedMonth)} — datos del mes`} />
+        <div className="grid grid-cols-3 gap-3.5">
+          <KpiCard label="Contactados del mes" value={monthContacts} trend={trend(monthContacts, lastContacts)} series={dailySeries.map((d) => d.contactos)} color="#f6bf26" dark={dark} />
+          <KpiCard label="Reuniones del mes"   value={monthMeetings} trend={trend(monthMeetings, lastMeetings)} series={dailySeries.map((d) => d.reuniones)} color="#3b82f6" dark={dark} />
+          <KpiCard label="Cierres del mes"     value={monthClosings} trend={trend(monthClosings, lastClosings)} series={dailySeries.map((d) => d.clientes)} color="#22c55e" dark={dark} />
+        </div>
       </div>
     ),
 
@@ -694,28 +636,107 @@ export function DashboardView() {
       />
     ),
 
-    // ── Gráficos de barras
-    barras: (
-      <section className="flex flex-col gap-3.5">
-        <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-slate-200">{`GRÁFICOS DIARIOS (${monthShort})`}</h3>
-        <div className="grid grid-cols-3 gap-3.5">
-          <MetricBarChart title="Contactos CRM" data={dayData((r) => r.tab === "CRM")} color="#f6bf26" dark={dark} />
-          <MetricBarChart title="Reuniones"     data={dayData(isR1R2)} color="#3b82f6" dark={dark} />
-          <MetricBarChart title="Cierres"       data={dayData(isCli)}  color="#22c55e" dark={dark} />
+    // ── Conversión (solo datos del mes)
+    conversion: (
+      <div className="grid grid-cols-2 gap-3.5">
+        <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 flex flex-col gap-2">
+          <div className="text-[13px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">Conversión de contactos a reunión</div>
+          <div className="text-[36px] font-black leading-none" style={{ color: pctColor(convR1) }}>{convR1}%</div>
+          <div className="text-[12px] text-slate-500 dark:text-slate-400">
+            {monthMeetings} reuniones de {monthContacts} contactados
+          </div>
+          <div className="text-[11px] text-slate-300 dark:text-slate-600 italic">
+            {monthContacts > 0 ? `Cada ${Math.round(monthContacts / Math.max(monthMeetings, 1))} contactados generan 1 reunión` : "Sin datos este mes"}
+          </div>
         </div>
-      </section>
+        <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 flex flex-col gap-2">
+          <div className="text-[13px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">Conversión de reuniones a cierres</div>
+          <div className="text-[36px] font-black leading-none" style={{ color: pctColor(convCli) }}>{convCli}%</div>
+          <div className="text-[12px] text-slate-500 dark:text-slate-400">
+            {monthClosings} cierres de {monthMeetings} reuniones
+          </div>
+          <div className="text-[11px] text-slate-300 dark:text-slate-600 italic">
+            {monthMeetings > 0 ? `Cada ${Math.round(monthMeetings / Math.max(monthClosings, 1))} reuniones generan 1 cliente` : "Sin datos este mes"}
+          </div>
+        </div>
+      </div>
     ),
 
-    // ── Reporte Diario — gráfico
-    hoy: (
-      <DailyReportChart
-        memberNames={memberNames}
-        contactados={memberNames.map((n) => countByMember(todayRows, n))}
-        objetivos={memberNames.map((n) => getGoal(n))}
-        setGoal={(name, val) => setGoal(name, val)}
-        today={today}
-        dark={dark}
-      />
+    // ── Estado actual (hoy)
+    estado_actual: (
+      <div className="flex flex-col gap-2">
+        <Separator label="📍 Estado actual — no cambia con el selector de mes" />
+        <div className="grid grid-cols-3 gap-3.5">
+          {/* Seguimientos */}
+          <a href="/seguimiento" className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 flex flex-col gap-1 hover:border-amber transition-colors no-underline">
+            <div className="text-[13px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">Seguimientos pendientes</div>
+            <div className="text-[36px] font-black leading-none text-amber">{dueToday + overdue}</div>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="font-bold">{dueToday} para hoy</span> · <span className="text-red-500 font-bold">{overdue} atrasados</span>
+            </div>
+            <div className="text-[10px] text-slate-300 dark:text-slate-600 mt-1">Clic para ver prospectos →</div>
+          </a>
+          {/* Proyección */}
+          <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] p-5 flex flex-col gap-3">
+              <div>
+                <div className="text-[13px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">Proyección {monthShort}</div>
+                <div className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">día {currentDay} de {daysInMonth} · {Math.round((currentDay/daysInMonth)*100)}% del mes</div>
+              </div>
+              {currentDay < 5 && (
+                <div className="text-[10px] text-amber font-bold bg-amber/[0.08] rounded-lg px-2 py-1">
+                  ⚠ Pocos días de datos — referencial
+                </div>
+              )}
+              {[
+                { label: "Contactos", now: monthContacts, proj: projContacts, color: "#f6bf26" },
+                { label: "Reuniones", now: monthMeetings, proj: projMeetings, color: "#3b82f6" },
+                { label: "Cierres",   now: monthClosings, proj: projClosings, color: "#22c55e" },
+              ].map(({ label, now, proj, color }) => (
+                <div key={label} className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-slate-400 w-[60px]">{label}</span>
+                  <span className="text-[13px] font-bold text-slate-500 dark:text-slate-400">{now}</span>
+                  <span className="text-[11px] text-slate-300 dark:text-slate-600">→</span>
+                  <span className="text-[16px] font-black" style={{ color }}>{proj}</span>
+                </div>
+              ))}
+            </div>
+          {/* Reporte diario */}
+          <DailyReportChart
+            memberNames={memberNames}
+            contactados={memberNames.map((n) => countByMember(todayRows, n))}
+            objetivos={memberNames.map((n) => getGoal(n))}
+            setGoal={(name, val) => setGoal(name, val)}
+            today={today}
+            dark={dark}
+          />
+        </div>
+      </div>
+    ),
+
+    // ── Pipeline actual
+    pipeline: (
+      <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+        <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
+          <span className="text-[13px] font-black text-amber tracking-[0.12em] uppercase">Estado del pipeline</span>
+          <span className="text-[9px] font-bold text-white/[0.22] uppercase tracking-[0.08em]">{pipelineTotal} prospectos activos</span>
+        </div>
+        <div className="p-5 flex flex-col gap-3">
+          {sortedStages.map((stage, i) => {
+            const count = pipelineCounts[i];
+            const pct = pipelineTotal > 0 ? (count / pipelineTotal) * 100 : 0;
+            return (
+              <div key={stage.id} className="flex items-center gap-3">
+                <div className="w-[90px] text-[11px] font-black text-slate-500 dark:text-slate-400 truncate">{stage.label}</div>
+                <div className="flex-1 bg-slate-100 dark:bg-white/[0.04] rounded-full h-2 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: stage.color }} />
+                </div>
+                <div className="w-[28px] text-right text-[13px] font-black" style={{ color: stage.color }}>{count}</div>
+                <div className="w-[36px] text-right text-[11px] text-slate-400">{Math.round(pct)}%</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     ),
 
     // ── Tabla AÑO

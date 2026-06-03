@@ -243,7 +243,7 @@ export function ImportLeadsModal({ onClose }: Props) {
         {/* Header */}
         <div className="modal-header">
           <div>
-            <h2 className="modal-title">Importar leads</h2>
+            <h2 className="modal-title">Importar prospectos</h2>
             {step !== "paste" && (
               <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2 }}>
                 {step === "map" ? "Paso 2 — Mapear columnas" : "Paso 3 — Preview y confirmar"}
@@ -258,13 +258,13 @@ export function ImportLeadsModal({ onClose }: Props) {
           <>
             {done > 0 && (
               <div style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 12, margin: "16px 24px 0", padding: "10px 16px", fontSize: 13, fontWeight: 700, color: "#166534" }}>
-                ✓ Se importaron {done} leads correctamente.
+                ✓ Se importaron {done} prospectos correctamente.
               </div>
             )}
             <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ background: "#f8fafc", border: "1px solid var(--slate-200)", borderRadius: 14, padding: "14px 16px", fontSize: 13, color: "#475569", lineHeight: 1.6 }}>
                 <strong style={{ color: "var(--dark)" }}>Cómo importar desde Google Sheets:</strong><br />
-                1. Abrí tu Sheet con los leads<br />
+                1. Abrí tu Sheet con los prospectos<br />
                 2. Seleccioná todas las celdas (incluyendo la fila de encabezado)<br />
                 3. Copiá con <kbd style={{ background: "#e2e8f0", borderRadius: 4, padding: "1px 5px", fontSize: 12 }}>Ctrl+C</kbd><br />
                 4. Pegá abajo con <kbd style={{ background: "#e2e8f0", borderRadius: 4, padding: "1px 5px", fontSize: 12 }}>Ctrl+V</kbd><br />
@@ -345,7 +345,7 @@ export function ImportLeadsModal({ onClose }: Props) {
                 ))}
               </div>
               <div style={{ marginTop: 14, fontSize: 12, color: "#94a3b8", fontWeight: 700 }}>
-                {Object.keys(mapping).length} de {parsed.headers.length} columnas mapeadas · {parsed.rows.length} leads a importar
+                {Object.keys(mapping).length} de {parsed.headers.length} columnas mapeadas · {parsed.rows.length} prospectos a importar
               </div>
             </div>
             <div className="modal-footer">
@@ -374,7 +374,7 @@ export function ImportLeadsModal({ onClose }: Props) {
                 </div>
               ) : (
                 <div style={{ marginBottom: 14, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: "10px 16px", fontSize: 13, color: "#92400e", fontWeight: 600 }}>
-                  ⚠ No mapeaste la columna <strong>Etapa</strong>. Todos los leads se importarán como <strong>CRM</strong>.
+                  ⚠ No mapeaste la columna <strong>Etapa</strong>. Todos los prospectos se importarán como <strong>CRM</strong>.
                 </div>
               )}
 
@@ -418,7 +418,7 @@ export function ImportLeadsModal({ onClose }: Props) {
                 disabled={importing}
                 onClick={doImport}
               >
-                {importing ? "Importando…" : `✓ Importar ${parsed.rows.length} leads`}
+                {importing ? "Importando…" : `✓ Importar ${parsed.rows.length} prospectos`}
               </button>
             </div>
           </>

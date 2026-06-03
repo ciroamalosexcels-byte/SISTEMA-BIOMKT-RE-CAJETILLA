@@ -33,12 +33,14 @@ const NAV_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
   COLABORADORES:       Users,
   PROCEDIMIENTOS:      BriefcaseBusiness,
   REUNIONES_EQUIPO:    MessageSquare,
+  CAJA:                BarChart3,
 };
 
 const WORKSPACE_CONFIGS: { key: WorkspaceMode; Icon: React.ComponentType<{ size?: number }>; label: string }[] = [
-  { key: "ventas",   Icon: TrendingUp, label: "Ventas" },
-  { key: "clientes", Icon: Users,      label: "Clientes" },
   { key: "equipo",   Icon: Building2,  label: "Equipo" },
+  { key: "ventas",   Icon: TrendingUp, label: "Venta" },
+  { key: "clientes", Icon: Users,      label: "Clientes" },
+  { key: "caja",     Icon: BarChart3,  label: "Caja" },
 ];
 
 /* ── Disquete icons ──────────────────────────────────────────────── */
@@ -138,7 +140,7 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onSync, s
 
       <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "4px 8px" }} />
 
-      <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar leads</button>
+      <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar prospectos</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
       {/* Escalar sistema — barra deslizable */}
@@ -244,22 +246,26 @@ export function Sidebar({ onSync, syncing, onSave, saving, dirty }: SidebarProps
         <div className="flex-1 overflow-y-auto py-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-white/[0.08]">
 
           {/* Dashboard General */}
-          <Link href="/general" className={navItem(isActive("/general"))}>
-            <BarChart3 size={18} className="flex-shrink-0 min-w-[20px]" />
-            <span className={lbl}>Dashboard General</span>
+          <Link
+            href="/general"
+            className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden no-underline ${
+              isActive("/general") ? "text-amber" : "text-white hover:bg-white/[0.07]"
+            }`}
+            style={{ fontSize: 13, fontWeight: 700, textDecoration: "none" }}
+          >
+            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><BarChart3 size={18} /></span>
+            <span className={`flex-1 text-left ${lbl}`} style={{ fontSize: 13, fontWeight: 700 }}>Panel General</span>
           </Link>
 
           <div className="mx-3 my-1.5 border-b border-white/[0.06]" />
 
           {/* Workspaces */}
-          {WORKSPACE_CONFIGS.map(({ key, Icon }) => {
+          {WORKSPACE_CONFIGS.map(({ key, Icon, label: wsLabel }) => {
             const isActiveWS = mode === key && !isActive("/general");
             const wsLinks = WORKSPACE_NAV[key];
-            const wsLabel = key === "ventas" ? "Ventas" : key === "clientes" ? "Clientes" : "Equipo";
 
             return (
               <div key={key}>
-                {/* Workspace parent */}
                 <button
                   className={`flex items-center gap-2.5 px-3 py-2 text-[13px] font-bold w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
                     isActiveWS ? "text-amber" : "text-white hover:bg-white/[0.07]"

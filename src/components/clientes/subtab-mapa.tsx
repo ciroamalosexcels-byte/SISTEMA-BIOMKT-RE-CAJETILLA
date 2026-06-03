@@ -101,7 +101,7 @@ export function SubtabMapa() {
               fontSize: 14,
             }}
           >
-            Sin leads para mostrar en el mapa.
+            Sin prospectos para mostrar en el mapa.
           </div>
         )}
       </div>

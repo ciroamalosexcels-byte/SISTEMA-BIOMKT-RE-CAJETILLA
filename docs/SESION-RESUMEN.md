@@ -4,7 +4,12 @@
 
 ## 1. Objetivo principal de la sesión
 
-Migrar, rediseñar y mejorar el sistema interno de gestión de Biomarketing (agencia de marketing argentina) de un monolito HTML a una app Next.js 15 completamente funcional, con sidebar unificado, Kanban de leads, dashboard con ApexCharts, tablas shadcn, y corrección de bugs críticos de sincronización con Google Sheets.
+Migrar, rediseñar y mejorar el sistema interno de gestión de Biomarketing (agencia de marketing argentina) de un monolito HTML a una app Next.js 15 completamente funcional. Esta sesión se centró en:
+- Completar y refinar el Kanban de Leads (vista Seguimiento)
+- Mejorar el Dashboard de Ventas con métricas reales
+- Construir el Dashboard General con bloques de Caja, Clientes, Estado y Líder
+- Agregar la vista de Objetivos al workspace Equipo
+- Reorganizar los workspaces de la barra lateral
 
 ---
 
@@ -14,166 +19,179 @@ Migrar, rediseñar y mejorar el sistema interno de gestión de Biomarketing (age
 - **Nombre:** Sistema Biomarketing / RE Cajetilla
 - **Repo:** `C:\Users\dell\Documents\github\SISTEMA-BIOMKT-RE-CAJETILLA`
 - **GitHub:** `https://github.com/ciroamalosexcels-byte/SISTEMA-BIOMKT-RE-CAJETILLA`
+- **Rama activa:** `ui-improvements` (creada esta sesión)
 - **Framework:** Next.js 15 (App Router), React 19, TypeScript
-- **Estilos:** Tailwind CSS v4 + CSS custom en `globals.css` (migración en curso)
+- **Estilos:** Tailwind CSS v4 + CSS legacy en `globals.css`
 - **Estado global:** Zustand (leads, team, pipeline, settings, content, plans)
-- **Backend:** Google Sheets via Apps Script (`Codigo.gs`) — es la única base de datos
-- **Font principal:** Poppins (variable `--font-poppins`)
-- **Colores brand:** amber `#f6bf26`, bio-dark `#07152f`, bio-rail `#020817`, bio-bg `#dbe1e7`
-- **Dev server:** `http://localhost:3000` (puede variar a 3001/3002 si hay conflictos)
+- **Backend:** Google Sheets via Apps Script (`Codigo.gs`) — única base de datos
+- **Dev server:** `http://localhost:3000`
 
-### Estructura del proyecto
+### Estructura clave
 ```
 src/
 ├── app/
-│   ├── dashboard/page.tsx → DashboardView
-│   ├── seguimiento/page.tsx → SeguimientoView (Kanban de Leads)
-│   ├── clientes/ (+ /dashboard)
-│   ├── equipo/ (+ /dashboard)
-│   ├── general/page.tsx → Dashboard General (nuevo)
+│   ├── general/page.tsx         → Dashboard General (5 bloques)
+│   ├── dashboard/page.tsx       → Dashboard Ventas
+│   ├── seguimiento/page.tsx     → Kanban de Leads
+│   ├── equipo/
+│   │   ├── page.tsx             → Vista Equipo
+│   │   ├── objetivos/page.tsx   → Vista Objetivos (nueva)
+│   │   └── dashboard/page.tsx
+│   ├── caja/page.tsx            → "Próximamente"
 │   └── ...otras rutas
 ├── components/
-│   ├── layout/sidebar.tsx → sidebar unificado colapsable
-│   ├── layout/app-shell.tsx → layout principal
-│   ├── dashboard/dashboard-view.tsx → ApexCharts + shadcn tables
-│   ├── seguimiento/ → Kanban (column, card, modal, view)
-│   └── ui/ → table.tsx (shadcn), apex-chart.tsx, etc.
-├── store/ → leads.ts, pipeline.ts, team.ts, app-settings.ts, etc.
-├── lib/ → dates.ts, sheets.ts, constants.ts, utils.ts
-└── types/ → lead.ts, pipeline.ts, etc.
+│   ├── layout/sidebar.tsx       → Sidebar colapsable con 4 workspaces
+│   ├── dashboard/dashboard-view.tsx
+│   ├── seguimiento/             → Kanban: view, column, card, modal
+│   ├── equipo/
+│   │   ├── equipo-view.tsx
+│   │   └── objetivos-view.tsx   → Tabla Faro/Meta/Objetivos con semáforo
+│   └── ui/
+│       ├── welcome-area-chart.tsx  → Gráfico área compartido (nuevo)
+│       └── apex-chart.tsx
+├── lib/constants.ts             → WORKSPACE_NAV con 4 workspaces
+└── store/app-settings.ts        → objetivosEquipo campo nuevo
 ```
 
-### Modelo de datos clave
-- **Lead:** campos `tab` (etapa del pipeline), `fechaContacto`, `medio`, `nombre`, `empresa`, etc.
-- **PipelineStage:** `{ id, label, color, order, isWon? }` — almacenado en localStorage `v2`
-- **Etapas por defecto:** CRM=Prospecto(rojo), REUNION_1(naranja), REUNION_2(amarillo), SEGUIMIENTO(azul), CLIENTES=Cliente✓(verde)
-- **Workspaces:** `ventas | clientes | equipo`
+### Workspaces (sidebar)
+| Workspace | Label | Icono | Nav items |
+|-----------|-------|-------|-----------|
+| `equipo`  | Equipo | Building2 | Dashboard, Objetivos, Equipo, Colaboradores, Procedimientos, Reunión de Equipo |
+| `ventas`  | Venta | TrendingUp | Dashboard, Leads, Clientes, Calendario |
+| `clientes`| Clientes | Users | Dashboard, Clientes, Planificación, Planes, Mapa, Calendario |
+| `caja`    | Caja | BarChart3 | Caja (→ /caja, "Próximamente") |
 
-### Mapeo Sheets ↔ Frontend (crítico)
-- La columna "etapa" en Sheets = campo `tab` en el frontend (son el mismo dato)
-- Al leer de Sheets: `r.tab = r.tab || r.etapa || "CRM"` (app-shell.tsx línea ~107)
-- Al guardar en Sheets (Codigo.gs): `etapa: row.etapa || row.tab || "CRM"`
+Default workspace: `equipo`
+
+### Modelo de datos clave
+- **Lead:** `tab` (etapa pipeline), `fechaContacto`, `medio`, `nombre`, `empresa`, `responsable1`, `responsable2`, etc.
+- **PipelineStage:** `{ id, label, color, order }` — localStorage `ventas_biomarketing_pipeline_stages_v2`
+- **TeamMember:** `roles` field → si contiene "lider/líder/LIDER" → es el líder del equipo
+- **AppSettings:** agregado `objetivosEquipo: Record<string, number>`
+
+### Mapeo Sheets ↔ Frontend
+- La columna "etapa" en Sheets = campo `tab` en el frontend
+- Al leer: `r.tab = r.tab || r.etapa || "CRM"` (app-shell.tsx)
+- Al guardar: `etapa: row.etapa || row.tab || "CRM"` (Codigo.gs)
 
 ---
 
 ## 3. Decisiones tomadas
 
-### Arquitectura / Navegación
-- **Sidebar unificado:** una sola barra que se expande (220px) / colapsa (52px). No hay rail separado. El logo B es el toggle.
-- **Estructura del sidebar:** Logo/toggle → Dashboard General → Ventas/Clientes/Equipo (accordion) → Utilidades (guardar, sync, notif, config)
-- **Dashboard General** en `/general` como vista transversal de las 3 áreas (aún placeholder)
-- **Workspaces como menú padre** en el panel, con links como submenu
-- **Icono guardar:** disquete (`FloppyIcon`) con check cuando está guardado (`FloppyCheckIcon`)
-- **Modo noche y Sincronizar** dentro del menú ⚙️ (settings popup con backdrop)
-
 ### Kanban / Seguimiento
-- **Nombre de la pestaña:** "LEADS" (no "Seguimiento")
-- **5 columnas a ancho completo** (`flex-1`), sin botón "Nueva etapa"
-- **Headers de columna:** fondo `#07152f` (negro navy), letras blancas
-- **Cards con altura fija** `h-[118px]`, empresa arriba (bold), nombre abajo (gris)
-- **Divisores de fecha** entre grupos de cards (Hoy / Ayer / DD/MM/AAAA)
-- **Badge de medio siempre visible** con `mt-auto` en la tarjeta
-- **Colores de medio:** WhatsApp=verde, Llamada=naranja, Instagram=rojo, Mail=azul, Presencial=amarillo
-- **Prompt de fecha** al mover card a Reunión 1 o Reunión 2 (mini-modal)
+- **Sin drag and drop** — reemplazado por flechas `← Pro. | Seg. | Reu 2 →` en cada tarjeta
+- Flechas muestran abreviación de la columna adyacente (función `abbr()`)
+- `Seg.` siempre en el medio → mueve directo a columna SEGUIMIENTO
+- Menú clic derecho: Llamar, WhatsApp, Eliminar
+- Al mover a Reunión 1/2 → prompt de fecha de reunión
+- Al mover a Seguimiento → prompt de fecha de próximo seguimiento
+- Cards: `h-[130px]`, empresa bold `17px`, nombre `14px`, badges pill `rounded-full`
+- Badge de responsable: color determinístico por nombre (`RESP_COLOR` mapa fijo)
+- Divisores de fecha: `text-[12px] text-slate-500` con "Hoy · 01/06", "Ayer · 31/05", "Anteayer"
+- `React.memo` en KanbanColumn y LeadCard
 
-### Dashboard
-- **ApexCharts** para todos los gráficos (SSR-safe via dynamic import)
-- **Reporte Diario:** barras distribuidas coloreadas por % de objetivo (rojo/amarillo/verde/lima)
-- **Eje Y mínimo:** 10 por defecto
-- **Secciones eliminadas:** TABLA AÑO y TABLA MES (se eliminaron del layout)
-- **Headers de gráficos:** fondo `#111827` (negro), letras blancas, esquinas redondeadas 18px
-- **shadcn Table** en lugar de tabla CSS custom
+### Modal de Lead
+- Orden campos: Nombre contacto | Empresa → 2do contacto (toggle) → Observaciones → Dirección+Teléfono → Responsables → Medio → Fechas
+- Sin pills de etapa ni botones de acciones rápidas
+- Labels `text-[13px]`
+- Botones footer: `.btn.btn-sm` (btn-amber, btn-outline, btn-danger)
+- Fecha de contacto pre-llenada con `nowDatetimeBA()` en leads nuevos
+- Responsables no pueden ser iguales, opción vacía invisible
 
-### Diseño general
-- **Sin border-radius** en tablas y dashcard (redondeado solo en cards: 18px)
-- **Fuente:** Poppins para todo, JetBrains Mono para labels de tabla (luego removido)
-- **Headers de páginas:** mismo estilo que el Calendario (`bio-page-head`, `bio-page-title`, `bio-page-subtitle`)
-- **Colores de etapas Kanban:** rojo, naranja, amarillo, azul, verde
-- **Storage key de pipeline:** `v2` (bumpeado para resetear colores)
+### Vista Tabla (Leads)
+- Columnas: Nombre | Empresa | Observaciones (15 chars + …) | Teléfono | Primer contacto | Dirección | Responsable (badge) | Medio (badge)
+- Clic en celda de Observaciones → modal editable con mismo formato que lead modal
+- Clic derecho en fila → menú: Llamar, WhatsApp, Eliminar
+- Muestra todos los leads (sin filtro de etapa)
+- `style={{ paddingLeft: 12 }}` en todas las celdas
 
-### Lead Modal
-- **Estructura de campos:** Empresa → Nombre → Dirección → Teléfono → Observaciones → Responsable1 + Responsable2 → Medio + Empresa Bio → Fechas
-- **Placeholders eliminados** de todos los inputs
-- **Select de Medio** tiene `— Sin medio —` como primera opción (para que el valor vacío sea explícito)
-- **Fechas con display formateado:** muestran `DD/MM/YYYY HH:MM` o `--/--/---- --:--` si vacío
+### Dashboard de Ventas
+- **Eliminados:** 3 gráficos de barras redundantes
+- **Agregados:** Conversión (contactos→reunión, reunión→cierres), Pipeline actual, Seguimientos pendientes, Proyección del mes
+- Separadores visuales: "📅 datos del mes" y "📍 estado actual"
+- Seguimientos: link clickeable → `/seguimiento`
+- Proyección: siempre visible, warning amber si < día 5
+- WelcomeAreaChart extraído a `src/components/ui/welcome-area-chart.tsx` (compartido)
+- WelcomeAreaChart acepta prop `actions` para renderizar contenido en el header
+
+### Dashboard General (/general)
+5 bloques:
+1. **Resumen de Caja** — tabla editable: $ ENTRA / $ SALE / $ CAJA / $ DEUDA / $ CALLE / $ OBJETIVO (amber). localStorage `biomarketing_caja_v1`
+2. **Clientes del mes** — Total activos (número grande) + Objetivo (editable, mismo tamaño) + Ticket promedio (amber, formato `100.000`) + Facturación estimada
+3. **Estado de Clientes** — emoji semáforo (😄/😊/😐/😟), clic para cambiar. localStorage `biomarketing_estado_clientes_v1`
+4. **Estado del Líder** — detecta líder por `roles` con regex `/l[ií]der/i`. Muestra nombre grande + círculo de color promedio 9.1. Sin porcentaje.
+5. **Gráfico crecimiento mensual** — WelcomeAreaChart compartido con selector `‹ › HOY` dentro del header del gráfico
+
+Layout: 4 columnas en fila superior, gráfico abajo
+
+### Vista Objetivos (/equipo/objetivos)
+- Tabla con 3 secciones: **FARO** (1 fila) / **META** (3 filas) / **OBJETIVOS** (9 filas)
+- Columnas: Objetivo (texto editable) | Fecha | Estado (círculo semáforo, clic para ciclar 0→1→2→3)
+- 0=gris, 1=rojo, 2=amarillo, 3=verde
+- Guardado en localStorage `biomarketing_objetivos_v2`
+- Accesible desde sidebar equipo como "Objetivos" debajo de Dashboard
+
+### Sidebar
+- 4 workspaces en orden: Equipo → Venta → Clientes → Caja
+- Caja es accordion igual que los demás (no link directo)
+- `wsLabel` toma `label` del `WORKSPACE_CONFIGS` (fix: antes hardcodeaba "Equipo")
 
 ---
 
 ## 4. Problemas resueltos
 
-### Bug crítico — fechas seriales de Excel (498 leads afectados)
-- **Problema:** El 86% de los leads tenían `fechaContacto` como número serial de Excel (`46168`) en lugar de ISO string, causando que no se contabilizaran en el dashboard.
-- **Causa:** Google Sheets guarda fechas como números internamente; al exportar/importar, el formato se pierde.
-- **Fix aplicado:**
-  1. `src/lib/dates.ts`: `normalizeISODate()` ahora convierte seriales (40000–70000) a ISO
-  2. `src/store/leads.ts`: `load()` normaliza toda `fechaContacto` que no sea ISO
-  3. `src/components/layout/app-shell.tsx`: normaliza al leer de Sheets
-  4. `Codigo.gs`: nueva función `normalizeSheetDate_()` que convierte al guardar
-- **PENDIENTE:** Copiar `Codigo.gs` actualizado al editor de Apps Script en Google
+### Kanban
+- **Drag lag** → eliminado dnd-kit, reemplazado por flechas ← Seg. →
+- **Fechas seriales Excel** → `normalizeISODate()` convierte seriales (40000–70000) a ISO
+- **Badge de medio vacío** → select con `<option value="">` sin texto
+- **Modo light kanban** → migrado a light-first con dark overrides
 
-### Bug — etapa (tab) vs etapa (Sheets)
-- **Problema:** Frontend usa campo `tab`, Sheets usa columna `etapa`. El normalizer de Sheets hacía `row.etapa || "CRM"` ignorando `row.tab`.
-- **Fix:** `Codigo.gs` normalizeLeadRows_ ahora hace `row.etapa || row.tab || "CRM"`. App-shell mapea al leer.
+### Dashboard
+- **Gráfico general sin datos** → fixed con selector de mes (antes fijo en mes actual)
+- **WelcomeAreaChart duplicado** → extraído a componente compartido
+- **"Equipo" aparecía como label de Caja** → fix: wsLabel ahora toma `label` de WORKSPACE_CONFIGS
 
-### Bug — badge de medio no aparecía
-- **Problema 1:** El select de Medio sin `—` mostraba el primer valor visualmente aunque `form.medio = ""`, creando confusión.
-- **Problema 2:** `overflow-hidden` + `maxHeight` cortaban el badge.
-- **Fix:** Opción `— Sin medio —` en select. Badge usa `mt-auto` sin maxHeight.
-
-### Bug — modo light no funcionaba
-- CSS del kanban tenía colores hardcodeados oscuros. Migrado a light-first con dark overrides.
-
-### Bug — caché corrupta de webpack
-- Resuelto con `rm -rf .next` cuando nuevos paquetes causan chunk errors.
+### Modal
+- **Fecha no mostraba** → si viene sin "T", se agrega "T00:00" para datetime-local
+- **Placeholder en campos vacíos** → `color: transparent` en inputs de fecha
+- **Tipo WorkspaceMode** → agregado `"caja"` al union type y al DEFAULT_APP_SETTINGS
 
 ---
 
 ## 5. Estado actual
 
-### Lo que está funcionando
-- ✅ Sidebar colapsable unificado con workspaces accordion
-- ✅ Kanban de Leads con 5 columnas a ancho completo, divisores de fecha, badges de medio
-- ✅ Lead modal reorganizado con prompt de fecha de reunión
-- ✅ Dashboard con ApexCharts (KPI cards, área, barras, reporte diario)
-- ✅ Headers de páginas estilo calendario en todas las vistas
-- ✅ Corrección de fechas seriales en el frontend (se aplica al recargar)
-- ✅ Google Sheets listo para recibir el Codigo.gs actualizado
+### Funcionando
+- ✅ Sidebar con 4 workspaces (Equipo, Venta, Clientes, Caja)
+- ✅ Kanban de Leads con flechas de movimiento, prompts de fecha, badges, clic derecho
+- ✅ Vista Tabla con observaciones, clic derecho, todos los leads
+- ✅ Lead modal reorganizado con 2do contacto, botones sistema, labels grandes
+- ✅ Dashboard Ventas con conversión, pipeline, seguimientos, proyección
+- ✅ Dashboard General con 5 bloques funcionales
+- ✅ Vista Objetivos del Equipo (Faro/Meta/Objetivos con semáforo)
+- ✅ Página Caja con "Próximamente"
+- ✅ WelcomeAreaChart compartido entre dashboards
 
-### Migración Tailwind
-- ✅ Migraciones completadas: sidebar, app-shell, kanban, lead modal, dashboard
-- ⏳ Pendientes: Equipo, Clientes, Planificación (usan CSS legacy que funciona pero no es Tailwind)
-- `globals.css` bajó de 2525 → ~1500 líneas
+### Rama activa
+- Trabajando en `ui-improvements` (no mergeada a `main` aún)
+
+### Último commit en main
+- `30645bf` — "feat: mejoras kanban, tabla y modal de leads"
 
 ### Dev server
-- Corre en `localhost:3000` (o 3001/3002 si hay conflictos)
-- Si hay error de chunk, hacer `rm -rf .next` y reiniciar
+- Corre en `localhost:3000`
+- Si hay error de chunk: `Remove-Item -Recurse -Force .next && npm run dev`
 
 ---
 
 ## 6. Próximos pasos recomendados
 
-1. **URGENTE — Actualizar Codigo.gs en Google:**
-   - Abrir `C:\Users\dell\Documents\github\SISTEMA-BIOMKT-RE-CAJETILLA\Codigo.gs`
-   - Copiar todo el contenido
-   - En Google Sheets → Extensiones → Apps Script → pegar y guardar → Implementar
-   - Luego hacer una sincronización para corregir las fechas en Sheets
-
-2. **Verificar datos de leads:**
-   - Después de actualizar el script, abrir la app y sincronizar
-   - Verificar que el dashboard muestra los contactos con sus fechas reales
-   - Verificar que las etapas de los leads están correctas en la columna `etapa` de Sheets
-
-3. **Dashboard General `/general`:**
-   - Actualmente solo tiene placeholders
-   - Decidir qué métricas mostrar de cada área
-
-4. **Continuar migración Tailwind:**
-   - Siguientes módulos: `equipo-view.tsx`, `clientes-view.tsx`, `planificacion-view.tsx`
-   - Plan: `docs/superpowers/plans/2026-05-28-tailwind-migration.md`
-
-5. **Vistas pendientes de mejora:**
-   - Dashboard de Clientes (`/clientes/dashboard`) — placeholder
-   - Dashboard de Equipo (`/equipo/dashboard`) — placeholder
+1. **Mergear `ui-improvements` a `main`** y hacer push a GitHub
+2. **Actualizar `Codigo.gs`** en Google Apps Script (pendiente desde sesión anterior):
+   - Abre `Codigo.gs`, copia todo, pega en Apps Script editor, guarda, implementa
+   - Luego sincronizar desde la app para corregir fechas seriales en Sheets
+3. **Dashboard General** — verificar que los datos reales aparecen correctamente
+4. **Dashboards Clientes y Equipo** (`/clientes/dashboard`, `/equipo/dashboard`) — siguen como placeholders
+5. **Migración Tailwind** — pendiente en `equipo-view.tsx`, `clientes-view.tsx`, `planificacion-view.tsx`
 
 ---
 
@@ -181,49 +199,58 @@ src/
 
 ### Stack técnico
 ```
-Next.js 15 App Router | React 19 | TypeScript | Tailwind v4 | Zustand | ApexCharts | dnd-kit
+Next.js 15 App Router | React 19 | TypeScript | Tailwind v4 | Zustand | ApexCharts
 ```
 
-### Reglas de trabajo del proyecto
+### Reglas críticas del proyecto
 1. **Idioma:** Responder siempre en español
-2. **CSS:** Preferir Tailwind. El CSS legacy en `globals.css` se va eliminando progresivamente
-3. **Dark mode:** Se activa con clase `dark-mode` en `body` (NO con `prefers-color-scheme`). Tailwind configurado con `darkMode: ["selector", ".dark-mode"]` en `tailwind.config.ts`
-4. **Fechas:** Usar siempre `todayBA()`, `nowDatetimeBA()` de `src/lib/dates.ts`. Nunca `new Date()` directo
+2. **CSS:** Preferir Tailwind. Si no funciona, usar inline `style={{ }}`. CSS legacy en `globals.css` se elimina progresivamente
+3. **Dark mode:** Clase `dark-mode` en `body` (NO `prefers-color-scheme`). Tailwind config: `darkMode: ["selector", ".dark-mode"]`
+4. **Fechas:** Usar `todayBA()`, `nowDatetimeBA()` de `src/lib/dates.ts`. Nunca `new Date()` directamente para display
 5. **Sheets:** `Content-Type: text/plain;charset=utf-8` con JSON string en body (NO `application/json`)
-6. **Sheets campo tab vs etapa:** frontend usa `tab`, Sheets usa `etapa`. Ya mapeado en app-shell y Codigo.gs
-7. **Pipeline stages:** guardadas en localStorage `ventas_biomarketing_pipeline_stages_v2`
-8. **No romper:** Las vistas que aún usan CSS legacy (equipo, clientes, planificación) funcionan — no tocar sin plan
+6. **tab vs etapa:** frontend usa `tab`, Sheets usa `etapa`. Mapeado en app-shell y Codigo.gs
+7. **Pipeline stages:** localStorage `ventas_biomarketing_pipeline_stages_v2`
+8. **No tocar:** vistas que usan CSS legacy (equipo, clientes, planificación) sin tener plan
+9. **Botones:** usar clases `.btn .btn-sm .btn-amber/.btn-dark/.btn-outline/.btn-danger` del globals.css
+10. **Headers de página:** clases `bio-page-head`, `bio-page-title`, `bio-page-subtitle`
 
-### Archivos clave a conocer
+### Archivos clave
 | Archivo | Qué hace |
 |---|---|
-| `src/components/layout/sidebar.tsx` | Sidebar colapsable unificado |
+| `src/components/layout/sidebar.tsx` | Sidebar con 4 workspaces |
 | `src/components/layout/app-shell.tsx` | Layout + auto-save + sync + mapeo etapa↔tab |
-| `src/components/dashboard/dashboard-view.tsx` | Dashboard con ApexCharts |
+| `src/app/general/page.tsx` | Dashboard General (5 bloques) |
+| `src/components/dashboard/dashboard-view.tsx` | Dashboard Ventas con ApexCharts |
+| `src/components/ui/welcome-area-chart.tsx` | Gráfico área compartido |
 | `src/components/seguimiento/` | Kanban: view, column, card, modal |
-| `src/lib/dates.ts` | `normalizeISODate()` convierte seriales Excel, `todayBA()`, etc. |
-| `src/store/pipeline.ts` | Etapas del Kanban (editables) |
-| `Codigo.gs` | Apps Script de Google Sheets — DEBE actualizarse en Google |
-| `tailwind.config.ts` | Config Tailwind con colores brand y dark mode selector |
-| `src/lib/constants.ts` | WORKSPACE_NAV, MEDIO_OPTS, EMPRESA_BIO_OPTS, etc. |
-| `src/app/globals.css` | CSS legacy + clases nuevas bio-page-head/title/subtitle |
+| `src/components/equipo/objetivos-view.tsx` | Tabla Faro/Meta/Objetivos |
+| `src/lib/constants.ts` | WORKSPACE_NAV, WorkspaceMode, MEDIO_OPTS |
+| `src/lib/dates.ts` | `normalizeISODate()`, `todayBA()`, `nowDatetimeBA()` |
+| `src/store/pipeline.ts` | Etapas del Kanban |
+| `src/store/app-settings.ts` | Settings + `objetivosEquipo` |
+| `Codigo.gs` | Apps Script Google Sheets — DEBE actualizarse |
+| `tailwind.config.ts` | Colores brand: amber=#f6bf26, bio-dark=#07152f |
 
 ### Comandos útiles
-```bash
+```powershell
 # Dev server
 npm run dev
 
-# Si hay error de chunks (después de instalar paquetes)
-rm -rf .next && npm run dev
+# Limpiar caché si hay errores de chunk
+Remove-Item -Recurse -Force .next; npm run dev
 
 # TypeScript check
 npx tsc --noEmit
+
+# Git — rama activa
+git checkout ui-improvements
+git push origin ui-improvements
 ```
 
 ### Convenciones de diseño actuales
-- Cards y modales: `rounded-[18px]`
-- Headers de página: clase `bio-page-head` + `bio-page-title` + `bio-page-subtitle` (estilo calendario)
-- Colores de etapas: Prospecto=rojo, R1=naranja, R2=amarillo, Seguimiento=azul, Cliente=verde
-- Colores de medio: WhatsApp=verde, Llamada=naranja, Instagram=rojo, Mail=azul, Presencial=amarillo
-- Badge de responsable: nombre completo en pill redondeada
-- Divisores de fecha en Kanban: Hoy / Ayer / DD/MM/YYYY
+- Cards: `rounded-[18px]`, header `bg-[#07152f]` con texto blanco
+- Badges: `rounded-full`, colores por tipo (medio, responsable, estado)
+- Responsable CIRO=#6366f1, LOREN=#ec4899, FEDE=#f97316, MATE=#22c55e, TINCHO=#ef4444, ARI=#a855f7, LU=#14b8a6
+- Medio: WHATSAPP=#22c55e, LLAMADA=#f97316, INSTAGRAM=#ef4444, MAIL=#3b82f6, PRESENCIAL=#eab308
+- Semáforo 9.1: ≥70%=verde, ≥40%=amarillo, <40%=rojo
+- Separadores de sección en dashboard: `<Separator label="📅 ...">` / `<Separator label="📍 ...">`

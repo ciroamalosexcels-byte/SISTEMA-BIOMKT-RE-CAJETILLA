@@ -33,6 +33,7 @@ export interface AppSettings {
   dashboardLayout: { id: string; visible: boolean; order: number }[];
   clientsGoal: number;
   dailyGoals: Record<string, number>;
+  objetivosEquipo: Record<string, number>;
   workspaceMode: WorkspaceMode;
   notificationsLog: NotificationEntry[];
   notifLastSeenCount: number;
@@ -71,7 +72,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   ],
   clientsGoal: 21,
   dailyGoals: {},
-  workspaceMode: "ventas",
+  objetivosEquipo: {},
+  workspaceMode: "equipo",
   notificationsLog: [],
   notifLastSeenCount: 0,
   servicePlans: {},

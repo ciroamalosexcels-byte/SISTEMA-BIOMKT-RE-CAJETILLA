@@ -89,7 +89,7 @@ export function SeguimientoView() {
     <div className="flex flex-col h-full min-h-screen bg-bio-bg dark:bg-[#080f1e] text-slate-900 dark:text-slate-200">
       <div className="bio-page-head">
         <div className="bio-page-title-row">
-          <h2 className="bio-page-title">LEADS</h2>
+          <h2 className="bio-page-title">PROSPECCIÓN</h2>
           <div className="bio-page-subtitle">{totalActive} ACTIVOS</div>
         </div>
         <div className="bio-page-actions">

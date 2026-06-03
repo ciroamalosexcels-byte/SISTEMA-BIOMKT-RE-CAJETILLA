@@ -7,7 +7,7 @@ export default function DashboardClientesPage() {
     <div className="p-8 min-h-full">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-          Dashboard Clientes
+          Panel de Control Clientes
         </h1>
         <p className="text-sm text-slate-400 dark:text-slate-500">
           Métricas de producción de contenido, gestión y cumplimiento de planes
