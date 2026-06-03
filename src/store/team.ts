@@ -58,14 +58,18 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch.status91),
-      }).catch(() => {});
+      })
+        .then(r => r.ok ? null : r.json().then(e => console.error("[team] status91 save error:", e)))
+        .catch(e => console.error("[team] status91 fetch error:", e));
     }
     if (patch.monthlyPoints) {
       fetch(`/api/supabase/team/${id}/points`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch.monthlyPoints),
-      }).catch(() => {});
+      })
+        .then(r => r.ok ? null : r.json().then(e => console.error("[team] points save error:", e)))
+        .catch(e => console.error("[team] points fetch error:", e));
     }
   },
 
