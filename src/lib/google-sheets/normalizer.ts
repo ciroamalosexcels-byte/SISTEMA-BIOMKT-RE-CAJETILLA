@@ -110,7 +110,7 @@ export function normalizeLeadRow(row: SheetRow): NormalizedLead | null {
     fecha_contacto: parseIsoDate(row.fechaContacto) ?? new Date().toISOString(),
     cumpleanos: parseDateOnly(row.cumpleanos),
     cumpleanos2: parseDateOnly(row.cumpleanos2),
-    proximo_seguimiento_fecha: parseDateOnly(row.proximaFecha),
+    proximo_seguimiento_fecha: parseDateOnly(row.proximoSeguimientoFecha ?? row.proximaFecha),
     proximo_seguimiento_dias: int(row.proximoSeguimientoDias),
     meeting_datetime: parseIsoDate(row.meetingDatetime),
 

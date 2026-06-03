@@ -184,6 +184,18 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
             </div>
           </div>
 
+          {/* Email + Instagram */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Email</label>
+              <input className={inputCls} type="email" value={form.email ?? ""} onChange={e => set("email", e.target.value)} placeholder="correo@ejemplo.com" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className={lbl}>Instagram</label>
+              <input className={inputCls} value={form.instagram ?? ""} onChange={e => set("instagram", e.target.value)} placeholder="@usuario" />
+            </div>
+          </div>
+
           {/* Fila 5: Responsable 1 + Responsable 2 */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-0.5">
