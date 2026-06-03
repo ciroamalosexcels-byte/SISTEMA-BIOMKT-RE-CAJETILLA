@@ -11,7 +11,7 @@ export async function GET() {
 
   const [{ data: members }, { data: status91 }, { data: points }] = await Promise.all([
     supabase.from("team_members").select("*").is("deleted_at", null),
-    supabase.from("team_status_91").select("*"),
+    supabase.from("team_status_91").select("*").eq("mes", new Date().toISOString().slice(0, 7)),
     supabase.from("team_monthly_points").select("*"),
   ]);
 

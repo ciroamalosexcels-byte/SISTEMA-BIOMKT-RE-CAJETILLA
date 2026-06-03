@@ -51,6 +51,22 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
       dirty: true,
     }));
     storage.setTeam(get().members);
+
+    // Persistir en Supabase los campos que se pierden al recargar
+    if (patch.status91) {
+      fetch(`/api/supabase/team/${id}/status91`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch.status91),
+      }).catch(() => {});
+    }
+    if (patch.monthlyPoints) {
+      fetch(`/api/supabase/team/${id}/points`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch.monthlyPoints),
+      }).catch(() => {});
+    }
   },
 
   deleteMember(id) {
