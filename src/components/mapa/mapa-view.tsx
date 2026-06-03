@@ -83,7 +83,7 @@ export function MapaView() {
             alignItems: "center", justifyContent: "center",
             color: "var(--slate-400)", fontWeight: 700, fontSize: 14,
           }}>
-            Sin leads para mostrar en el mapa.
+            Sin prospectos para mostrar en el mapa.
           </div>
         )}
       </div>

@@ -70,6 +70,14 @@ html, body {
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; border: none; background: none; }
 
+/* Ocultar "dd/mm/aaaa" en campos de fecha vacíos — mantiene el ícono del calendario */
+input[type="date"][value=""]::-webkit-datetime-edit,
+input[type="date"]:not([value])::-webkit-datetime-edit,
+input[type="datetime-local"][value=""]::-webkit-datetime-edit,
+input[type="datetime-local"]:not([value])::-webkit-datetime-edit { color: transparent; }
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 1; cursor: pointer; }
+
 /* ── Layout ─────────────────────────────────────────────────────── */
 .container { max-width: 1800px; margin: 0 auto; padding: 14px 18px 22px; }
 .app-space { display: flex; flex-direction: column; gap: 16px; min-height: 100vh; }

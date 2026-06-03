@@ -147,13 +147,24 @@ export function MemberProfile({ memberId }: Props) {
 
   const earned = earnedGroups(member.badges);
 
+  const S91_SCORE: Record<string, number> = { red: 0, yellow: 1, green: 2, lime: 3 };
+  const S91_COLOR = ["#ff1616", "#ffc21a", "#157a4d", "#52ff00"];
+  const s91Vals = STATUS91_ITEMS.map(k => member.status91?.[k] ?? "").filter(v => v in S91_SCORE);
+  const s91AvgColor = s91Vals.length === 0 ? "#d1d5db" : (() => {
+    const avg = s91Vals.reduce((sum, v) => sum + S91_SCORE[v], 0) / s91Vals.length;
+    return S91_COLOR[Math.round(avg)];
+  })();
+
   return (
     <div className="team-panel-page mock-team-v23">
       {/* Header */}
       <div className="team-panel-head">
-        <div className="team-panel-title-wrap">
+        <div className="team-panel-title-wrap" style={{ alignItems: "center" }}>
           <h2 className="team-panel-title">{member.nombre}</h2>
-          <div className="team-panel-sub">PANEL PERSONAL DEL INTEGRANTE</div>
+          {/l[ií]der/i.test(member.roles ?? "") && (
+            <span className="team-panel-sub" style={{ marginTop: 0 }}>Líder</span>
+          )}
+          <div style={{ width: 31, height: 31, borderRadius: "50%", background: s91AvgColor, flexShrink: 0 }} />
         </div>
 
         {/* All medals in header — lit if earned, locked if not */}
@@ -255,7 +266,7 @@ export function MemberProfile({ memberId }: Props) {
                         <td><input className="team-monthly-input-v23" value={row.puntos} onChange={(e) => patchMonthRow(i, { puntos: e.target.value })} placeholder="—" /></td>
                         <td><input className="team-monthly-input-v23" value={row.detalles} onChange={(e) => patchMonthRow(i, { detalles: e.target.value })} placeholder="—" /></td>
                         <td><input type="date" className="team-monthly-date-v23" value={row.fecha} onChange={(e) => patchMonthRow(i, { fecha: e.target.value })} /></td>
-                        <td>
+                        <td style={{ overflow: "visible", position: "relative" }}>
                           <div className="team-monthly-state-wrap-v23" style={{ justifyContent: "center" }}>
                             <ColorDotPicker
                               value={row.estado || ""}

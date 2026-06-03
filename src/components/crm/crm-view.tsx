@@ -6,7 +6,7 @@ import { NewLeadModal } from "./new-lead-modal";
 import type { TabKey } from "@/types";
 
 const META: Record<string, { title: string; subtitle: string }> = {
-  CRM: { title: "CRM GENERAL", subtitle: "PROSPECCIÓN, PRIMER CONTACTO Y CARGA DE LEADS" },
+  CRM: { title: "CRM GENERAL", subtitle: "PROSPECCIÓN, PRIMER CONTACTO Y CARGA DE PROSPECTOS" },
   REUNION_1: { title: "REUNIÓN 1", subtitle: "AUDITORÍA, PRESUPUESTADO Y CIERRE" },
   REUNION_2: { title: "REUNIÓN 2", subtitle: "ENTREGA DE PRESUPUESTO Y CIERRE" },
   SEGUIMIENTO: { title: "SEGUIMIENTO", subtitle: "LLAMADAS, RECORDATORIOS Y REACTIVACIÓN" },

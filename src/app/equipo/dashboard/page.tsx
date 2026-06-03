@@ -7,7 +7,7 @@ export default function DashboardEquipoPage() {
     <div className="p-8 min-h-full">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-          Dashboard Equipo
+          Panel de Control Equipo
         </h1>
         <p className="text-sm text-slate-400 dark:text-slate-500">
           Métricas de desempeño, badges y status del equipo de ventas

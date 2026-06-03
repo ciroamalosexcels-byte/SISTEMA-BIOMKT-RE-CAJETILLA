@@ -64,7 +64,7 @@ export const BADGES = [
 ] as const;
 
 export const TABS = [
-  { key: "DASHBOARD", label: "Dashboard", href: "/dashboard" },
+  { key: "DASHBOARD", label: "Panel de Control", href: "/dashboard" },
   { key: "CRM", label: "CRM General", href: "/crm" },
   { key: "REUNION_1", label: "Reunión 1", href: "/reunion/1" },
   { key: "REUNION_2", label: "Reunión 2", href: "/reunion/2" },
@@ -81,25 +81,28 @@ export const TABS = [
   { key: "CALENDARIO", label: "📅", href: "/calendario" },
 ] as const;
 
-export type WorkspaceMode = "ventas" | "clientes" | "equipo";
+export type WorkspaceMode = "ventas" | "clientes" | "equipo" | "caja";
 
 export const WORKSPACE_TITLES: Record<WorkspaceMode, string> = {
-  ventas: "VENTAS BIOMARKETING",
+  equipo:   "EQUIPO BIOMARKETING",
+  ventas:   "VENTAS BIOMARKETING",
   clientes: "CLIENTES BIOMARKETING",
-  equipo: "EQUIPO BIOMARKETING",
+  caja:     "CAJA BIOMARKETING",
 };
 
 export const WORKSPACE_OPTION_LABELS: Record<WorkspaceMode, string> = {
-  ventas: "Ventas Biomarketing",
+  equipo:   "Equipo Biomarketing",
+  ventas:   "Ventas Biomarketing",
   clientes: "Clientes Biomarketing",
-  equipo: "Equipo Biomarketing",
+  caja:     "Caja",
 };
 
 /* Tab keys visible per workspace mode (matches VIEW_TABS_V30 from the HTML reference) */
 export const WORKSPACE_TABS: Record<WorkspaceMode, string[]> = {
+  equipo:   ["EQUIPO", "COLABORADORES", "PROCEDIMIENTOS", "REUNIONES_EQUIPO"],
   ventas:   ["DASHBOARD", "SEGUIMIENTO", "CLIENTES", "EQUIPO", "CALENDARIO"],
   clientes: ["CLIENTES", "PLANIFICACION", "PLANES", "MAPA_CLIENTES", "CALENDARIO"],
-  equipo:   ["EQUIPO", "COLABORADORES", "PROCEDIMIENTOS", "REUNIONES_EQUIPO"],
+  caja:     [],
 };
 
 export interface WorkspaceNavItem {
@@ -109,27 +112,30 @@ export interface WorkspaceNavItem {
 }
 
 export const WORKSPACE_NAV: Record<WorkspaceMode, WorkspaceNavItem[]> = {
+  equipo: [
+    { key: "DASHBOARD_EQUIPO",   label: "Panel de Control",  href: "/equipo/dashboard" },
+    { key: "OBJETIVOS_EQUIPO",   label: "Objetivos",         href: "/equipo/objetivos" },
+    { key: "EQUIPO",             label: "Equipo",            href: "/equipo" },
+    { key: "COLABORADORES",      label: "Colaboradores",     href: "/colaboradores" },
+    { key: "PROCEDIMIENTOS",     label: "Procedimientos",    href: "/procedimientos" },
+    { key: "REUNIONES_EQUIPO",   label: "Reunión de Equipo", href: "/reuniones-equipo" },
+  ],
   ventas: [
-    { key: "DASHBOARD",    label: "Dashboard",    href: "/dashboard" },
-    { key: "SEGUIMIENTO",  label: "Leads",        href: "/seguimiento" },
+    { key: "DASHBOARD",    label: "Panel de Control", href: "/dashboard" },
+    { key: "SEGUIMIENTO",  label: "Prospección",   href: "/seguimiento" },
     { key: "CLIENTES",     label: "Clientes",     href: "/clientes" },
-    { key: "EQUIPO",       label: "Equipo",       href: "/equipo" },
     { key: "CALENDARIO",   label: "Calendario",   href: "/calendario" },
   ],
   clientes: [
-    { key: "DASHBOARD_CLIENTES", label: "Dashboard",     href: "/clientes/dashboard" },
+    { key: "DASHBOARD_CLIENTES", label: "Panel de Control", href: "/clientes/dashboard" },
     { key: "CLIENTES",           label: "Clientes",      href: "/clientes" },
     { key: "PLANIFICACION",      label: "Planificación", href: "/planificacion" },
     { key: "PLANES",             label: "Planes",        href: "/planes" },
     { key: "MAPA_CLIENTES",      label: "Mapa",          href: "/mapa" },
     { key: "CALENDARIO",         label: "Calendario",    href: "/calendario" },
   ],
-  equipo: [
-    { key: "DASHBOARD_EQUIPO",   label: "Dashboard",         href: "/equipo/dashboard" },
-    { key: "EQUIPO",             label: "Equipo",            href: "/equipo" },
-    { key: "COLABORADORES",      label: "Colaboradores",     href: "/colaboradores" },
-    { key: "PROCEDIMIENTOS",     label: "Procedimientos",    href: "/procedimientos" },
-    { key: "REUNIONES_EQUIPO",   label: "Reunión de Equipo", href: "/reuniones-equipo" },
+  caja: [
+    { key: "CAJA", label: "Caja", href: "/caja" },
   ],
 };
 
