@@ -126,7 +126,7 @@ export function SeguimientoView() {
             <thead>
               <tr className="border-b border-slate-200 dark:border-white/[0.05]">
                 {[["Nombre","17%"],["Empresa","14%"],["Observaciones","15%"],["Teléfono","9%"],["Primer contacto","9%"],["Dirección","14%"],["Responsable","10%"],["Medio","12%"]].map(([h, w]) => (
-                  <th key={h} style={{ width: w }} className="text-left py-2 pr-3 text-[13px] font-black uppercase tracking-[0.06em] text-slate-400 dark:text-slate-600 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{h}</th>
+                  <th key={h} style={{ width: w, paddingLeft: 12 }} className="text-left py-2 pr-3 text-[13px] font-black uppercase tracking-[0.06em] text-slate-400 dark:text-slate-600 whitespace-nowrap overflow-hidden">{h}</th>
                 ))}
               </tr>
             </thead>

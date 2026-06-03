@@ -4,6 +4,8 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { syncLeads, syncTeam } from "@/lib/google-sheets/sync";
 import type { Database } from "@/types/supabase";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   // ── Auth — dos caminos válidos ───────────────────────────────────────────────
   // 1. Service key header (bootstrap / CI): x-sync-secret = SUPABASE_SERVICE_ROLE_KEY

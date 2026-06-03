@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { readSheetValues } from "@/lib/google-sheets/client";
 
+export const runtime = "nodejs";
+
 // Endpoint de diagnóstico — solo disponible en desarrollo
 // Eliminar antes de ir a producción
 export async function GET() {
