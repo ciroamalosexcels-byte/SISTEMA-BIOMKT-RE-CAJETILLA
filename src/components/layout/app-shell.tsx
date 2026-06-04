@@ -52,8 +52,9 @@ export function AppShell({ children }: AppShellProps) {
       fetch("/api/supabase/management-events").then(r => r.ok ? r.json() : []).catch(() => []),
       fetch("/api/supabase/plans").then(r => r.ok ? r.json() : []).catch(() => []),
       fetch("/api/supabase/plan-events").then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch("/api/supabase/pipeline").then(r => r.ok ? r.json() : []).catch(() => []),
     ])
-      .then(([supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts]) => {
+      .then(([supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts, pipeline]) => {
         if (supaLeads.length > 0) {
           useLeadsStore.setState({ rows: deduplicateLeads(supaLeads), dirty: false });
           storage.setLeads(supaLeads);
@@ -71,6 +72,10 @@ export function AppShell({ children }: AppShellProps) {
           usePlansStore.setState({ plans, planEvents: planEvts, dirty: false });
           storage.setPlans(plans);
           storage.setPlanEvents(planEvts);
+        }
+        if (pipeline.length > 0) {
+          usePipelineStore.setState({ stages: pipeline });
+          try { localStorage.setItem("ventas_biomarketing_pipeline_stages_v2", JSON.stringify(pipeline)); } catch {}
         }
       })
       .catch(() => {});
