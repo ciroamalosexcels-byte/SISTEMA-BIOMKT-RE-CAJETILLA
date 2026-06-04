@@ -1,5 +1,8 @@
 import type { Lead, ContentEvent, ManagementEvent, Plan, PlanEvent } from "@/types";
 
+/** Convierte string vacío a null — evita errores de tipo en columnas date/timestamptz */
+const d = (v: string | undefined | null) => (v && v.trim()) ? v : null;
+
 /** Lead TS → leads DB row */
 export function serializeLead(lead: Lead, stageMap: Map<string, string>) {
   return {
@@ -21,11 +24,11 @@ export function serializeLead(lead: Lead, stageMap: Map<string, string>) {
     stage_id:                  stageMap.get(lead.tab) ?? null,
     sheet_stage:               lead.tab,
     fecha_contacto:            lead.fechaContacto,
-    cumpleanos:                lead.cumpleanos ?? null,
-    cumpleanos2:               lead.cumpleanos2 ?? null,
+    cumpleanos:                d(lead.cumpleanos),
+    cumpleanos2:               d(lead.cumpleanos2),
     proximo_seguimiento_dias:  lead.proximoSeguimientoDias ?? null,
-    proximo_seguimiento_fecha: lead.proximoSeguimientoFecha ?? null,
-    meeting_datetime:          lead.meetingDatetime ?? null,
+    proximo_seguimiento_fecha: d(lead.proximoSeguimientoFecha),
+    meeting_datetime:          d(lead.meetingDatetime),
     plan_id:                   lead.planId ?? null,
     activo:                    lead.activo ?? true,
     rubro:                     lead.rubro ?? null,
@@ -45,7 +48,7 @@ export function serializeContentEvent(e: ContentEvent) {
     title:           e.title,
     type:            e.type || null,
     status:          e.status || null,
-    scheduled_date:  e.scheduledDate ?? null,
+    scheduled_date:  d(e.scheduledDate),
     done:            e.done,
     timer_seconds:   e.timerSeconds,
     timer_running:   e.timerRunning,
@@ -67,7 +70,7 @@ export function serializeManagementEvent(e: ManagementEvent) {
     client_id: e.clientId,
     title:     e.title,
     type:      e.type || null,
-    datetime:  e.datetime ?? null,
+    datetime:  d(e.datetime),
     done:      e.done,
     notes:     e.notes ?? null,
   };
@@ -90,7 +93,7 @@ export function serializePlanEvent(e: PlanEvent) {
     title:           e.title,
     type:            e.type || null,
     status:          e.status || null,
-    scheduled_date:  e.scheduledDate ?? null,
+    scheduled_date:  d(e.scheduledDate),
     plan_slot:       e.planSlot ?? null,
     frase:           e.frase ?? null,
     notes:           e.notes ?? null,

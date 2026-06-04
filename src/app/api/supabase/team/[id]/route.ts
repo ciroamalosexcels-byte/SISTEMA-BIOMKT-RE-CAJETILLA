@@ -13,21 +13,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json();
   const admin = createAdminClient();
 
+  const str = (v: unknown): string | null => {
+    if (v == null) return null;
+    const s = String(v).trim();
+    return s || null;
+  };
   const row = {
-    nombre:          body.nombre,
-    edad:            body.edad ?? null,
-    equipo:          body.equipo ?? null,
-    roles:           body.roles ?? null,
-    horarios:        body.horarios ?? null,
-    sueno:           body.sueno ?? null,
-    telefono:        body.telefono ?? null,
-    mail:            body.mail ?? null,
-    direccion:       body.direccion ?? null,
-    fecha_nacimiento: body.fechaNacimiento ?? null,
-    notas:           body.notas ?? null,
-    signo:           body.signo ?? null,
-    signo_chino:     body.signoChino ?? null,
-    badges:          body.badges ?? [],
+    nombre:           str(body.nombre) ?? body.nombre,
+    edad:             str(body.edad),
+    equipo:           str(body.equipo),
+    roles:            str(body.roles),
+    horarios:         str(body.horarios),
+    sueno:            str(body.sueno),
+    telefono:         str(body.telefono),
+    mail:             str(body.mail),
+    direccion:        str(body.direccion),
+    fecha_nacimiento: str(body.fechaNacimiento), // date — string vacío → null
+    notas:            str(body.notas),
+    signo:            str(body.signo),
+    signo_chino:      str(body.signoChino),
+    badges:           Array.isArray(body.badges) ? body.badges : [],
   };
 
   const { error } = await admin.from("team_members").update(row).eq("id", id);

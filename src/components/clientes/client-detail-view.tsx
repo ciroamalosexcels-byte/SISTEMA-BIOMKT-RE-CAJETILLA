@@ -703,10 +703,11 @@ export function ClientDetailView({ clientId }: Props) {
     if (next) router.push(`/clientes/${next.id}`);
   }
 
+  const patch = useCallback((p: Partial<Lead>) => updateLead(clientId, p), [clientId, updateLead]);
+
   function deleteClient() {
     if (!confirm("¿Eliminar este cliente? Esta acción no se puede deshacer.")) return;
-    const { rows: r } = useLeadsStore.getState();
-    useLeadsStore.setState({ rows: r.filter(x => x.id !== clientId), dirty: true });
+    useLeadsStore.getState().deleteLead(clientId);
     router.push("/clientes");
   }
 
@@ -720,8 +721,6 @@ export function ClientDetailView({ clientId }: Props) {
       </div>
     );
   }
-
-  const patch = useCallback((p: Partial<Lead>) => updateLead(clientId, p), [clientId, updateLead]);
   const title = lead.empresa || lead.nombre || "Sin nombre";
 
   return (
