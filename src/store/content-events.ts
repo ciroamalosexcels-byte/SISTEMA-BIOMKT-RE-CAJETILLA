@@ -18,8 +18,16 @@ interface ContentEventsStore {
   toggleManagementDone: (id: string) => void;
 }
 
-function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+function uid() { return crypto.randomUUID(); }
+
+function supabase(path: string, method: string, body: unknown) {
+  fetch(path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then(r => r.ok ? null : r.json().then(e => console.error(`[events] ${path} error:`, e)))
+    .catch(e => console.error(`[events] ${path} fetch error:`, e));
 }
 
 export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
@@ -28,39 +36,27 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
   dirty: false,
 
   load() {
-    set({
-      contentEvents: storage.getContentEvents(),
-      managementEvents: storage.getManagementEvents(),
-      dirty: false,
-    });
+    set({ contentEvents: storage.getContentEvents(), managementEvents: storage.getManagementEvents(), dirty: false });
   },
 
   addContentEvent(event) {
-    const clientEvents = get().contentEvents.filter(
-      (e) => e.clientId === event.clientId
-    );
-    const newEvent: ContentEvent = {
-      ...event,
-      id: uid(),
-      order: clientEvents.length,
-    };
+    const newEvent: ContentEvent = { ...event, id: uid(), order: get().contentEvents.filter(e => e.clientId === event.clientId).length };
     set((s) => ({ contentEvents: [...s.contentEvents, newEvent], dirty: true }));
     storage.setContentEvents(get().contentEvents);
+    supabase("/api/supabase/content-events", "POST", newEvent);
   },
 
   updateContentEvent(id, patch) {
-    set((s) => ({
-      contentEvents: s.contentEvents.map((e) =>
-        e.id === id ? { ...e, ...patch } : e
-      ),
-      dirty: true,
-    }));
+    set((s) => ({ contentEvents: s.contentEvents.map((e) => e.id === id ? { ...e, ...patch } : e), dirty: true }));
     storage.setContentEvents(get().contentEvents);
+    const updated = get().contentEvents.find(e => e.id === id);
+    if (updated) supabase(`/api/supabase/content-events/${id}`, "PATCH", updated);
   },
 
   deleteContentEvent(id) {
     set((s) => ({ contentEvents: s.contentEvents.filter((e) => e.id !== id), dirty: true }));
     storage.setContentEvents(get().contentEvents);
+    supabase(`/api/supabase/content-events/${id}`, "DELETE", {});
   },
 
   reorderContentEvents(clientId, orderedIds) {
@@ -73,46 +69,43 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       dirty: true,
     }));
     storage.setContentEvents(get().contentEvents);
+    // Guardar cada evento reordenado
+    get().contentEvents.filter(e => e.clientId === clientId).forEach(e =>
+      supabase(`/api/supabase/content-events/${e.id}`, "PATCH", e)
+    );
   },
 
   toggleContentDone(id) {
-    set((s) => ({
-      contentEvents: s.contentEvents.map((e) =>
-        e.id === id ? { ...e, done: !e.done } : e
-      ),
-      dirty: true,
-    }));
+    set((s) => ({ contentEvents: s.contentEvents.map((e) => e.id === id ? { ...e, done: !e.done } : e), dirty: true }));
     storage.setContentEvents(get().contentEvents);
+    const updated = get().contentEvents.find(e => e.id === id);
+    if (updated) supabase(`/api/supabase/content-events/${id}`, "PATCH", updated);
   },
 
   addManagementEvent(event) {
     const newEvent: ManagementEvent = { ...event, id: uid() };
     set((s) => ({ managementEvents: [...s.managementEvents, newEvent], dirty: true }));
     storage.setManagementEvents(get().managementEvents);
+    supabase("/api/supabase/management-events", "POST", newEvent);
   },
 
   updateManagementEvent(id, patch) {
-    set((s) => ({
-      managementEvents: s.managementEvents.map((e) =>
-        e.id === id ? { ...e, ...patch } : e
-      ),
-      dirty: true,
-    }));
+    set((s) => ({ managementEvents: s.managementEvents.map((e) => e.id === id ? { ...e, ...patch } : e), dirty: true }));
     storage.setManagementEvents(get().managementEvents);
+    const updated = get().managementEvents.find(e => e.id === id);
+    if (updated) supabase(`/api/supabase/management-events/${id}`, "PATCH", updated);
   },
 
   deleteManagementEvent(id) {
     set((s) => ({ managementEvents: s.managementEvents.filter((e) => e.id !== id), dirty: true }));
     storage.setManagementEvents(get().managementEvents);
+    supabase(`/api/supabase/management-events/${id}`, "DELETE", {});
   },
 
   toggleManagementDone(id) {
-    set((s) => ({
-      managementEvents: s.managementEvents.map((e) =>
-        e.id === id ? { ...e, done: !e.done } : e
-      ),
-      dirty: true,
-    }));
+    set((s) => ({ managementEvents: s.managementEvents.map((e) => e.id === id ? { ...e, done: !e.done } : e), dirty: true }));
     storage.setManagementEvents(get().managementEvents);
+    const updated = get().managementEvents.find(e => e.id === id);
+    if (updated) supabase(`/api/supabase/management-events/${id}`, "PATCH", updated);
   },
 }));

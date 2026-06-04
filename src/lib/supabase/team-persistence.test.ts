@@ -42,7 +42,7 @@ describe("adaptTeamMember — lectura de status91 desde Supabase", () => {
     const status91Rows = [
       { member_id: "member-1", item: STATUS91_ITEMS[0], estado: "green" },
       { member_id: "member-1", item: STATUS91_ITEMS[1], estado: "red" },
-    ];
+    ] as any[];
     const result = adaptTeamMember(baseMemberRow as any, status91Rows, []);
     expect(result.status91[STATUS91_ITEMS[0]]).toBe("green");
     expect(result.status91[STATUS91_ITEMS[1]]).toBe("red");
@@ -50,9 +50,9 @@ describe("adaptTeamMember — lectura de status91 desde Supabase", () => {
 
   it("status91 de otro integrante no contamina al integrante actual", () => {
     const status91Rows = [
-      { member_id: "member-2", item: STATUS91_ITEMS[0], estado: "lime" }, // otro miembro
+      { member_id: "member-2", item: STATUS91_ITEMS[0], estado: "lime" },
       { member_id: "member-1", item: STATUS91_ITEMS[0], estado: "yellow" },
-    ];
+    ] as any[];
     const result = adaptTeamMember(baseMemberRow as any, status91Rows, []);
     expect(result.status91[STATUS91_ITEMS[0]]).toBe("yellow");
   });
@@ -70,9 +70,9 @@ describe("adaptTeamMember — lectura de monthlyPoints desde Supabase", () => {
   it("mapea correctamente puntos, detalles, fecha y estado", () => {
     const pointsRows = [
       { member_id: "member-1", puntos: "150", detalles: "Excelente mes", fecha: "2025-06-01", estado: "green" },
-    ];
+    ] as any[];
     const result = adaptTeamMember(baseMemberRow as any, [], pointsRows);
-    expect(result.monthlyPoints[0]).toEqual({
+    expect(result.monthlyPoints?.[0]).toEqual({
       puntos: "150",
       detalles: "Excelente mes",
       fecha: "2025-06-01",
@@ -83,10 +83,10 @@ describe("adaptTeamMember — lectura de monthlyPoints desde Supabase", () => {
   it("estado null en la DB se convierte en string vacío", () => {
     const pointsRows = [
       { member_id: "member-1", puntos: "0", detalles: null, fecha: "2025-05-01", estado: null },
-    ];
+    ] as any[];
     const result = adaptTeamMember(baseMemberRow as any, [], pointsRows);
-    expect(result.monthlyPoints[0].estado).toBe("");
-    expect(result.monthlyPoints[0].detalles).toBe("");
+    expect(result.monthlyPoints?.[0].estado).toBe("");
+    expect(result.monthlyPoints?.[0].detalles).toBe("");
   });
 });
 

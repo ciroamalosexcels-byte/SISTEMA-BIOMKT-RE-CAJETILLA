@@ -17,6 +17,16 @@ function persist(stages: PipelineStage[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stages)); } catch {}
 }
 
+function supabase(id: string, body: unknown) {
+  fetch(`/api/supabase/pipeline/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then(r => r.ok ? null : r.json().then(e => console.error(`[pipeline] patch error:`, e)))
+    .catch(e => console.error(`[pipeline] fetch error:`, e));
+}
+
 export const usePipelineStore = create<PipelineStore>((set, get) => ({
   stages: DEFAULT_PIPELINE_STAGES,
 
@@ -36,12 +46,7 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
 
   addStage(label, color = "#94a3b8") {
     const { stages } = get();
-    const newStage: PipelineStage = {
-      id: `stage_${Date.now()}`,
-      label,
-      color,
-      order: stages.length,
-    };
+    const newStage: PipelineStage = { id: `stage_${Date.now()}`, label, color, order: stages.length };
     const updated = [...stages, newStage];
     set({ stages: updated });
     persist(updated);
@@ -51,12 +56,12 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
     const updated = get().stages.map(s => s.id === id ? { ...s, ...patch } : s);
     set({ stages: updated });
     persist(updated);
+    const stage = updated.find(s => s.id === id);
+    if (stage) supabase(id, stage);
   },
 
   removeStage(id) {
-    const updated = get().stages
-      .filter(s => s.id !== id)
-      .map((s, i) => ({ ...s, order: i }));
+    const updated = get().stages.filter(s => s.id !== id).map((s, i) => ({ ...s, order: i }));
     set({ stages: updated });
     persist(updated);
   },
@@ -65,5 +70,6 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
     const reindexed = stages.map((s, i) => ({ ...s, order: i }));
     set({ stages: reindexed });
     persist(reindexed);
+    reindexed.forEach(s => supabase(s.id, s));
   },
 }));

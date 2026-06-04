@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { storage } from "@/lib/storage";
-import { saveToSheets } from "@/lib/sheets";
+// import { saveToSheets } from "@/lib/sheets"; // Sheets comentado — persistencia via Supabase
 import { todayBA, nowDatetimeBA, normalizeISODate } from "@/lib/dates";
 import type { Lead, TabKey, LeadFormData } from "@/types";
 
@@ -24,7 +24,9 @@ interface LeadsStore {
   setHighlightLeadId: (id: string | null) => void;
 }
 
-let nextId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+function nextId() {
+  return crypto.randomUUID();
+}
 
 function deduplicateById(rows: Lead[]): Lead[] {
   const seen = new Set<string>();
@@ -37,8 +39,16 @@ function deduplicateById(rows: Lead[]): Lead[] {
 
 export { deduplicateById as deduplicateLeads };
 
-/* ── Debounce para updateLead: guarda checkpoint sólo antes del primer
-   cambio en una secuencia de edición (800 ms de inactividad = nueva seq) */
+function supabase(path: string, method: string, body: unknown) {
+  fetch(path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then(r => r.ok ? null : r.json().then(e => console.error(`[leads] ${path} error:`, e)))
+    .catch(e => console.error(`[leads] ${path} fetch error:`, e));
+}
+
 let updateTimer: ReturnType<typeof setTimeout> | null = null;
 let updateCheckpointed = false;
 
@@ -53,9 +63,7 @@ export const useLeadsStore = create<LeadsStore>((set, get) => ({
   load() {
     const rawRows = deduplicateById(storage.getLeads());
     const rows = rawRows.map((r) => {
-      // Skip si ya es ISO correcto
       if (r.fechaContacto && /^\d{4}-\d{2}-\d{2}/.test(String(r.fechaContacto))) return r;
-      // Normalizar: convierte seriales Excel, DD/MM/YYYY, etc.
       const normalized = normalizeISODate(r.fechaContacto as string);
       return { ...r, fechaContacto: normalized || todayBA() };
     });
@@ -65,66 +73,41 @@ export const useLeadsStore = create<LeadsStore>((set, get) => ({
 
   addLead(data, tab) {
     const { rows, past } = get();
-    const lead: Lead = {
-      ...data,
-      id: nextId(),
-      tab,
-      fechaContacto: nowDatetimeBA(),
-    };
-    set({
-      rows: [...rows, lead],
-      dirty: true,
-      past: [...past.slice(-(MAX_HISTORY - 1)), rows],
-      future: [],
-    });
+    const lead: Lead = { ...data, id: nextId(), tab, fechaContacto: nowDatetimeBA() };
+    set({ rows: [...rows, lead], dirty: true, past: [...past.slice(-(MAX_HISTORY - 1)), rows], future: [] });
     storage.setLeads(get().rows);
+    supabase("/api/supabase/leads", "POST", lead);
   },
 
   updateLead(id, patch) {
-    // Guarda checkpoint antes del primer cambio en la secuencia de edición
     if (!updateCheckpointed) {
       const { rows, past } = get();
       set({ past: [...past.slice(-(MAX_HISTORY - 1)), rows], future: [] });
       updateCheckpointed = true;
     }
     if (updateTimer) clearTimeout(updateTimer);
-    updateTimer = setTimeout(() => {
-      updateCheckpointed = false;
-      updateTimer = null;
-    }, 800);
+    updateTimer = setTimeout(() => { updateCheckpointed = false; updateTimer = null; }, 800);
 
-    set((s) => ({
-      rows: s.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)),
-      dirty: true,
-    }));
+    set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)), dirty: true }));
     storage.setLeads(get().rows);
+    const updated = get().rows.find(r => r.id === id);
+    if (updated) supabase(`/api/supabase/leads/${id}`, "PATCH", updated);
   },
 
   deleteLead(id) {
     const { rows, past } = get();
-    set({
-      rows: rows.filter((r) => r.id !== id),
-      dirty: true,
-      past: [...past.slice(-(MAX_HISTORY - 1)), rows],
-      future: [],
-    });
+    set({ rows: rows.filter((r) => r.id !== id), dirty: true, past: [...past.slice(-(MAX_HISTORY - 1)), rows], future: [] });
     storage.setLeads(get().rows);
+    supabase(`/api/supabase/leads/${id}`, "DELETE", {});
   },
 
-  moveLeadTo(id, tab) {
-    get().updateLead(id, { tab });
-  },
+  moveLeadTo(id, tab) { get().updateLead(id, { tab }); },
 
   undo() {
     const { past, rows, future } = get();
     if (past.length === 0) return;
     const prev = past[past.length - 1];
-    set({
-      rows: prev,
-      past: past.slice(0, -1),
-      future: [rows, ...future].slice(0, MAX_HISTORY),
-      dirty: true,
-    });
+    set({ rows: prev, past: past.slice(0, -1), future: [rows, ...future].slice(0, MAX_HISTORY), dirty: true });
     storage.setLeads(prev);
   },
 
@@ -132,24 +115,15 @@ export const useLeadsStore = create<LeadsStore>((set, get) => ({
     const { past, rows, future } = get();
     if (future.length === 0) return;
     const next = future[0];
-    set({
-      rows: next,
-      past: [...past.slice(-(MAX_HISTORY - 1)), rows],
-      future: future.slice(1),
-      dirty: true,
-    });
+    set({ rows: next, past: [...past.slice(-(MAX_HISTORY - 1)), rows], future: future.slice(1), dirty: true });
     storage.setLeads(next);
   },
 
   setHighlightLeadId(id) { set({ highlightLeadId: id }); },
 
   async save() {
-    set({ saving: true });
-    try {
-      await saveToSheets({ action: "saveSheet", sheet: "Leads", rows: get().rows });
-      set({ dirty: false });
-    } finally {
-      set({ saving: false });
-    }
+    // Sheets comentado — los cambios ya se guardan en Supabase en tiempo real
+    // await saveToSheets({ action: "saveSheet", sheet: "Leads", rows: get().rows });
+    set({ dirty: false });
   },
 }));

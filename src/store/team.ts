@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { storage } from "@/lib/storage";
-import { saveToSheets } from "@/lib/sheets";
+// import { saveToSheets } from "@/lib/sheets"; // Sheets comentado — persistencia via Supabase
 import { DEFAULT_TEAM, DEFAULT_BADGE_REQUIREMENTS, STATUS91_ITEMS } from "@/lib/constants";
 import type { TeamMember, BadgeKey } from "@/types";
 
@@ -18,12 +18,22 @@ interface TeamStore {
 
 function makeMember(nombre: string): TeamMember {
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: crypto.randomUUID(),
     nombre,
     status91: Object.fromEntries(STATUS91_ITEMS.map((k) => [k, ""])),
     badges: [],
     monthlyPoints: [],
   };
+}
+
+function supabase(path: string, method: string, body: unknown) {
+  fetch(path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then(r => r.ok ? null : r.json().then(e => console.error(`[team] ${path} error:`, e)))
+    .catch(e => console.error(`[team] ${path} fetch error:`, e));
 }
 
 export const useTeamStore = create<TeamStore>((set, get) => ({
@@ -52,24 +62,23 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     }));
     storage.setTeam(get().members);
 
-    // Persistir en Supabase los campos que se pierden al recargar
-    if (patch.status91) {
-      fetch(`/api/supabase/team/${id}/status91`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch.status91),
-      })
-        .then(r => r.ok ? null : r.json().then(e => console.error("[team] status91 save error:", e)))
-        .catch(e => console.error("[team] status91 fetch error:", e));
+    // Campos básicos
+    if (Object.keys(patch).some(k => !["status91", "monthlyPoints", "badges"].includes(k))) {
+      const updated = get().members.find(m => m.id === id);
+      if (updated) supabase(`/api/supabase/team/${id}`, "PATCH", updated);
     }
+    // Badges
+    if (patch.badges) {
+      const updated = get().members.find(m => m.id === id);
+      if (updated) supabase(`/api/supabase/team/${id}`, "PATCH", updated);
+    }
+    // Status91
+    if (patch.status91) {
+      supabase(`/api/supabase/team/${id}/status91`, "PATCH", patch.status91);
+    }
+    // Monthly points
     if (patch.monthlyPoints) {
-      fetch(`/api/supabase/team/${id}/points`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch.monthlyPoints),
-      })
-        .then(r => r.ok ? null : r.json().then(e => console.error("[team] points save error:", e)))
-        .catch(e => console.error("[team] points fetch error:", e));
+      supabase(`/api/supabase/team/${id}/points`, "PATCH", patch.monthlyPoints);
     }
   },
 
@@ -81,13 +90,13 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
   awardBadge(id, badge) {
     set((s) => ({
       members: s.members.map((m) =>
-        m.id === id && !m.badges.includes(badge)
-          ? { ...m, badges: [...m.badges, badge] }
-          : m
+        m.id === id && !m.badges.includes(badge) ? { ...m, badges: [...m.badges, badge] } : m
       ),
       dirty: true,
     }));
     storage.setTeam(get().members);
+    const updated = get().members.find(m => m.id === id);
+    if (updated) supabase(`/api/supabase/team/${id}`, "PATCH", updated);
   },
 
   revokeBadge(id, badge) {
@@ -98,15 +107,17 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
       dirty: true,
     }));
     storage.setTeam(get().members);
+    const updated = get().members.find(m => m.id === id);
+    if (updated) supabase(`/api/supabase/team/${id}`, "PATCH", updated);
   },
 
   async save() {
-    await saveToSheets({ action: "saveTeam", team: get().members });
+    // Sheets comentado — los cambios ya se guardan en Supabase en tiempo real
+    // await saveToSheets({ action: "saveTeam", team: get().members });
     set({ dirty: false });
   },
 }));
 
-// Auto-badge logic: call this after recalculating closings per member
 export function checkBadgeRequirements(
   closings: number,
   requirements: typeof DEFAULT_BADGE_REQUIREMENTS
