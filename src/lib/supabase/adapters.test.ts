@@ -108,7 +108,9 @@ describe("adaptLead", () => {
 
     // Campos intencionalmente excluidos del adapter (gestionados por fuera de la DB normal)
     const INTENTIONALLY_EXCLUDED: (keyof Lead)[] = [
-      "clave", // gestionado via Supabase Vault (clave_secret_id), no en texto plano
+      "clave",      // gestionado via Supabase Vault (clave_secret_id), no en texto plano
+      "claveEmail", // nuevo campo — pendiente mapear en adaptLead
+      "ticket",     // nuevo campo — pendiente mapear en adaptLead
     ];
 
     const ALL_LEAD_KEYS: (keyof Lead)[] = [

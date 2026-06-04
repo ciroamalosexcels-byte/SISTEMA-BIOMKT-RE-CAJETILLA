@@ -33,6 +33,9 @@ export interface Lead {
   cumpleanos2?: string; // ISO date string — segundo contacto
   // Credenciales
   clave?: string;
+  claveEmail?: string;
+  // Ticket del cliente
+  ticket?: number;
   // Seguimiento
   proximoSeguimientoDias?: number;
   proximoSeguimientoFecha?: string;

@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { data: stages } = await admin.from("pipeline_stages").select("id, stage_key");
   const stageMap = new Map(stages?.map((s) => [s.stage_key, s.id]) ?? []);
 
-  const { error } = await admin.from("leads").update(serializeLead(lead, stageMap)).eq("id", id);
+  const { error } = await admin.from("leads").update(serializeLead(lead, stageMap) as any).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const { data: stages } = await admin.from("pipeline_stages").select("id, stage_key");
   const stageMap = new Map(stages?.map((s) => [s.stage_key, s.id]) ?? []);
 
-  const { error } = await admin.from("leads").upsert(serializeLead(lead, stageMap), { onConflict: "id" });
+  const { error } = await admin.from("leads").upsert(serializeLead(lead, stageMap) as any, { onConflict: "id" });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

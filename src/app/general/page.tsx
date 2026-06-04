@@ -96,15 +96,27 @@ function ClientesTicket() {
   const month   = currentMonthBA();
   const [y, mo] = month.split("-").map(Number);
   const mesLabel = MONTH_NAMES[(mo ?? 1) - 1];
-  const clientes = rows.filter((r) => r.tab === "CLIENTES").length;
-  const [ticket, setTicket]   = useState(0);
+  const clientesRows = rows.filter((r) => r.tab === "CLIENTES");
+  const clientes = clientesRows.length;
+
+  // Ticket promedio calculado desde los tickets de los clientes activos
+  const ticketAuto = useMemo(() => {
+    const withTicket = clientesRows.filter(r => r.ticket && r.ticket > 0);
+    if (withTicket.length === 0) return 0;
+    return Math.round(withTicket.reduce((sum, r) => sum + (r.ticket ?? 0), 0) / withTicket.length);
+  }, [clientesRows]);
+
+  const [ticketManual, setTicketManual] = useState(0);
   const [objetivo, setObjetivo] = useState(0);
   useEffect(() => {
-    try { const r = localStorage.getItem(TICKET_STORAGE); if (r) setTicket(Number(r)); } catch {}
+    try { const r = localStorage.getItem(TICKET_STORAGE); if (r) setTicketManual(Number(r)); } catch {}
     try { const r = localStorage.getItem(OBJETIVO_CLI_STORAGE); if (r) setObjetivo(Number(r)); } catch {}
   }, []);
-  function saveTicket(v: number)   { setTicket(v);   localStorage.setItem(TICKET_STORAGE, String(v)); }
+  function saveTicket(v: number)   { setTicketManual(v); localStorage.setItem(TICKET_STORAGE, String(v)); }
   function saveObjetivo(v: number) { setObjetivo(v); localStorage.setItem(OBJETIVO_CLI_STORAGE, String(v)); }
+
+  // Usar ticket automático si hay datos, manual si no
+  const ticket = ticketAuto > 0 ? ticketAuto : ticketManual;
   const pct = objetivo > 0 ? Math.round((clientes / objetivo) * 100) : 0;
   const pctColor = pct >= 100 ? "#22c55e" : pct >= 70 ? "#f59e0b" : "#ef4444";
 
@@ -135,18 +147,23 @@ function ClientesTicket() {
         </div>
         {/* Ticket promedio */}
         <div className="flex items-center justify-between px-5 py-[9px]">
-          <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.05em]">Ticket promedio</span>
+          <div className="flex flex-col">
+            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.05em]">Ticket promedio</span>
+            {ticketAuto > 0 && <span className="text-[9px] text-slate-400 dark:text-slate-600 font-medium">desde tickets de clientes</span>}
+          </div>
           <div className="flex items-center gap-1 bg-amber rounded-xl px-3 py-1.5 relative">
             <span className="text-[16px] font-black text-[#07152f]">$</span>
             <span className="text-[16px] font-black text-[#07152f] text-right select-none">
               {ticket > 0 ? ticket.toLocaleString("es-AR") : "0"}
             </span>
-            <input
-              type="number"
-              value={ticket || ""}
-              onChange={e => saveTicket(Number(e.target.value))}
-              className="absolute inset-0 opacity-0 w-full cursor-text"
-            />
+            {ticketAuto === 0 && (
+              <input
+                type="number"
+                value={ticketManual || ""}
+                onChange={e => saveTicket(Number(e.target.value))}
+                className="absolute inset-0 opacity-0 w-full cursor-text"
+              />
+            )}
           </div>
         </div>
         {/* Total facturación estimada */}
