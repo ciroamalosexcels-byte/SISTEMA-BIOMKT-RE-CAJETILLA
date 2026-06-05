@@ -121,12 +121,12 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
 
   function exportClientesCSV() {
     const clients = rows.filter((r) => r.tab === "CLIENTES");
-    const header = "Cliente,Nombre,Teléfono,Dirección,Servicio,Mes de entrada,Ticket";
+    const header = "Cliente;Nombre;Teléfono;Dirección;Servicio;Mes de entrada;Ticket";
     const q = (v: string | number | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = clients.map((c) =>
-      [q(c.empresa), q(c.nombre), q(c.telefono), q(c.direccion), q(c.servicio), q(c.mesEntrada), q(c.ticket)].join(",")
+      [q(c.empresa), q(c.nombre), q(c.telefono), q(c.direccion), q(c.servicio), q(c.mesEntrada), q(c.ticket)].join(";")
     );
-    const csv  = [header, ...lines].join("\n");
+    const csv  = ["sep=;", header, ...lines].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
