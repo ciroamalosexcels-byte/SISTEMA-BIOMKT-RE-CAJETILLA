@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     label:       body.label,
     color:       body.color,
     stage_order: body.order,
-  }).eq("id", id);
+  }).eq("stage_key", id);  // id es el stage_key ("CRM", "REUNION_1", etc.)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

@@ -17,10 +17,10 @@ export async function GET() {
 
   return NextResponse.json(
     (data ?? []).map((r) => ({
-      id:     r.id,
-      label:  r.label,
-      color:  r.color,
-      order:  r.stage_order,
+      id:    r.stage_key,   // coincide con lead.tab ("CRM", "REUNION_1", etc.)
+      label: r.label,
+      color: r.color,
+      order: r.stage_order,
     }))
   );
 }
