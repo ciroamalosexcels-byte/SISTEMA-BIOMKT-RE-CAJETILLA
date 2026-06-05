@@ -103,12 +103,11 @@ function ClientesTicket() {
   const totalLeads = rows.length;
   const convPct = totalLeads > 0 ? Math.round((clientes / totalLeads) * 100) : 0;
   const convColor = convPct >= 30 ? "#22c55e" : convPct >= 15 ? "#f59e0b" : "#ef4444";
-  const cada10 = Math.round(convPct / 10);
-  const convTooltip = cada10 > 0
-    ? `${cada10} de cada 10 contactos se hacen clientes`
-    : convPct > 0
-      ? `Menos de 1 de cada 10 contactos se hace cliente`
-      : `Sin datos de conversión aún`;
+  const convTooltip = clientes === 0 || totalLeads === 0
+    ? "Sin conversiones aún"
+    : convPct % 10 === 0
+      ? `${convPct / 10} de cada 10 contactos se hacen clientes`
+      : `${convPct} de cada 100 contactos se hacen clientes`;
 
   // Ticket promedio calculado desde los tickets de los clientes activos
   const ticketAuto = useMemo(() => {
