@@ -164,12 +164,18 @@ export function ClientesView() {
   }
 
   function exportCSV() {
-    const header = "Nombre,Empresa,Teléfono";
+    const header = "Cliente,Nombre,Teléfono,Dirección,Servicio,Mes de entrada,Ticket";
     const rows = clients.map(c => {
-      const nombre   = `"${(c.nombre  || "").replace(/"/g, '""')}"`;
-      const empresa  = `"${(c.empresa || "").replace(/"/g, '""')}"`;
-      const telefono = `"${(c.telefono || "").replace(/"/g, '""')}"`;
-      return `${nombre},${empresa},${telefono}`;
+      const q = (v: string | number | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      return [
+        q(c.empresa),
+        q(c.nombre),
+        q(c.telefono),
+        q(c.direccion),
+        q(c.servicio),
+        q(c.mesEntrada),
+        q(c.ticket),
+      ].join(",");
     });
     const csv  = [header, ...rows].join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
