@@ -99,6 +99,11 @@ function ClientesTicket() {
   const clientesRows = rows.filter((r) => r.tab === "CLIENTES");
   const clientes = clientesRows.length;
 
+  // % conversión: clientes / total leads (todas las etapas)
+  const totalLeads = rows.length;
+  const convPct = totalLeads > 0 ? Math.round((clientes / totalLeads) * 100) : 0;
+  const convColor = convPct >= 30 ? "#22c55e" : convPct >= 15 ? "#f59e0b" : "#ef4444";
+
   // Ticket promedio calculado desde los tickets de los clientes activos
   const ticketAuto = useMemo(() => {
     const withTicket = clientesRows.filter(r => r.ticket && r.ticket > 0);
@@ -166,10 +171,15 @@ function ClientesTicket() {
             )}
           </div>
         </div>
-        {/* Total facturación estimada */}
+        {/* Conversión a clientes */}
         <div className="flex items-center justify-between px-5 py-2 bg-amber/[0.06] dark:bg-amber/[0.04]">
-          <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.05em]">Facturación estimada</span>
-          <span className="text-[16px] font-black text-amber">{fmtPesos(clientes * ticket)}</span>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.05em]">Conversión a clientes</span>
+            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-600">
+              {clientes} de {totalLeads} contactos
+            </span>
+          </div>
+          <span className="text-[22px] font-black" style={{ color: convColor }}>{convPct}%</span>
         </div>
       </div>
     </Card>
