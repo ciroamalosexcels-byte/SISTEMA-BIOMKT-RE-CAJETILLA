@@ -163,6 +163,24 @@ export function ClientesView() {
     setOverId(null);
   }
 
+  function exportCSV() {
+    const header = "Nombre,Empresa,Teléfono";
+    const rows = clients.map(c => {
+      const nombre   = `"${(c.nombre  || "").replace(/"/g, '""')}"`;
+      const empresa  = `"${(c.empresa || "").replace(/"/g, '""')}"`;
+      const telefono = `"${(c.telefono || "").replace(/"/g, '""')}"`;
+      return `${nombre},${empresa},${telefono}`;
+    });
+    const csv  = [header, ...rows].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `clientes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="clients-v11-panel">
       <div className="panel-head">
@@ -172,6 +190,15 @@ export function ClientesView() {
             {clients.length} ACTIVO{clients.length !== 1 ? "S" : ""}
           </div>
         </div>
+        {clients.length > 0 && (
+          <button
+            onClick={exportCSV}
+            className="btn btn-outline btn-sm"
+            style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
+          >
+            ↓ Exportar CSV
+          </button>
+        )}
       </div>
 
       {clients.length === 0 ? (
