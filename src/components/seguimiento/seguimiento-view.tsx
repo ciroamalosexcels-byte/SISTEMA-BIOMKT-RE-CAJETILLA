@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { LayoutGrid, List, Phone, MessageCircle, Trash2 } from "lucide-react";
+import { LayoutGrid, List, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
 import { KanbanColumn } from "./kanban-column";
 import { LeadModal } from "./lead-modal";
+import { CargaRapidaModal } from "./carga-rapida-modal";
 import type { Lead } from "@/types";
 
 type ViewMode = "kanban" | "table";
@@ -16,6 +17,7 @@ export function SeguimientoView() {
   const stages      = usePipelineStore((s) => s.stages);
 
   const [viewMode, setViewMode]       = useState<ViewMode>("kanban");
+  const [cargaRapida, setCargaRapida] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
   const [meetingPrompt, setMeetingPrompt]     = useState<{ leadId: string; targetStage: string } | null>(null);
@@ -99,6 +101,9 @@ export function SeguimientoView() {
           <button className={`btn btn-sm ${viewMode === "table" ? "btn-dark" : "btn-outline"}`} onClick={() => setViewMode("table")}>
             <List size={13} className="inline mr-1 align-middle" />Tabla
           </button>
+          <button className="btn btn-sm btn-outline" onClick={() => setCargaRapida(true)}>
+            <Zap size={13} className="inline mr-1 align-middle" />Carga rápida
+          </button>
           <button className="btn btn-sm btn-amber" onClick={() => openNewLead(sortedStages[0]?.id ?? "CRM")}>
             + Nuevo lead
           </button>
@@ -176,6 +181,8 @@ export function SeguimientoView() {
       {selectedLead !== undefined && (
         <LeadModal lead={selectedLead} defaultStageId={defaultStageId} onClose={closeModal} />
       )}
+
+      {cargaRapida && <CargaRapidaModal onClose={() => setCargaRapida(false)} />}
 
       {followUpPrompt && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center" style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setFollowUpPrompt(null)}>
