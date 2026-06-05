@@ -10,6 +10,7 @@ interface RoadmapStep {
   description: string;
   done: boolean;
   icon?: string;
+  duration?: string;
 }
 
 /* ── Íconos disponibles para pasos ─────────────────────────────── */
@@ -301,6 +302,7 @@ function RoadmapView({
   onDelete: () => void;
 }) {
   const steps = proc.steps;
+  const [viewMode, setViewMode]  = useState<"roadmap" | "tres-pasos">("roadmap");
   const [tooltip, setTooltip]   = useState<{ x: number; y: number; step: RoadmapStep } | null>(null);
   const [viewModal, setViewModal] = useState<RoadmapStep | null>(null);
   const [editModal, setEditModal] = useState<{ step: Partial<RoadmapStep>; isNew: boolean } | null>(null);
@@ -317,8 +319,8 @@ function RoadmapView({
 
   function save(list: RoadmapStep[]) { onUpdateSteps(list); }
 
-  function addStep(title: string, description: string) {
-    save([...steps, { id: makeId(), title: title.trim(), description: description.trim(), done: false }]);
+  function addStep(title: string, description: string, duration?: string) {
+    save([...steps, { id: makeId(), title: title.trim(), description: description.trim(), done: false, duration: duration?.trim() || undefined }]);
   }
 
   function updateStep(id: string, changes: Partial<RoadmapStep>) {
@@ -394,15 +396,45 @@ function RoadmapView({
             </div>
           )}
         </div>
-        <button
-          className="btn btn-outline btn-sm"
-          style={{ color: "#dc2626", borderColor: "#dc2626" }}
-          onClick={onDelete}
-        >
-          Eliminar proceso
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Selector de vista */}
+          <div style={{ display: "flex", gap: 4, background: "var(--slate-100,#f1f5f9)", borderRadius: 10, padding: 3 }}>
+            <button
+              className={viewMode === "roadmap" ? "btn btn-dark btn-sm" : "btn btn-outline btn-sm"}
+              style={{ fontSize: 12, borderRadius: 8 }}
+              onClick={() => setViewMode("roadmap")}
+            >
+              Roadmap
+            </button>
+            <button
+              className={viewMode === "tres-pasos" ? "btn btn-dark btn-sm" : "btn btn-outline btn-sm"}
+              style={{ fontSize: 12, borderRadius: 8 }}
+              onClick={() => setViewMode("tres-pasos")}
+            >
+              Tres pasos
+            </button>
+          </div>
+          <button
+            className="btn btn-outline btn-sm"
+            style={{ color: "#dc2626", borderColor: "#dc2626" }}
+            onClick={onDelete}
+          >
+            Eliminar proceso
+          </button>
+        </div>
       </div>
 
+      {/* ── Vista Tres Pasos ── */}
+      {viewMode === "tres-pasos" && (
+        <TresPasosView
+          steps={steps}
+          onStepClick={(step) => setViewModal(step)}
+          onAddStep={() => setEditModal({ step: { title: "", description: "", done: false }, isNew: true })}
+        />
+      )}
+
+      {/* ── Vista Roadmap ── */}
+      {viewMode === "roadmap" && (
       <div
         className="team-panel-body"
         style={{ padding: "20px 16px 32px", overflowX: "auto" }}
@@ -515,6 +547,7 @@ function RoadmapView({
           </g>
         </svg>
       </div>
+      )} {/* fin roadmap */}
 
       {/* Tooltip */}
       {tooltip && (
@@ -621,14 +654,150 @@ function RoadmapView({
         <EditStepModal
           step={editModal.step}
           isNew={editModal.isNew}
-          onSave={(title, description) => {
-            if (editModal.isNew) addStep(title, description);
-            else updateStep(editModal.step.id!, { title, description });
+          onSave={(title, description, duration) => {
+            if (editModal.isNew) addStep(title, description, duration);
+            else updateStep(editModal.step.id!, { title, description, duration: duration || undefined });
             setEditModal(null);
           }}
           onCancel={() => setEditModal(null)}
         />
       )}
+    </div>
+  );
+}
+
+/* ── Vista Tres Pasos ───────────────────────────────────────────── */
+function TresPasosView({ steps, onStepClick, onAddStep }: {
+  steps: RoadmapStep[];
+  onStepClick: (step: RoadmapStep) => void;
+  onAddStep: () => void;
+}) {
+  if (steps.length === 0) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center" }}>
+        <div style={{ fontSize: 40, opacity: 0.2, marginBottom: 12 }}>📋</div>
+        <div style={{ fontWeight: 800, fontSize: 15, color: "var(--dark)", marginBottom: 8 }}>Sin pasos aún</div>
+        <button className="btn btn-amber" onClick={onAddStep}>+ Agregar primer paso</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "32px 24px 48px", overflowX: "auto" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", minWidth: steps.length * 220, position: "relative" }}>
+
+        {/* Línea horizontal que conecta los círculos */}
+        <div style={{
+          position: "absolute",
+          top: 48,
+          left: 80,
+          right: 80,
+          height: 2,
+          background: "var(--slate-200,#e2e8f0)",
+          zIndex: 0,
+        }} />
+
+        {steps.map((step, idx) => (
+          <div
+            key={step.id}
+            onClick={() => onStepClick(step)}
+            style={{
+              flex: 1,
+              minWidth: 200,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {/* Círculo numerado */}
+            <div style={{
+              width: 96,
+              height: 96,
+              borderRadius: "50%",
+              border: `4px solid ${step.done ? "#157a4d" : "var(--slate-200,#e2e8f0)"}`,
+              background: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: step.done ? 0 : 32,
+              fontWeight: 700,
+              color: "var(--dark,#07152f)",
+              position: "relative",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              transition: "border-color 0.2s",
+            }}>
+              {step.done ? (
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#157a4d" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              ) : (
+                <span>{idx + 1}</span>
+              )}
+            </div>
+
+            {/* Flecha hacia abajo */}
+            <div style={{ fontSize: 20, color: "var(--slate-300,#cbd5e1)", margin: "10px 0 14px", lineHeight: 1 }}>↓</div>
+
+            {/* Contenido */}
+            <div style={{ textAlign: "center", padding: "0 12px", width: "100%" }}>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--dark,#07152f)",
+                marginBottom: 10,
+                lineHeight: 1.3,
+              }}>
+                {step.title}
+              </div>
+              {step.description && (
+                <div style={{
+                  fontSize: 12,
+                  color: "var(--slate-500,#64748b)",
+                  lineHeight: 1.55,
+                  marginBottom: 14,
+                  fontWeight: 400,
+                }}>
+                  {step.description}
+                </div>
+              )}
+              {step.duration && (
+                <div style={{
+                  display: "inline-block",
+                  background: "#dcfce7",
+                  color: "#166534",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  borderRadius: 20,
+                  padding: "3px 14px",
+                  letterSpacing: "0.04em",
+                }}>
+                  {step.duration}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Botón agregar paso */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 120, zIndex: 1 }}>
+          <div
+            onClick={onAddStep}
+            style={{
+              width: 96, height: 96, borderRadius: "50%",
+              border: "2.5px dashed var(--slate-300,#cbd5e1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", fontSize: 32, color: "var(--slate-300,#cbd5e1)",
+              background: "#fff",
+            }}
+          >+</div>
+          <div style={{ marginTop: 24, fontSize: 11, color: "var(--slate-400)", fontWeight: 600 }}>Agregar paso</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -675,11 +844,12 @@ function EditStepModal({
 }: {
   step: Partial<RoadmapStep>;
   isNew: boolean;
-  onSave: (title: string, description: string) => void;
+  onSave: (title: string, description: string, duration: string) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle]       = useState(step.title ?? "");
   const [description, setDesc]  = useState(step.description ?? "");
+  const [duration, setDuration]  = useState(step.duration ?? "");
   return (
     <div className="modal-backdrop open" onClick={onCancel}>
       <div className="modal" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
@@ -696,7 +866,7 @@ function EditStepModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nombre del paso…"
               autoFocus
-              onKeyDown={(e) => e.key === "Enter" && title.trim() && onSave(title, description)}
+              onKeyDown={(e) => e.key === "Enter" && title.trim() && onSave(title, description, duration)}
             />
           </div>
           <div>
@@ -706,8 +876,17 @@ function EditStepModal({
               value={description}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="Describí el paso, instrucciones o notas…"
-              rows={5}
+              rows={4}
               style={{ resize: "vertical" }}
+            />
+          </div>
+          <div>
+            <label className="roadmap-field-label">Duración (ej: 30 MIN)</label>
+            <input
+              className="field"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="30 MIN, 1 HORA…"
             />
           </div>
         </div>
@@ -716,7 +895,7 @@ function EditStepModal({
           <button
             className="btn btn-amber"
             disabled={!title.trim()}
-            onClick={() => { if (title.trim()) onSave(title, description); }}
+            onClick={() => { if (title.trim()) onSave(title, description, duration); }}
           >
             {isNew ? "Agregar paso" : "Guardar cambios"}
           </button>
