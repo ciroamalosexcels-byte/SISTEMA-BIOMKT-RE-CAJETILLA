@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { STATUS91_ITEMS } from "@/lib/constants";
 
 export const runtime = "nodejs";
@@ -9,10 +10,11 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json([]);
 
+  const admin = createAdminClient();
   const [{ data: members }, { data: status91 }, { data: points }] = await Promise.all([
-    supabase.from("team_members").select("*").is("deleted_at", null),
-    supabase.from("team_status_91").select("*").eq("mes", new Date().toISOString().slice(0, 7)),
-    supabase.from("team_monthly_points").select("*"),
+    admin.from("team_members").select("*").is("deleted_at", null),
+    admin.from("team_status_91").select("*").eq("mes", new Date().toISOString().slice(0, 7)),
+    admin.from("team_monthly_points").select("*"),
   ]);
 
   const mapped = (members ?? []).map((m) => {

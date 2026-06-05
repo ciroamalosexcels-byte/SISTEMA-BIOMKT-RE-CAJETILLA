@@ -11,7 +11,8 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json([]);
 
-  const { data } = await supabase.from("management_events").select("*").order("created_at");
+  const admin = createAdminClient();
+  const { data } = await admin.from("management_events").select("*").order("created_at");
   return NextResponse.json(
     (data ?? []).map((r) => ({
       id: r.id, clientId: r.client_id, title: r.title,

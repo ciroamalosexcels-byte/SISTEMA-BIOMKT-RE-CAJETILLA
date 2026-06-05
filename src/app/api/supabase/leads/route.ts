@@ -8,13 +8,16 @@ import type { Lead } from "@/types";
 export const runtime = "nodejs";
 
 export async function GET() {
+  // Verificar sesión
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json([]);
 
+  // Leer con admin para garantizar acceso independiente del role
+  const admin = createAdminClient();
   const [{ data: stages }, { data: leads }] = await Promise.all([
-    supabase.from("pipeline_stages").select("id, stage_key"),
-    supabase
+    admin.from("pipeline_stages").select("id, stage_key"),
+    admin
       .from("leads")
       .select("*")
       .is("deleted_at", null)

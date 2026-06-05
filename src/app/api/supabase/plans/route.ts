@@ -11,7 +11,8 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json([]);
 
-  const { data } = await supabase.from("plans").select("*").is("deleted_at", null);
+  const admin = createAdminClient();
+  const { data } = await admin.from("plans").select("*").is("deleted_at", null);
   return NextResponse.json(
     (data ?? []).map((r) => ({
       id: r.id, nombre: r.nombre,
