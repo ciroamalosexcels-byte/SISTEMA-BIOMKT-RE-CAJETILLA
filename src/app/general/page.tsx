@@ -375,20 +375,35 @@ function FMOModal({ section, index, row, onSave, onClose }: {
 
 function FMOPill({ row, onClick }: { row: FMORow; onClick: () => void }) {
   const dot = FMO_DOT_COLORS.find(c => c.value === row.color) ?? FMO_DOT_COLORS[0];
+  const hasFecha = !!row.fecha;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex flex-col justify-between bg-white dark:bg-[#0d1f3c] border-2 border-slate-200 dark:border-white/[0.08] cursor-pointer hover:border-slate-400 dark:hover:border-white/[0.25] transition-all hover:shadow-md text-left w-full"
-      style={{ aspectRatio: "2/1", padding: "8px 12px", borderRadius: "18px" }}
+      className="client-card-v11 text-left w-full"
+      style={{ height: "auto", minHeight: 100, padding: 14 }}
     >
-      <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wide leading-tight line-clamp-3 pr-3 block">
-        {row.texto || ""}
-      </span>
-      <span
-        className="w-[11px] h-[11px] rounded-full self-end flex-shrink-0"
-        style={{ background: dot.bg, boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}
-      />
+      {/* Título — igual que h3 en client-card */}
+      <div style={{ flex: 1 }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, lineHeight: 1.2, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
+          {row.texto || ""}
+        </p>
+        {hasFecha && (
+          <p style={{ margin: "4px 0 0", fontSize: 10, fontWeight: 600, color: "#94a3b8" }}>
+            {new Date(row.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}
+          </p>
+        )}
+      </div>
+      {/* Estado — igual que pill Activo/Inactivo */}
+      <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+        <span
+          style={{
+            width: 12, height: 12, borderRadius: "50%",
+            background: dot.bg, display: "inline-block",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }}
+        />
+      </div>
     </button>
   );
 }
