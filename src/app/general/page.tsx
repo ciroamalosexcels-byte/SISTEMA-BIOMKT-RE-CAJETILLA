@@ -103,6 +103,12 @@ function ClientesTicket() {
   const totalLeads = rows.length;
   const convPct = totalLeads > 0 ? Math.round((clientes / totalLeads) * 100) : 0;
   const convColor = convPct >= 30 ? "#22c55e" : convPct >= 15 ? "#f59e0b" : "#ef4444";
+  const cada10 = Math.round(convPct / 10);
+  const convTooltip = cada10 > 0
+    ? `${cada10} de cada 10 contactos se hacen clientes`
+    : convPct > 0
+      ? `Menos de 1 de cada 10 contactos se hace cliente`
+      : `Sin datos de conversión aún`;
 
   // Ticket promedio calculado desde los tickets de los clientes activos
   const ticketAuto = useMemo(() => {
@@ -179,7 +185,12 @@ function ClientesTicket() {
               {clientes} de {totalLeads} contactos
             </span>
           </div>
-          <span className="text-[22px] font-black" style={{ color: convColor }}>{convPct}%</span>
+          <div className="relative group cursor-help">
+            <span className="text-[22px] font-black" style={{ color: convColor }}>{convPct}%</span>
+            <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover:block bg-slate-800 dark:bg-slate-700 text-white text-[11px] font-semibold rounded-lg px-3 py-1.5 whitespace-nowrap z-20 shadow-lg pointer-events-none">
+              {convTooltip}
+            </div>
+          </div>
         </div>
       </div>
     </Card>
