@@ -12,6 +12,7 @@ import {
   BriefcaseBusiness, BarChart3, Database, LogOut, LogIn,
 } from "lucide-react";
 import { useAppSettings } from "@/store/app-settings";
+import { useLeadsStore } from "@/store/leads";
 import { ApiSettingsModal } from "./api-settings-modal";
 import { ColumnWidthsModal } from "./column-widths-modal";
 import { ImportLeadsModal } from "@/components/ui/import-leads-modal";
@@ -116,6 +117,25 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
   sidebarW: number;
 }) {
   const { settings, update } = useAppSettings();
+  const rows = useLeadsStore((s) => s.rows);
+
+  function exportClientesCSV() {
+    const clients = rows.filter((r) => r.tab === "CLIENTES");
+    const header = "Cliente,Nombre,Teléfono,Dirección,Servicio,Mes de entrada,Ticket";
+    const q = (v: string | number | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = clients.map((c) =>
+      [q(c.empresa), q(c.nombre), q(c.telefono), q(c.direccion), q(c.servicio), q(c.mesEntrada), q(c.ticket)].join(",")
+    );
+    const csv  = [header, ...lines].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `clientes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    onClose();
+  }
   return (
     <div style={{
       position: "fixed", left: sidebarW + 4, bottom: 44, zIndex: 300,
@@ -133,6 +153,7 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
       <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "4px 8px" }} />
 
       <button className={MBTN} onClick={() => { onImport(); onClose(); }}><Upload size={17} /> Importar prospectos</button>
+      <button className={MBTN} onClick={exportClientesCSV}><FileText size={17} /> Exportar clientes CSV</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
       {/* Escalar sistema — barra deslizable */}
