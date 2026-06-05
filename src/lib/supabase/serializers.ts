@@ -30,6 +30,7 @@ export function serializeLead(lead: Lead, stageMap: Map<string, string>) {
     proximo_seguimiento_fecha: d(lead.proximoSeguimientoFecha),
     meeting_datetime:          d(lead.meetingDatetime),
     plan_id:                   lead.planId || null,
+    client_order:              lead.clientOrder ?? null,
     activo:                    lead.activo ?? true,
     ticket:                    lead.ticket ?? null,
     clave_email:               lead.claveEmail ?? null,

@@ -45,6 +45,8 @@ export interface Lead {
   planId?: string;
   // Estado
   activo?: boolean; // undefined / true = activo, false = inactivo
+  // Orden visual en el grid de clientes
+  clientOrder?: number;
 }
 
 export type LeadFormData = Omit<Lead, "id" | "fechaContacto" | "tab">;

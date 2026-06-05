@@ -42,6 +42,7 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     activo: row.activo,
     ticket: (row as any).ticket ?? undefined,
     claveEmail: (row as any).clave_email ?? undefined,
+    clientOrder: (row as any).client_order ?? undefined,
     // clave no se mapea desde DB — se gestiona via Vault (clave_secret_id)
   };
 }
