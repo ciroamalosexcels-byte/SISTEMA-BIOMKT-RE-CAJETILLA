@@ -31,17 +31,30 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  const lead: Lead = await req.json();
-  const admin = createAdminClient();
+    const lead: Lead = await req.json();
+    const admin = createAdminClient();
 
-  const { data: stages } = await admin.from("pipeline_stages").select("id, stage_key");
-  const stageMap = new Map(stages?.map((s) => [s.stage_key, s.id]) ?? []);
+    const { data: stages } = await admin.from("pipeline_stages").select("id, stage_key");
+    const stageMap = new Map(stages?.map((s) => [s.stage_key, s.id]) ?? []);
 
-  const { error } = await admin.from("leads").upsert(serializeLead(lead, stageMap) as any, { onConflict: "id" });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+    const serialized = serializeLead(lead, stageMap);
+    const { error } = await admin.from("leads").upsert(serialized as any, { onConflict: "id" });
+
+    if (error) {
+      console.error("[leads POST] Supabase error:", JSON.stringify(error), error);
+      return NextResponse.json(
+        { error: error.message ?? "Supabase error", code: error.code, details: error.details },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[leads POST] Exception:", e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
 }

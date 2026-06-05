@@ -26,7 +26,13 @@ function supabase(path: string, method: string, body: unknown) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
-    .then(r => r.ok ? null : r.json().then(e => console.error(`[events] ${path} error:`, e)))
+    .then(r => {
+      if (r.ok) return null;
+      return r.text().then(text => {
+        try { console.error(`[events] ${path} (${r.status}):`, JSON.parse(text)); }
+        catch { console.error(`[events] ${path} (${r.status}): non-JSON:`, text); }
+      });
+    })
     .catch(e => console.error(`[events] ${path} fetch error:`, e));
 }
 
