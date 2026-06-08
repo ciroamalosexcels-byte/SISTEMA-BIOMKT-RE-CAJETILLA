@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { saveToSheets } from "@/lib/sheets";
 
 /* ── Types ─────────────────────────────────────────────────────── */
@@ -309,10 +309,14 @@ function RoadmapView({
   const [ctxMenu, setCtxMenu]   = useState<{ x: number; y: number; idx: number } | null>(null);
   const [renaming, setRenaming]  = useState(false);
   const [renameTxt, setRenameTxt] = useState(proc.name);
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!ctxMenu) return;
-    const h = () => setCtxMenu(null);
+    const h = (e: MouseEvent) => {
+      if (ctxMenuRef.current?.contains(e.target as Node)) return;
+      setCtxMenu(null);
+    };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [ctxMenu]);
@@ -566,9 +570,9 @@ function RoadmapView({
       {/* Context menu */}
       {ctxMenu && (
         <div
+          ref={ctxMenuRef}
           className="roadmap-ctx-menu"
           style={{ left: ctxMenu.x, top: ctxMenu.y, minWidth: 180 }}
-          onMouseDown={(e) => e.stopPropagation()}
         >
           <button
             className="roadmap-ctx-btn"
