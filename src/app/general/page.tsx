@@ -96,7 +96,7 @@ function ClientesTicket() {
   const month   = currentMonthBA();
   const [y, mo] = month.split("-").map(Number);
   const mesLabel = MONTH_NAMES[(mo ?? 1) - 1];
-  const clientesRows = rows.filter((r) => r.tab === "CLIENTES");
+  const clientesRows = rows.filter((r) => r.tab === "CLIENTES" && r.activo !== false);
   const clientes = clientesRows.length;
 
   // % conversión: clientes / total leads (todas las etapas)
