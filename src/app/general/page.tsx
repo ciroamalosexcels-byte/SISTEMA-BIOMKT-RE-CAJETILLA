@@ -17,7 +17,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden flex flex-col">
       <div className="px-5 py-3 bg-[#07152f] flex-shrink-0">
-        <span className="text-[13px] font-black text-white uppercase tracking-[-0.03em]">{title}</span>
+        <span className="text-[13px] font-black text-white uppercase tracking-[-0.01em]">{title}</span>
       </div>
       {children}
     </div>
@@ -35,7 +35,7 @@ function CajaRow({ label, value, onChange, amber }: { label: string; value: numb
   return (
     <div className={`flex items-center flex-1 ${amber ? "bg-amber" : "border-b border-slate-100 dark:border-white/[0.04]"}`}>
       <div
-        className={`py-[6px] text-[12px] font-black uppercase tracking-[0.02em] border-r border-slate-200 dark:border-white/[0.06] flex-shrink-0 ${amber ? "text-[#07152f]" : "text-slate-500 dark:text-slate-400"}`}
+        className={`py-[6px] text-[12px] font-black uppercase tracking-[0.04em] border-r border-slate-200 dark:border-white/[0.06] flex-shrink-0 ${amber ? "text-[#07152f]" : "text-slate-500 dark:text-slate-400"}`}
         style={{ width: "48%", paddingLeft: 20, paddingRight: 12 }}
       >
         {label}
@@ -135,13 +135,13 @@ function ClientesTicket() {
       <div className="flex flex-col divide-y divide-slate-100 dark:divide-white/[0.04]">
         {/* Clientes del mes */}
         <div className="flex items-center justify-between pl-5 pr-[31px] py-[9px]">
-          <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.02em]">Total clientes activos</span>
+          <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.04em]">Total clientes activos</span>
           <span className="text-[29px] font-black text-slate-900 dark:text-white leading-none">{clientes}</span>
         </div>
         {/* Objetivo de clientes */}
         <div className="flex items-center justify-between px-5 py-[9px]">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.02em]">Objetivo clientes</span>
+            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.04em]">Objetivo clientes</span>
             {objetivo > 0 && (
               <span className="text-[13px] font-black" style={{ color: pctColor }}>{pct}%</span>
             )}
@@ -158,7 +158,7 @@ function ClientesTicket() {
         {/* Ticket promedio */}
         <div className="flex items-center justify-between px-5 py-[9px]">
           <div className="flex flex-col">
-            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.02em]">Ticket promedio</span>
+            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.04em]">Ticket promedio</span>
             {ticketAuto > 0 && <span className="text-[9px] text-slate-400 dark:text-slate-600 font-medium">desde tickets de clientes</span>}
           </div>
           <div className="flex items-center gap-1 bg-amber rounded-xl px-3 py-1.5 relative">
@@ -179,7 +179,7 @@ function ClientesTicket() {
         {/* Conversión a clientes */}
         <div className="flex items-center justify-between pl-5 pr-[31px] py-[9px]">
           <div className="flex flex-col">
-            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.02em]">Conversión a clientes</span>
+            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.04em]">Conversión a clientes</span>
             <span className="text-[10px] font-medium text-slate-400 dark:text-slate-600">
               {clientes} de {totalLeads} contactos
             </span>
@@ -465,7 +465,7 @@ function FaroMetaObjetivo() {
       {/* Header */}
       <div className="grid" style={{ gridTemplateColumns: "1fr 2fr 3fr" }}>
         {sections.map(({ key, label }, i) => (
-          <div key={key} className={`px-4 py-2.5 bg-[#07152f] text-[13px] font-black text-white uppercase tracking-[-0.03em] ${i > 0 ? "border-l border-white/[0.1]" : ""}`}>
+          <div key={key} className={`px-4 py-2.5 bg-[#07152f] text-[13px] font-black text-white uppercase tracking-[-0.01em] ${i > 0 ? "border-l border-white/[0.1]" : ""}`}>
             {label}
           </div>
         ))}

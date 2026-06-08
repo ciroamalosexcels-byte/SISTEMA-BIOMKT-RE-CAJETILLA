@@ -76,7 +76,7 @@ export function WelcomeAreaChart({
   return (
     <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px]">
       <div className="px-5 py-2.5 bg-[#111827] flex items-center justify-between gap-4">
-        <span className="text-[13px] font-black text-white uppercase tracking-[0.12em]">{title}</span>
+        <span className="text-[13px] font-black text-white uppercase tracking-[-0.01em]">{title}</span>
         <div className="flex items-center gap-4 flex-shrink-0">
           {[
             { label: "Contactos", color: "#f6bf26" },
