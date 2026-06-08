@@ -177,9 +177,9 @@ function ClientesTicket() {
           </div>
         </div>
         {/* Conversión a clientes */}
-        <div className="flex items-center justify-between px-5 py-2 bg-amber/[0.06] dark:bg-amber/[0.04]">
+        <div className="flex items-center justify-between pl-5 pr-[31px] py-[9px]">
           <div className="flex flex-col">
-            <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.05em]">Conversión a clientes</span>
+            <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.05em]">Conversión a clientes</span>
             <span className="text-[10px] font-medium text-slate-400 dark:text-slate-600">
               {clientes} de {totalLeads} contactos
             </span>
