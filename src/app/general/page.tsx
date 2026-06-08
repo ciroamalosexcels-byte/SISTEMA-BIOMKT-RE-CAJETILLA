@@ -33,7 +33,7 @@ function CajaRow({ label, value, onChange, amber }: { label: string; value: numb
   const [focused, setFocused] = useState(false);
   const color = amber ? "#07152f" : undefined;
   return (
-    <div className={`flex items-center ${amber ? "bg-amber" : "border-b border-slate-100 dark:border-white/[0.04]"}`}>
+    <div className={`flex items-center flex-1 ${amber ? "bg-amber" : "border-b border-slate-100 dark:border-white/[0.04]"}`}>
       <div
         className={`py-[6px] text-[12px] font-black uppercase tracking-[0.05em] border-r border-slate-200 dark:border-white/[0.06] flex-shrink-0 ${amber ? "text-[#07152f]" : "text-slate-500 dark:text-slate-400"}`}
         style={{ width: "48%", paddingLeft: 20, paddingRight: 12 }}
@@ -78,7 +78,7 @@ function ResumenCaja() {
   ];
   return (
     <Card title="Resumen de Caja">
-      <div className="flex flex-col">
+      <div className="flex flex-col flex-1">
         {rows.map(({ key, label, amber }) => (
           <CajaRow key={key} label={label} value={vals[key]} onChange={v => set(key, v)} amber={amber} />
         ))}
