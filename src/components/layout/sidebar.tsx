@@ -111,10 +111,11 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
 /* ── Settings popup ──────────────────────────────────────────────── */
 const MBTN = "flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer w-full text-white";
 
-function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW }: {
+function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW, onSync, syncing, isAdmin }: {
   onClose: () => void; onImport: () => void;
   onApiSettings: () => void; onColWidths: () => void;
   sidebarW: number;
+  onSync?: () => void; syncing?: boolean; isAdmin?: boolean;
 }) {
   const { settings, update } = useAppSettings();
   const rows = useLeadsStore((s) => s.rows);
@@ -156,6 +157,17 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW 
       <button className={MBTN} onClick={exportClientesCSV}><FileText size={17} /> Exportar clientes CSV</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
+      {isAdmin && (
+        <button
+          className={MBTN}
+          onClick={onSync}
+          disabled={syncing}
+          style={{ opacity: syncing ? 0.6 : 1 }}
+        >
+          <RefreshCw size={17} className={syncing ? "animate-spin" : ""} />
+          {syncing ? "Sincronizando…" : "Sincronizar con Sheets"}
+        </button>
+      )}
       {/* Escalar sistema — barra deslizable */}
       <div className="px-3 py-2">
         <div className="flex items-center justify-between mb-1.5">
@@ -237,12 +249,13 @@ export function Sidebar(_props: SidebarProps) {
     try {
       const res = await fetch("/api/google-sheets/sync", { method: "POST" });
       const data = await res.json() as { status: string; summary?: { created: number; updated: number } };
-      const msg = data.status === "success" || data.status === "partial"
+      const ok = data.status === "success" || data.status === "partial";
+      const msg = ok
         ? `Sync OK — ${data.summary?.created ?? 0} nuevos, ${data.summary?.updated ?? 0} actualizados`
         : "Error en el sync";
-      // Reutiliza el sistema de notificaciones existente
       const { useAppSettings: s } = await import("@/store/app-settings");
       s.getState().addNotification(msg);
+      if (ok) window.location.reload();
     } catch {
       const { useAppSettings: s } = await import("@/store/app-settings");
       s.getState().addNotification("Error al conectar con el sync");
@@ -467,6 +480,9 @@ export function Sidebar(_props: SidebarProps) {
             onApiSettings={() => setApiSettingsOpen(true)}
             onColWidths={() => setColWidthsOpen(true)}
             sidebarW={sidebarW}
+            onSync={handleDbSync}
+            syncing={dbSyncing}
+            isAdmin={user?.role === "admin"}
           />
         </>
       )}
