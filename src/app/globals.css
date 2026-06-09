@@ -422,7 +422,7 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
 .month-current-btn { height: 32px; border-radius: 12px; background: var(--amber); color: #111827; padding: 0 14px; font-size: 14.4px; font-weight: 900; }
 
 /* ── Client cards ───────────────────────────────────────────────── */
-.clients-v11-panel { width: 100%; border-radius: var(--r-xl); background: #fff; border: var(--border); box-shadow: var(--shadow-md); overflow: hidden; }
+.clients-v11-panel { width: 100%; border-radius: var(--r-xl); background: #fff; border: var(--border); box-shadow: var(--shadow-md); overflow: clip; }
 .clients-v11-panel .panel-head { padding: 16px; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .clients-v11-panel .panel-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .clients-v11-panel .panel-title { margin: 0; font-size: 27px; line-height: 1; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; color: var(--dark); }
