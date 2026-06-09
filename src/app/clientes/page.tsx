@@ -2,7 +2,7 @@ import { ClientesView } from "@/components/clientes/clientes-view";
 
 export default function ClientesPage() {
   return (
-    <div className="p-4 pb-8">
+    <div className="p-4 pb-8 shrink-0">
       <ClientesView />
     </div>
   );
