@@ -120,6 +120,11 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
                 </span>
               );
             })()}
+            {lead.telefono && lead.telefono.replace(/\D/g, "").length >= 6 && (
+              <span title={lead.telefono} className="px-1.5 py-0.5 rounded-full flex items-center" style={{ background: "#94a3b820", color: "#94a3b8" }}>
+                <Phone size={10} strokeWidth={2.5} />
+              </span>
+            )}
             {meetingBadge && (
               <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
                 <Calendar size={9} /> {meetingBadge}
