@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { Phone } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useColumnWidthsStore } from "@/store/column-widths";
@@ -579,7 +580,18 @@ function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelative
       <td><input className="cell-input" value={row.nombre} onChange={(e) => onUpdate({ nombre: e.target.value })} placeholder="Nombre" /></td>
       <td><input className="cell-input" value={row.empresa} onChange={(e) => onUpdate({ empresa: e.target.value })} placeholder="Empresa" /></td>
       <td><input className="cell-input" value={row.observaciones} onChange={(e) => onUpdate({ observaciones: e.target.value })} placeholder="Observaciones" /></td>
-      <td><input className="cell-input" value={row.telefono} onChange={(e) => onUpdate({ telefono: e.target.value })} placeholder="Teléfono" /></td>
+      <td>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Phone
+            size={12}
+            style={{
+              flexShrink: 0,
+              color: cleanPhone(row.telefono).length >= 6 ? "#16a34a" : "#cbd5e1",
+            }}
+          />
+          <input className="cell-input" value={row.telefono} onChange={(e) => onUpdate({ telefono: e.target.value })} placeholder="Teléfono" style={{ flex: 1 }} />
+        </div>
+      </td>
       <td>
         <select className={`cell-select${!row.responsable1 ? " empty-soft" : ""}`} value={row.responsable1} onChange={(e) => onUpdate({ responsable1: e.target.value })}>
           <option value="">—</option>
