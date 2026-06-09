@@ -188,6 +188,96 @@ function relativeContactTime(dateStr: string): string {
   return `${totalMins}m`;
 }
 
+/* ── Helpers contacto ─────────────────────────────────────────────── */
+function cleanPhone(tel: string) {
+  return tel.replace(/\D/g, "");
+}
+function waUrl(tel: string) {
+  const n = cleanPhone(tel);
+  const withCC = n.startsWith("54") ? n : `54${n.startsWith("0") ? n.slice(1) : n}`;
+  return `https://wa.me/${withCC}`;
+}
+function telUrl(tel: string) {
+  const n = cleanPhone(tel);
+  const withCC = n.startsWith("54") ? n : `54${n.startsWith("0") ? n.slice(1) : n}`;
+  return `tel:+${withCC}`;
+}
+
+/* ── Menú contextual ─────────────────────────────────────────────── */
+function RowCtxMenu({
+  x, y, telefono, nombre, onClose,
+}: {
+  x: number; y: number; telefono: string; nombre: string; onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const hasPhone = cleanPhone(telefono).length >= 6;
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current?.contains(e.target as Node)) return;
+      onClose();
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [onClose]);
+
+  // Ajustar posición para no salir de pantalla
+  const style: React.CSSProperties = {
+    position: "fixed",
+    top: Math.min(y, window.innerHeight - 130),
+    left: Math.min(x, window.innerWidth - 200),
+    zIndex: 9999,
+    background: "#07152f",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 12,
+    padding: 6,
+    minWidth: 190,
+    boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+  };
+
+  const btnStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: 10,
+    padding: "8px 12px", borderRadius: 8, border: "none",
+    background: "transparent", cursor: "pointer", color: "#fff",
+    fontSize: 13, fontWeight: 600, textAlign: "left", width: "100%",
+  };
+
+  return (
+    <div ref={ref} style={style}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.35)", letterSpacing: ".06em", padding: "4px 12px 2px", textTransform: "uppercase" }}>
+        {nombre || "Sin nombre"}
+      </div>
+      {hasPhone ? (
+        <>
+          <a
+            href={telUrl(telefono)}
+            style={{ ...btnStyle, textDecoration: "none" }}
+            onClick={onClose}
+          >
+            <span style={{ fontSize: 16 }}>📞</span> Llamar
+          </a>
+          <a
+            href={waUrl(telefono)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ ...btnStyle, textDecoration: "none", color: "#25d366" }}
+            onClick={onClose}
+          >
+            <span style={{ fontSize: 16 }}>💬</span> WhatsApp
+          </a>
+        </>
+      ) : (
+        <div style={{ padding: "8px 12px", fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
+          Sin teléfono cargado
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── LeadsTable ────────────────────────────────────────────────────── */
 
 export function LeadsTable({ tab, query }: Props) {
@@ -198,6 +288,7 @@ export function LeadsTable({ tab, query }: Props) {
   const { getWidth, setWidth, resizeModeEnabled, toggleResizeMode } = useColumnWidthsStore();
   const allWidths = useColumnWidthsStore((s) => s.widths);
   const [page, setPage] = useState(1);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; telefono: string; nombre: string } | null>(null);
   const [datePending, setDatePending] = useState<{
     leadId: string;
     to: TabKey;
@@ -397,6 +488,7 @@ export function LeadsTable({ tab, query }: Props) {
                   onUpdate={(patch) => updateLead(row.id, patch)}
                   onDelete={() => deleteLead(row.id)}
                   onMove={(to) => handleMove(row.id, to)}
+                  onCtxMenu={(x, y) => setCtxMenu({ x, y, telefono: row.telefono, nombre: row.nombre })}
                 />
               ))}
             </tbody>
@@ -429,6 +521,15 @@ export function LeadsTable({ tab, query }: Props) {
           onCancel={() => setDatePending(null)}
         />
       )}
+      {ctxMenu && (
+        <RowCtxMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          telefono={ctxMenu.telefono}
+          nombre={ctxMenu.nombre}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
     </>
   );
 }
@@ -445,9 +546,10 @@ interface RowProps {
   onUpdate: (patch: Partial<Lead>) => void;
   onDelete: () => void;
   onMove: (to: TabKey) => void;
+  onCtxMenu: (x: number, y: number) => void;
 }
 
-function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelativeContact, isHighlighted, onUpdate, onDelete, onMove }: RowProps) {
+function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelativeContact, isHighlighted, onUpdate, onDelete, onMove, onCtxMenu }: RowProps) {
   const isBase         = tab === "BASE";
   const showMeetingCol = tab === "REUNION_1" || tab === "REUNION_2";
   const showSegCol     = tab === "SEGUIMIENTO";
@@ -472,6 +574,7 @@ function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelative
     <tr
       className={phase === "blink" ? "row-blink" : phase === "active" ? "row-active" : ""}
       onAnimationEnd={() => { if (!firedRef.current) { firedRef.current = true; setPhase("active"); } }}
+      onContextMenu={(e) => { e.preventDefault(); onCtxMenu(e.clientX, e.clientY); }}
     >
       <td><input className="cell-input" value={row.nombre} onChange={(e) => onUpdate({ nombre: e.target.value })} placeholder="Nombre" /></td>
       <td><input className="cell-input" value={row.empresa} onChange={(e) => onUpdate({ empresa: e.target.value })} placeholder="Empresa" /></td>
