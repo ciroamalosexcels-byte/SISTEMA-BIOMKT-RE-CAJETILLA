@@ -198,7 +198,7 @@ export function ClientesView() {
         <div className="panel-title-row">
           <h2 className="panel-title">CLIENTES</h2>
           <div className="panel-subtitle">
-            {clients.length} ACTIVO{clients.length !== 1 ? "S" : ""}
+            {activos.length} ACTIVO{activos.length !== 1 ? "S" : ""}
           </div>
         </div>
         {clients.length > 0 && (
