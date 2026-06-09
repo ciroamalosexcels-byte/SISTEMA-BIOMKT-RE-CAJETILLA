@@ -107,14 +107,19 @@ export function ClientesView() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  const clients = useMemo(() => {
+  const { activos, inactivos } = useMemo(() => {
     const list = rows.filter((r) => r.tab === "CLIENTES");
-    return [...list].sort((a, b) => {
+    const sorted = [...list].sort((a, b) => {
       const ao = a.clientOrder ?? Infinity;
       const bo = b.clientOrder ?? Infinity;
       return ao !== bo ? ao - bo : 0;
     });
+    return {
+      activos:   sorted.filter((c) => c.activo !== false),
+      inactivos: sorted.filter((c) => c.activo === false),
+    };
   }, [rows]);
+  const clients = useMemo(() => [...activos, ...inactivos], [activos, inactivos]);
 
   function getProgress(clientId: string) {
     const events = managementEvents.filter((e) => e.clientId === clientId);
@@ -212,22 +217,53 @@ export function ClientesView() {
           Sin clientes aún — mové leads a la etapa CLIENTES para verlos aquí.
         </div>
       ) : (
-        <div className="client-grid-v11">
-          {clients.map((lead) => (
-            <ClientCard
-              key={lead.id}
-              lead={lead}
-              progress={getProgress(lead.id)}
-              contentCount={getContentCount(lead.id)}
-              onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
-              isDragging={dragId === lead.id}
-              isDragOver={overId === lead.id}
-              onDragStart={(e) => handleDragStart(e, lead.id)}
-              onDragOver={(e) => handleDragOver(e, lead.id)}
-              onDrop={(e) => handleDrop(e, lead.id)}
-              onDragEnd={handleDragEnd}
-            />
-          ))}
+        <div style={{ padding: "0 0 24px" }}>
+          <div className="client-grid-v11">
+            {activos.map((lead) => (
+              <ClientCard
+                key={lead.id}
+                lead={lead}
+                progress={getProgress(lead.id)}
+                contentCount={getContentCount(lead.id)}
+                onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
+                isDragging={dragId === lead.id}
+                isDragOver={overId === lead.id}
+                onDragStart={(e) => handleDragStart(e, lead.id)}
+                onDragOver={(e) => handleDragOver(e, lead.id)}
+                onDrop={(e) => handleDrop(e, lead.id)}
+                onDragEnd={handleDragEnd}
+              />
+            ))}
+          </div>
+
+          {inactivos.length > 0 && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "18px 20px 10px" }}>
+                <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                  Inactivos · {inactivos.length}
+                </span>
+                <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
+              </div>
+              <div className="client-grid-v11">
+                {inactivos.map((lead) => (
+                  <ClientCard
+                    key={lead.id}
+                    lead={lead}
+                    progress={getProgress(lead.id)}
+                    contentCount={getContentCount(lead.id)}
+                    onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
+                    isDragging={dragId === lead.id}
+                    isDragOver={overId === lead.id}
+                    onDragStart={(e) => handleDragStart(e, lead.id)}
+                    onDragOver={(e) => handleDragOver(e, lead.id)}
+                    onDrop={(e) => handleDrop(e, lead.id)}
+                    onDragEnd={handleDragEnd}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
