@@ -580,18 +580,7 @@ function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelative
       <td><input className="cell-input" value={row.nombre} onChange={(e) => onUpdate({ nombre: e.target.value })} placeholder="Nombre" /></td>
       <td><input className="cell-input" value={row.empresa} onChange={(e) => onUpdate({ empresa: e.target.value })} placeholder="Empresa" /></td>
       <td><input className="cell-input" value={row.observaciones} onChange={(e) => onUpdate({ observaciones: e.target.value })} placeholder="Observaciones" /></td>
-      <td>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <Phone
-            size={12}
-            style={{
-              flexShrink: 0,
-              color: cleanPhone(row.telefono).length >= 6 ? "#16a34a" : "#cbd5e1",
-            }}
-          />
-          <input className="cell-input" value={row.telefono} onChange={(e) => onUpdate({ telefono: e.target.value })} placeholder="Teléfono" style={{ flex: 1 }} />
-        </div>
-      </td>
+      <td><input className="cell-input" value={row.telefono} onChange={(e) => onUpdate({ telefono: e.target.value })} placeholder="Teléfono" /></td>
       <td>
         <select className={`cell-select${!row.responsable1 ? " empty-soft" : ""}`} value={row.responsable1} onChange={(e) => onUpdate({ responsable1: e.target.value })}>
           <option value="">—</option>
@@ -643,10 +632,20 @@ function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelative
         </select>
       </td>
       <td>
-        <select className={`cell-select${!row.medio ? " empty-soft" : ""}`} value={row.medio} onChange={(e) => onUpdate({ medio: e.target.value as Lead["medio"] })}>
-          <option value="">—</option>
-          {MEDIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, paddingRight: 4 }}>
+          <select className={`cell-select${!row.medio ? " empty-soft" : ""}`} value={row.medio} onChange={(e) => onUpdate({ medio: e.target.value as Lead["medio"] })} style={{ flex: 1 }}>
+            <option value="">—</option>
+            {MEDIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <Phone
+            size={13}
+            title={cleanPhone(row.telefono).length >= 6 ? row.telefono : "Sin teléfono"}
+            style={{
+              flexShrink: 0,
+              color: cleanPhone(row.telefono).length >= 6 ? "#16a34a" : "#e2e8f0",
+            }}
+          />
+        </div>
       </td>
       <td>
         {isBase ? (
