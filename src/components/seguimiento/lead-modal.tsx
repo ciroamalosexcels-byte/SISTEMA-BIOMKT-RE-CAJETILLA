@@ -4,7 +4,6 @@ import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { nowDatetimeBA } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
-import { useTeamStore } from "@/store/team";
 import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
 import type { Lead, LeadFormData } from "@/types";
@@ -12,6 +11,7 @@ import type { Lead, LeadFormData } from "@/types";
 interface LeadModalProps {
   lead: Lead | null;       // null = nuevo lead
   defaultStageId?: string;
+  teamNames: string[];
   onClose: () => void;
 }
 
@@ -36,10 +36,9 @@ function DateField({
   );
 }
 
-export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
+export function LeadModal({ lead, defaultStageId, teamNames, onClose }: LeadModalProps) {
   const { addLead, updateLead, deleteLead } = useLeadsStore();
   const stages = usePipelineStore((s) => s.stages);
-  const teamNames = useTeamStore((s) => s.members.map((m) => m.nombre));
 
   const isNew = lead === null;
   const initialStage = lead?.tab ?? defaultStageId ?? stages[0]?.id ?? "CRM";
