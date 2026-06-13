@@ -14,7 +14,7 @@ interface LeadModalProps {
   onClose: () => void;
 }
 
-const TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
+const TEAM = ["FEDE", "MATE", "TINCHO", "ARI", "LU", "LOREN", "CIRO"];
 
 /* ── Campo de fecha ──────────────────────────────────────────────── */
 function DateField({
