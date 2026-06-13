@@ -120,6 +120,16 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
                 </span>
               );
             })()}
+            {meetingBadge && (
+              <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
+                <Calendar size={9} /> {meetingBadge}
+              </span>
+            )}
+            {(isFollowUpToday || isFollowUpLate) && (
+              <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
+                <RefreshCw size={9} /> {isFollowUpToday ? "Hoy" : "Atrasado"}
+              </span>
+            )}
             {lead.telefono && lead.telefono.replace(/\D/g, "").length >= 6 && (
               <span title={lead.telefono} className="px-1.5 py-0.5 rounded-full flex items-center" style={{ background: "#94a3b820", color: "#94a3b8" }}>
                 <Phone size={10} strokeWidth={2.5} />
@@ -128,20 +138,10 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-[5px] overflow-hidden">
+            <div className="flex items-center gap-[5px]">
               {lead.responsable1 && (
                 <span className="text-[13px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60">
                   {lead.responsable1}
-                </span>
-              )}
-              {meetingBadge && (
-                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
-                  <Calendar size={9} /> {meetingBadge}
-                </span>
-              )}
-              {(isFollowUpToday || isFollowUpLate) && (
-                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
-                  <RefreshCw size={9} /> {isFollowUpToday ? "Hoy" : "Atrasado"}
                 </span>
               )}
             </div>
