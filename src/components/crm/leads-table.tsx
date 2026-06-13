@@ -637,14 +637,14 @@ function LeadRow({ row, memberNames, moveTargets: viewTargets, tab, showRelative
             <option value="">—</option>
             {MEDIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
-          <Phone
-            size={13}
-            title={cleanPhone(row.telefono).length >= 6 ? row.telefono : "Sin teléfono"}
-            style={{
-              flexShrink: 0,
-              color: cleanPhone(row.telefono).length >= 6 ? "#16a34a" : "#e2e8f0",
-            }}
-          />
+          <span title={cleanPhone(row.telefono).length >= 6 ? row.telefono : "Sin teléfono"} style={{ display: "inline-flex", flexShrink: 0 }}>
+            <Phone
+              size={13}
+              style={{
+                color: cleanPhone(row.telefono).length >= 6 ? "#16a34a" : "#e2e8f0",
+              }}
+            />
+          </span>
         </div>
       </td>
       <td>
