@@ -68,7 +68,7 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
     else if (diffDays === -1) rel = "Ayer";
     else if (diffDays > 1)    rel = `En ${diffDays} días`;
     else                      rel = `Hace ${Math.abs(diffDays)} días`;
-    return `${date} · ${rel}`;
+    return rel || date;
   })();
 
   const closeCtx = useCallback(() => setCtxMenu(null), []);
@@ -128,7 +128,7 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-[5px] flex-wrap">
+            <div className="flex items-center gap-[5px] overflow-hidden">
               {lead.responsable1 && (
                 <span className="text-[13px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60">
                   {lead.responsable1}
