@@ -8,10 +8,11 @@ import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
 import type { Lead, LeadFormData } from "@/types";
 
+const TEAM = ["FEDE", "MATE", "TINCHO", "ARI", "LU", "LOREN", "CIRO"];
+
 interface LeadModalProps {
   lead: Lead | null;       // null = nuevo lead
   defaultStageId?: string;
-  teamNames: string[];
   onClose: () => void;
 }
 
@@ -36,7 +37,7 @@ function DateField({
   );
 }
 
-export function LeadModal({ lead, defaultStageId, teamNames, onClose }: LeadModalProps) {
+export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const { addLead, updateLead, deleteLead } = useLeadsStore();
   const stages = usePipelineStore((s) => s.stages);
 
@@ -201,14 +202,14 @@ export function LeadModal({ lead, defaultStageId, teamNames, onClose }: LeadModa
               <label className={lbl}>Responsable 1</label>
               <select className={inputCls} value={form.responsable1 || ""} onChange={e => set("responsable1", e.target.value)}>
                 <option value=""></option>
-                {teamNames.filter(t => t !== form.responsable2).map(t => <option key={t}>{t}</option>)}
+                {TEAM.filter(t => t !== form.responsable2).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Responsable 2</label>
               <select className={inputCls} value={form.responsable2 || ""} onChange={e => set("responsable2", e.target.value)}>
                 <option value=""></option>
-                {teamNames.filter(t => t !== form.responsable1).map(t => <option key={t}>{t}</option>)}
+                {TEAM.filter(t => t !== form.responsable1).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
           </div>

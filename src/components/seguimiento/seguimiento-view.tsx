@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { LayoutGrid, List, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
-import { useTeamStore } from "@/store/team";
 import { KanbanColumn } from "./kanban-column";
 import { LeadModal } from "./lead-modal";
 import { CargaRapidaModal } from "./carga-rapida-modal";
@@ -16,7 +15,6 @@ export function SeguimientoView() {
   const rows        = useLeadsStore((s) => s.rows);
   const moveLeadTo  = useLeadsStore((s) => s.moveLeadTo);
   const stages      = usePipelineStore((s) => s.stages);
-  const teamNames   = useTeamStore((s) => s.members.map((m) => m.nombre));
 
   const [viewMode, setViewMode]       = useState<ViewMode>("kanban");
   const [cargaRapida, setCargaRapida] = useState(false);
@@ -181,7 +179,7 @@ export function SeguimientoView() {
       )}
 
       {selectedLead !== undefined && (
-        <LeadModal lead={selectedLead} defaultStageId={defaultStageId} teamNames={teamNames} onClose={closeModal} />
+        <LeadModal lead={selectedLead} defaultStageId={defaultStageId} onClose={closeModal} />
       )}
 
       {cargaRapida && <CargaRapidaModal onClose={() => setCargaRapida(false)} />}
