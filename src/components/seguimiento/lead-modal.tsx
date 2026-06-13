@@ -8,13 +8,13 @@ import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
 import type { Lead, LeadFormData } from "@/types";
 
-const TEAM = ["FEDE", "MATE", "TINCHO", "ARI", "LU", "LOREN", "CIRO"];
-
 interface LeadModalProps {
   lead: Lead | null;       // null = nuevo lead
   defaultStageId?: string;
   onClose: () => void;
 }
+
+const TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
 
 /* ── Campo de fecha ──────────────────────────────────────────────── */
 function DateField({

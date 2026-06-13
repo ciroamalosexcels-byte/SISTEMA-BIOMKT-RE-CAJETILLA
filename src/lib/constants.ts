@@ -2,7 +2,7 @@ import type { EmpresaBio, Medio, ContentType, ContentStatus, ManagementType } fr
 
 export const STORAGE_KEYS = {
   rows: "ventas_biomarketing_v2",
-  team: "ventas_biomarketing_team_v3",
+  team: "ventas_biomarketing_team_v2",
   dashboard: "ventas_biomarketing_dashboard_v2",
   columnWidths: "ventas_biomarketing_column_widths_v2",
   appSettings: "ventas_biomarketing_app_settings_v2",
@@ -15,7 +15,7 @@ export const STORAGE_KEYS = {
 
 export const BA_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
-export const DEFAULT_TEAM = ["FEDE", "MATE", "TINCHO", "ARI", "LU", "LOREN", "CIRO"];
+export const DEFAULT_TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
 
 export const EMPRESA_BIO_OPTS: EmpresaBio[] = ["BIOMARKETING", "BIOESTRATEGIA"];
 
