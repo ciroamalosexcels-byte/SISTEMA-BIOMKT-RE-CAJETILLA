@@ -110,28 +110,30 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
           <div className="text-[17px] font-bold text-slate-900 dark:text-slate-200 mb-0.5 leading-tight truncate">{lead.empresa || lead.nombre}</div>
           {lead.empresa && <div className="text-[14px] text-slate-400 dark:text-slate-600 mb-1.5 truncate">{lead.nombre}</div>}
 
-          <div className="flex gap-1 items-center mt-auto mb-1.5 flex-shrink-0 flex-wrap">
-            {lead.medio && (() => {
-              const key = lead.medio.trim().toUpperCase();
-              const c = MEDIO_COLOR[key] ?? "#94a3b8";
-              return (
-                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px]" style={{ background: `${c}18`, color: c }}>
-                  {lead.medio}
+          <div className="flex items-center mt-auto mb-1.5 flex-shrink-0">
+            <div className="flex gap-1 items-center flex-wrap flex-1 min-w-0">
+              {lead.medio && (() => {
+                const key = lead.medio.trim().toUpperCase();
+                const c = MEDIO_COLOR[key] ?? "#94a3b8";
+                return (
+                  <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap" style={{ background: `${c}18`, color: c }}>
+                    {lead.medio}
+                  </span>
+                );
+              })()}
+              {meetingBadge && (
+                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
+                  <Calendar size={9} /> {meetingBadge}
                 </span>
-              );
-            })()}
-            {meetingBadge && (
-              <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-indigo-100 dark:bg-indigo-500/[0.1] text-indigo-600 dark:text-indigo-400">
-                <Calendar size={9} /> {meetingBadge}
-              </span>
-            )}
-            {(isFollowUpToday || isFollowUpLate) && (
-              <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
-                <RefreshCw size={9} /> {isFollowUpToday ? "Hoy" : "Atrasado"}
-              </span>
-            )}
+              )}
+              {(isFollowUpToday || isFollowUpLate) && (
+                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
+                  <RefreshCw size={9} /> {isFollowUpToday ? "Hoy" : "Atrasado"}
+                </span>
+              )}
+            </div>
             {lead.telefono && lead.telefono.replace(/\D/g, "").length >= 6 && (
-              <span title={lead.telefono} className="px-1.5 py-0.5 rounded-full flex items-center" style={{ background: "#94a3b820", color: "#94a3b8" }}>
+              <span title={lead.telefono} className="px-1.5 py-0.5 rounded-full flex items-center flex-shrink-0 ml-auto" style={{ background: "#94a3b820", color: "#94a3b8" }}>
                 <Phone size={10} strokeWidth={2.5} />
               </span>
             )}
