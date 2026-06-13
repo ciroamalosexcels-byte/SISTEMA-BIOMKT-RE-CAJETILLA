@@ -25,7 +25,7 @@ export function SeguimientoView() {
   const [followUpPrompt, setFollowUpPrompt]   = useState<{ leadId: string; targetStage: string } | null>(null);
   const [followUpDate, setFollowUpDate]       = useState("");
 
-  const sortedStages = useMemo(() => [...stages].sort((a, b) => a.order - b.order), [stages]);
+  const sortedStages = useMemo(() => [...stages].filter(s => s.id !== "CLIENTES").sort((a, b) => a.order - b.order), [stages]);
 
   const leadsPerStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
