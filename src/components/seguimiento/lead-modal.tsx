@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { nowDatetimeBA } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
+import { useTeamStore } from "@/store/team";
 import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
 import type { Lead, LeadFormData } from "@/types";
@@ -13,8 +14,6 @@ interface LeadModalProps {
   defaultStageId?: string;
   onClose: () => void;
 }
-
-const TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
 
 /* ── Campo de fecha ──────────────────────────────────────────────── */
 function DateField({
@@ -40,6 +39,7 @@ function DateField({
 export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
   const { addLead, updateLead, deleteLead } = useLeadsStore();
   const stages = usePipelineStore((s) => s.stages);
+  const teamNames = useTeamStore((s) => s.members.map((m) => m.nombre));
 
   const isNew = lead === null;
   const initialStage = lead?.tab ?? defaultStageId ?? stages[0]?.id ?? "CRM";
@@ -202,14 +202,14 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
               <label className={lbl}>Responsable 1</label>
               <select className={inputCls} value={form.responsable1 || ""} onChange={e => set("responsable1", e.target.value)}>
                 <option value=""></option>
-                {TEAM.filter(t => t !== form.responsable2).map(t => <option key={t}>{t}</option>)}
+                {teamNames.filter(t => t !== form.responsable2).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-0.5">
               <label className={lbl}>Responsable 2</label>
               <select className={inputCls} value={form.responsable2 || ""} onChange={e => set("responsable2", e.target.value)}>
                 <option value=""></option>
-                {TEAM.filter(t => t !== form.responsable1).map(t => <option key={t}>{t}</option>)}
+                {teamNames.filter(t => t !== form.responsable1).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
           </div>
