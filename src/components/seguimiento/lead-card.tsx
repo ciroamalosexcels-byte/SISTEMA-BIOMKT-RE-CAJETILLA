@@ -47,7 +47,8 @@ function abbr(label: string): string {
 }
 
 export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, onClick, onMoveLeft, onMoveRight, onMoveSeguimiento }: LeadCardProps) {
-  const deleteLead = useLeadsStore((s) => s.deleteLead);
+  const deleteLead  = useLeadsStore((s) => s.deleteLead);
+  const moveLeadTo  = useLeadsStore((s) => s.moveLeadTo);
   const [ctxMenu, setCtxMenu]   = useState<{ x: number; y: number } | null>(null);
   const [exiting, setExiting]   = useState<"left" | "right" | null>(null);
 
@@ -182,7 +183,13 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
               <MessageCircle size={13} /> WhatsApp
             </button>
           )}
-          {lead.telefono && <div className="mx-3 my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />}
+          <div className="mx-3 my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />
+          <button className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] border-none bg-transparent cursor-pointer"
+            onClick={() => { moveLeadTo(lead.id, "CLIENTES"); setCtxMenu(null); }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            Pasar a Clientes
+          </button>
+          <div className="mx-3 my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />
           <button className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/[0.1] border-none bg-transparent cursor-pointer" onClick={handleDelete}>
             <Trash2 size={13} /> Eliminar lead
           </button>
