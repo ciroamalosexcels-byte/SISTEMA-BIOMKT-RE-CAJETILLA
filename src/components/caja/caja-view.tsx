@@ -181,19 +181,18 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="border-collapse" style={{ tableLayout: "fixed", width: "max-content" }}>
+              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
                 <colgroup>
-                  <col style={{ width: 44 }} />
-                  <col style={{ width: 120 }} />
-                  <col style={{ width: 30 }} />
-                  <col style={{ width: 84 }} />
-                  <col style={{ width: 70 }} />
-                  <col style={{ width: 64 }} />
-                  <col style={{ width: 84 }} />
+                  <col style={{ width: 46 }} />
+                  <col />
+                  <col style={{ width: 88 }} />
+                  <col style={{ width: 72 }} />
+                  <col style={{ width: 68 }} />
+                  <col style={{ width: 86 }} />
                 </colgroup>
                 <thead>
                   <tr>
-                    {["Día","Concepto","","Monto","Cat.","Medio","Saldo"].map((h,i) => <th key={i} className={movThCls}>{h}</th>)}
+                    {["Día","Concepto","Monto","Cat.","Medio","Saldo"].map((h,i) => <th key={i} className={movThCls}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -207,10 +206,12 @@ export function CajaView() {
                   ].map((r, i) => (
                     <tr key={i} className="hover:bg-[#fafafa]">
                       <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
-                      <td className={`${movTdCls} truncate`}>{r.concepto}</td>
-                      <td className={movTdCls}>
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-black" style={{ background: r.entrada ? "#dcfce7" : "#fee2e2", color: r.entrada ? "#16a34a" : "#dc2626" }}>
-                          {r.entrada ? "↑" : "↓"}
+                      <td className={`${movTdCls} truncate`}>
+                        <span className="inline-flex items-center gap-[5px]">
+                          <span className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full text-[9px] font-black flex-shrink-0" style={{ background: r.entrada ? "#dcfce7" : "#fee2e2", color: r.entrada ? "#16a34a" : "#dc2626" }}>
+                            {r.entrada ? "↑" : "↓"}
+                          </span>
+                          {r.concepto}
                         </span>
                       </td>
                       <td className={`${movTdCls} font-black`} style={{ color: r.entrada ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
@@ -220,7 +221,7 @@ export function CajaView() {
                     </tr>
                   ))}
                   <tr style={{ background: "#fffbeb" }}>
-                    <td colSpan={3} className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL</td>
+                    <td colSpan={2} className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
                     <td className="px-[4px] py-[4px] font-black text-[10px] border-t border-[#fde68a]" style={{ color: "#16a34a" }}>+$4.850k / <span style={{ color: "#dc2626" }}>−$2.130k</span></td>
                     <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
                     <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
