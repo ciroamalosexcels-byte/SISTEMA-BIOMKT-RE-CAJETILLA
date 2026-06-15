@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
@@ -99,6 +99,21 @@ export function CajaView() {
   const [navYear, setNavYear] = useState(now.getFullYear());
   const [navMonth, setNavMonth] = useState(now.getMonth());
   const [extraRows, setExtraRows] = useState<string[]>([]);
+
+  // Sincronizar totales calculados al storage compartido con /general
+  useEffect(() => {
+    try {
+      const existing = localStorage.getItem("biomarketing_caja_v1");
+      const parsed = existing ? JSON.parse(existing) : {};
+      localStorage.setItem("biomarketing_caja_v1", JSON.stringify({
+        ...parsed,
+        entra: 4850000,
+        sale:  2130000,
+        caja:  2720000,
+        calle: 980000,
+      }));
+    } catch {}
+  }, []);
 
   function prevMonth() {
     if (navMonth === 0) { setNavMonth(11); setNavYear(y => y - 1); }
