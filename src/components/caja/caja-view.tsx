@@ -181,15 +181,15 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+              <table className="border-collapse" style={{ tableLayout: "fixed", width: "max-content" }}>
                 <colgroup>
-                  <col style={{ width: 42 }} />
-                  <col style={{ width: 110 }} />
+                  <col style={{ width: 44 }} />
+                  <col style={{ width: 120 }} />
                   <col style={{ width: 30 }} />
-                  <col style={{ width: 82 }} />
-                  <col style={{ width: 68 }} />
-                  <col style={{ width: 62 }} />
-                  <col style={{ width: 82 }} />
+                  <col style={{ width: 84 }} />
+                  <col style={{ width: 70 }} />
+                  <col style={{ width: 64 }} />
+                  <col style={{ width: 84 }} />
                 </colgroup>
                 <thead>
                   <tr>
