@@ -36,6 +36,8 @@ function SumCard({ title, amount, color, sub }: { title: string; amount: React.R
 
 const thCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-3 py-[7px] text-left border-b border-slate-200 whitespace-nowrap";
 const tdCls = "px-3 py-2 text-[12px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle";
+const movThCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-2 py-[5px] text-left border-b border-slate-200 whitespace-nowrap";
+const movTdCls = "px-2 py-[5px] text-[11px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle";
 const addBtnCls = "flex items-center gap-[6px] px-[14px] py-[9px] text-[11px] font-black tracking-[0.02em] uppercase border-none cursor-pointer w-full text-left font-sans border-t border-[#fde68a]";
 
 function EntradaBadge() {
@@ -179,10 +181,19 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+                <colgroup>
+                  <col style={{ width: 52 }} />
+                  <col />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 96 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 78 }} />
+                  <col style={{ width: 90 }} />
+                </colgroup>
                 <thead>
                   <tr>
-                    {["Día","Concepto","Tipo","Monto","Detalle","Medio","Saldo"].map(h => <th key={h} className={thCls}>{h}</th>)}
+                    {["Día","Concepto","Tipo","Monto","Detalle","Medio","Saldo"].map(h => <th key={h} className={movThCls}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -195,21 +206,21 @@ export function CajaView() {
                     { day:"14/06", concepto:"Sueldos equipo",  tipo:"salida",  monto:"−$800.000", detalle:"Equipos",    medio:"tf",  saldo:"$2.915.000" },
                   ].map((r, i) => (
                     <tr key={i} className="hover:bg-[#fafafa]">
-                      <td className={`${tdCls} text-[11px] whitespace-nowrap`} style={{ color: "#94a3b8" }}>{r.day}</td>
-                      <td className={tdCls}>{r.concepto}</td>
-                      <td className={tdCls}>{r.tipo === "entrada" ? <EntradaBadge /> : <SalidaBadge />}</td>
-                      <td className={`${tdCls} font-black text-[13px]`} style={{ color: r.tipo === "entrada" ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
-                      <td className={tdCls} style={{ color: "#64748b", fontSize: "11px" }}>{r.detalle}</td>
-                      <td className={tdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
-                      <td className={`${tdCls} font-black`} style={{ color: "#d97706" }}>{r.saldo}</td>
+                      <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
+                      <td className={`${movTdCls} truncate`}>{r.concepto}</td>
+                      <td className={movTdCls}>{r.tipo === "entrada" ? <EntradaBadge /> : <SalidaBadge />}</td>
+                      <td className={`${movTdCls} font-black whitespace-nowrap`} style={{ color: r.tipo === "entrada" ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
+                      <td className={`${movTdCls} truncate`} style={{ color: "#64748b" }}>{r.detalle}</td>
+                      <td className={movTdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
+                      <td className={`${movTdCls} font-black whitespace-nowrap`} style={{ color: "#d97706" }}>{r.saldo}</td>
                     </tr>
                   ))}
                   <tr style={{ background: "#fffbeb" }}>
-                    <td colSpan={3} className="px-3 py-2 font-black text-[13px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
-                    <td className="px-3 py-2 font-black text-[13px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>+$4.850.000 / −$2.130.000</td>
-                    <td className="px-3 py-2 border-t border-[#fde68a]"></td>
-                    <td className="px-3 py-2 border-t border-[#fde68a]"></td>
-                    <td className="px-3 py-2 font-black text-[13px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>$2.720.000</td>
+                    <td colSpan={3} className="px-2 py-[5px] font-black text-[12px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
+                    <td className="px-2 py-[5px] font-black text-[11px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>+$4.850k / −$2.130k</td>
+                    <td className="px-2 py-[5px] border-t border-[#fde68a]"></td>
+                    <td className="px-2 py-[5px] border-t border-[#fde68a]"></td>
+                    <td className="px-2 py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>$2.720.000</td>
                   </tr>
                 </tbody>
               </table>
