@@ -164,75 +164,72 @@ export function CajaView() {
           </div>
         </div>
 
-        {/* ── 2. Movimientos + Gastos + Medios ─────────────── */}
-        <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
-
-          {/* Movimientos */}
-          <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden min-w-0">
-            <PanelHead
-              title="Movimientos Diarios"
-              badge="74 registros"
-              right={
-                <button className="flex items-center justify-center w-[26px] h-[26px] rounded-lg border-none text-[18px] font-black cursor-pointer leading-none" style={{ background: AMBER, color: NAVY }}>+</button>
-              }
-            />
-            <div className="flex items-center justify-between px-4 py-[9px] border-b border-[#fde68a]" style={{ background: "#fffbeb" }}>
-              <span className="text-[11px] font-black tracking-[0.02em] uppercase truncate mr-2" style={{ color: "#92400e" }}>Saldo mes anterior — {navMonth === 0 ? MESES[11] + " " + (navYear - 1) : MESES[navMonth - 1] + " " + navYear}</span>
-              <span className="text-[16px] font-black flex-shrink-0" style={{ color: "#d97706" }}>$1.890.000</span>
-            </div>
-            <div className="overflow-x-auto min-w-0">
-              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
-                <colgroup>
-                  <col style={{ width: "8%" }} />
-                  <col style={{ width: "27%" }} />
-                  <col style={{ width: "16%" }} />
-                  <col style={{ width: "15%" }} />
-                  <col style={{ width: "14%" }} />
-                  <col style={{ width: "20%" }} />
-                </colgroup>
-                <thead>
-                  <tr>
-                    {["Día","Concepto","Monto","Cat.","Medio","Saldo"].map((h,i) => <th key={i} className={movThCls}>{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { day:"01/06", concepto:"Marcos Ruiz",     entrada:true,  monto:"+$450.000", cat:"Servicios",   medio:"tf", saldo:"$2.340.000" },
-                    { day:"02/06", concepto:"Alquiler oficina", entrada:false, monto:"−$120.000", cat:"Alquiler",    medio:"ef", saldo:"$2.220.000" },
-                    { day:"05/06", concepto:"Laura González",   entrada:true,  monto:"+$680.000", cat:"Audiovisual", medio:"tf", saldo:"$2.900.000" },
-                    { day:"07/06", concepto:"Proveedores",      entrada:false, monto:"−$85.000",  cat:"Proveedor",   medio:"ef", saldo:"$2.815.000" },
-                    { day:"10/06", concepto:"Carlos Medina",    entrada:true,  monto:"+$900.000", cat:"Branding",    medio:"tf", saldo:"$3.715.000" },
-                    { day:"14/06", concepto:"Sueldos equipo",   entrada:false, monto:"−$800.000", cat:"Equipos",     medio:"tf", saldo:"$2.915.000" },
-                  ].map((r, i) => (
-                    <tr key={i} className="hover:bg-[#fafafa]">
-                      <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
-                      <td className={`${movTdCls} truncate`}>
-                        <span className="inline-flex items-center gap-[5px]">
-                          <span className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full text-[9px] font-black flex-shrink-0" style={{ background: r.entrada ? "#dcfce7" : "#fee2e2", color: r.entrada ? "#16a34a" : "#dc2626" }}>
-                            {r.entrada ? "↑" : "↓"}
-                          </span>
-                          {r.concepto}
-                        </span>
-                      </td>
-                      <td className={`${movTdCls} font-black`} style={{ color: r.entrada ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
-                      <td className={`${movTdCls} truncate`} style={{ color: "#64748b" }}>{r.cat}</td>
-                      <td className={movTdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
-                      <td className={`${movTdCls} font-black`} style={{ color: "#d97706" }}>{r.saldo}</td>
-                    </tr>
-                  ))}
-                  <tr style={{ background: "#fffbeb" }}>
-                    <td colSpan={2} className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
-                    <td className="px-[4px] py-[4px] font-black text-[10px] border-t border-[#fde68a]" style={{ color: "#16a34a" }}>+$4.850k / <span style={{ color: "#dc2626" }}>−$2.130k</span></td>
-                    <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
-                    <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
-                    <td className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>$2.720.000</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <button className={addBtnCls} style={{ background: "#fffbeb", color: "#d97706" }}>＋ Agregar movimiento</button>
+        {/* ── 2. Movimientos (fila completa) ───────────────── */}
+        <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden">
+          <PanelHead
+            title="Movimientos Diarios"
+            badge="74 registros"
+            right={
+              <button className="flex items-center justify-center w-[26px] h-[26px] rounded-lg border-none text-[18px] font-black cursor-pointer leading-none" style={{ background: AMBER, color: NAVY }}>+</button>
+            }
+          />
+          <div className="flex items-center justify-between px-4 py-[9px] border-b border-[#fde68a]" style={{ background: "#fffbeb" }}>
+            <span className="text-[11px] font-black tracking-[0.02em] uppercase" style={{ color: "#92400e" }}>Saldo mes anterior — {navMonth === 0 ? MESES[11] + " " + (navYear - 1) : MESES[navMonth - 1] + " " + navYear}</span>
+            <span className="text-[16px] font-black flex-shrink-0 ml-4" style={{ color: "#d97706" }}>$1.890.000</span>
           </div>
+          <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "7%" }} />
+              <col style={{ width: "26%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "14%" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                {["Día","Concepto","Tipo","Monto","Cat.","Medio","Saldo"].map((h,i) => <th key={i} className={movThCls}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { day:"01/06", concepto:"Marcos Ruiz",     entrada:true,  monto:"+$450.000", cat:"Servicios",   medio:"tf", saldo:"$2.340.000" },
+                { day:"02/06", concepto:"Alquiler oficina", entrada:false, monto:"−$120.000", cat:"Alquiler",    medio:"ef", saldo:"$2.220.000" },
+                { day:"05/06", concepto:"Laura González",   entrada:true,  monto:"+$680.000", cat:"Audiovisual", medio:"tf", saldo:"$2.900.000" },
+                { day:"07/06", concepto:"Proveedores",      entrada:false, monto:"−$85.000",  cat:"Proveedor",   medio:"ef", saldo:"$2.815.000" },
+                { day:"10/06", concepto:"Carlos Medina",    entrada:true,  monto:"+$900.000", cat:"Branding",    medio:"tf", saldo:"$3.715.000" },
+                { day:"14/06", concepto:"Sueldos equipo",   entrada:false, monto:"−$800.000", cat:"Equipos",     medio:"tf", saldo:"$2.915.000" },
+              ].map((r, i) => (
+                <tr key={i} className="hover:bg-[#fafafa]">
+                  <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
+                  <td className={`${movTdCls} truncate`}>{r.concepto}</td>
+                  <td className={movTdCls}>
+                    <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-black" style={{ background: r.entrada ? "#dcfce7" : "#fee2e2", color: r.entrada ? "#16a34a" : "#dc2626" }}>
+                      {r.entrada ? "↑" : "↓"}
+                    </span>
+                  </td>
+                  <td className={`${movTdCls} font-black`} style={{ color: r.entrada ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
+                  <td className={`${movTdCls} truncate`} style={{ color: "#64748b" }}>{r.cat}</td>
+                  <td className={movTdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
+                  <td className={`${movTdCls} font-black`} style={{ color: "#d97706" }}>{r.saldo}</td>
+                </tr>
+              ))}
+              <tr style={{ background: "#fffbeb" }}>
+                <td colSpan={2} className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
+                <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
+                <td className="px-[4px] py-[4px] font-black text-[10px] border-t border-[#fde68a]" style={{ color: "#16a34a" }}>+$4.850k / <span style={{ color: "#dc2626" }}>−$2.130k</span></td>
+                <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
+                <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
+                <td className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>$2.720.000</td>
+              </tr>
+            </tbody>
+          </table>
+          <button className={addBtnCls} style={{ background: "#fffbeb", color: "#d97706" }}>＋ Agregar movimiento</button>
+        </div>
 
+        {/* ── 2b. Gastos + Por Medio (2 columnas) ──────────── */}
+        <div className="grid grid-cols-2 gap-[18px] items-start">
           {/* Gastos por Categoría */}
           <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden">
             <PanelHead title="Gastos por Categoría" badge="calc." />
