@@ -181,7 +181,7 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="border-collapse" style={{ width: "auto" }}>
                 <thead>
                   <tr>
                     {["Día","Concepto","Tipo","Monto","Detalle","Medio","Saldo"].map(h => <th key={h} className={movThCls}>{h}</th>)}
@@ -207,11 +207,11 @@ export function CajaView() {
                     </tr>
                   ))}
                   <tr style={{ background: "#fffbeb" }}>
-                    <td colSpan={3} className="px-2 py-[5px] font-black text-[12px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
-                    <td className="px-2 py-[5px] font-black text-[11px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>+$4.850k / −$2.130k</td>
-                    <td className="px-2 py-[5px] border-t border-[#fde68a]"></td>
-                    <td className="px-2 py-[5px] border-t border-[#fde68a]"></td>
-                    <td className="px-2 py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>$2.720.000</td>
+                    <td colSpan={3} className="px-[6px] py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
+                    <td className="px-[6px] py-[5px] font-black text-[11px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>+$4.850k / −$2.130k</td>
+                    <td className="px-[6px] py-[5px] border-t border-[#fde68a]"></td>
+                    <td className="px-[6px] py-[5px] border-t border-[#fde68a]"></td>
+                    <td className="px-[6px] py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>$2.720.000</td>
                   </tr>
                 </tbody>
               </table>
