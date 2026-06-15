@@ -168,7 +168,7 @@ export function CajaView() {
         <div className="grid gap-[18px] items-start" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
 
           {/* Movimientos */}
-          <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden min-w-0">
             <PanelHead
               title="Movimientos Diarios"
               badge="74 registros"
@@ -177,10 +177,10 @@ export function CajaView() {
               }
             />
             <div className="flex items-center justify-between px-4 py-[9px] border-b border-[#fde68a]" style={{ background: "#fffbeb" }}>
-              <span className="text-[11px] font-black tracking-[0.02em] uppercase" style={{ color: "#92400e" }}>Saldo mes anterior — {navMonth === 0 ? MESES[11] + " " + (navYear - 1) : MESES[navMonth - 1] + " " + navYear}</span>
-              <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
+              <span className="text-[11px] font-black tracking-[0.02em] uppercase truncate mr-2" style={{ color: "#92400e" }}>Saldo mes anterior — {navMonth === 0 ? MESES[11] + " " + (navYear - 1) : MESES[navMonth - 1] + " " + navYear}</span>
+              <span className="text-[16px] font-black flex-shrink-0" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-w-0">
               <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: "8%" }} />
