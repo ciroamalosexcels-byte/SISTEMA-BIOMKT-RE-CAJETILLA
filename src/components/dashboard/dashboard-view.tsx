@@ -569,6 +569,7 @@ export function DashboardView() {
     { id: "pipeline",      visible: true, order: 4 },
     { id: "area_mensual",  visible: true, order: 5 },
     { id: "area_anual",    visible: true, order: 6 },
+    { id: "resumen_caja", visible: true, order: 7 },
   ];
   const layout = (() => {
     const saved = settings.dashboardLayout ?? [];
@@ -777,6 +778,50 @@ export function DashboardView() {
         cierres={yearlyData.map((d) => d.clientes)}
         dark={dark}
       />
+    ),
+
+    // ── Resumen de Caja
+    resumen_caja: (
+      <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+        <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
+          <span className="text-[13px] font-black text-amber tracking-[0.12em] uppercase">Resumen de Caja</span>
+          <a href="/caja" className="text-[9px] font-bold text-white/[0.35] hover:text-amber uppercase tracking-[0.08em] transition-colors no-underline">Ver caja →</a>
+        </div>
+        <div className="grid grid-cols-2 gap-0 divide-x divide-slate-100 dark:divide-white/[0.04]">
+          <div>
+            {[
+              { label: "↑ Transfer.",  val: "$3.870.000", color: "#2563eb" },
+              { label: "↓ Transfer.",  val: "$680.000",   color: "#ef4444" },
+              { label: "↑ Efectivo",   val: "$980.000",   color: "#16a34a" },
+              { label: "↓ Efectivo",   val: "$320.000",   color: "#ef4444" },
+              { label: "↑ Servicios",  val: "$4.200.000", color: "#16a34a" },
+              { label: "↑ Inversión",  val: "$650.000",   color: "#16a34a" },
+            ].map((r) => (
+              <div key={r.label} className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-white/[0.04]">
+                <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-400 dark:text-slate-500">{r.label}</span>
+                <span className="text-[13px] font-black [font-variant-numeric:tabular-nums]" style={{ color: r.color }}>{r.val}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-amber/[0.06] dark:bg-amber/[0.04]">
+              <span className="text-[11px] font-black uppercase tracking-[0.06em] text-amber-600 dark:text-amber">Total ↑</span>
+              <span className="text-[16px] font-black text-amber-600 dark:text-amber [font-variant-numeric:tabular-nums]">$4.850.000</span>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center px-5 py-5 gap-3">
+            {[
+              { label: "Total entrada mes",       val: "$4.850.000", color: "#16a34a" },
+              { label: "Total salidas mes",        val: "$2.130.000", color: "#ef4444" },
+              { label: "Total en caja",            val: "$2.720.000", color: "#d97706" },
+              { label: "Total en calle (me deben)", val: "$980.000",  color: "#7c3aed" },
+            ].map((r) => (
+              <div key={r.label} className="flex items-center justify-between gap-4">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">{r.label}</span>
+                <span className="text-[15px] font-black [font-variant-numeric:tabular-nums] whitespace-nowrap" style={{ color: r.color }}>{r.val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     ),
   };
 

@@ -253,9 +253,9 @@ export function CajaView() {
             </div>
           </div>
 
-          {/* Por Medio */}
+          {/* Resumen de Caja */}
           <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden">
-            <PanelHead title="Por Medio" badge="calc." />
+            <PanelHead title="Resumen de Caja" badge="calc." />
             {[
               { label: "↑ Transfer.",  val: "$3.870.000", color: "#2563eb" },
               { label: "↓ Transfer.",  val: "$680.000",   color: "#dc2626" },
