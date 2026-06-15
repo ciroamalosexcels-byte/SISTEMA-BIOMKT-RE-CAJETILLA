@@ -183,12 +183,12 @@ export function CajaView() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
                 <colgroup>
-                  <col style={{ width: 46 }} />
-                  <col />
-                  <col style={{ width: 88 }} />
-                  <col style={{ width: 72 }} />
-                  <col style={{ width: 68 }} />
-                  <col style={{ width: 86 }} />
+                  <col style={{ width: "8%" }} />
+                  <col style={{ width: "27%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "14%" }} />
+                  <col style={{ width: "20%" }} />
                 </colgroup>
                 <thead>
                   <tr>
