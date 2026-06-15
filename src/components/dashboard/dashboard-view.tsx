@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
@@ -441,6 +441,74 @@ function Separator({ label }: { label: string }) {
   );
 }
 
+// ── Resumen de Caja (lee del storage compartido con /caja y /general) ─
+const CAJA_STORAGE = "biomarketing_caja_v1";
+const CAJA_DEFAULT = { entra: 0, sale: 0, caja: 0, deuda: 0, calle: 0, objetivo: 0 };
+const fmtPesos = (n: number) => n === 0 ? "$0" : `$${n.toLocaleString("es-AR")}`;
+
+function ResumenCajaDash() {
+  const [vals, setVals] = useState(CAJA_DEFAULT);
+  useEffect(() => {
+    try {
+      const r = localStorage.getItem(CAJA_STORAGE);
+      if (r) setVals({ ...CAJA_DEFAULT, ...JSON.parse(r) });
+    } catch {}
+    function onStorage(e: StorageEvent) {
+      if (e.key === CAJA_STORAGE && e.newValue) {
+        try { setVals({ ...CAJA_DEFAULT, ...JSON.parse(e.newValue) }); } catch {}
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const rows = [
+    { label: "Entra",   val: vals.entra,   color: "#16a34a" },
+    { label: "Sale",    val: vals.sale,    color: "#ef4444" },
+    { label: "Caja",   val: vals.caja,    color: "#d97706" },
+    { label: "Deuda",  val: vals.deuda,   color: "#ef4444" },
+    { label: "Calle",  val: vals.calle,   color: "#7c3aed" },
+  ];
+
+  return (
+    <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
+      <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
+        <span className="text-[13px] font-black text-amber tracking-[0.12em] uppercase">Resumen de Caja</span>
+        <a href="/caja" className="text-[9px] font-bold text-white/[0.35] hover:text-amber uppercase tracking-[0.08em] transition-colors no-underline">Ver caja →</a>
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-white/[0.04]">
+        <div className="flex flex-col">
+          {rows.map((r) => (
+            <div key={r.label} className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-white/[0.04]">
+              <span className="text-[11px] font-black uppercase tracking-[0.06em] text-slate-400 dark:text-slate-500">{r.label}</span>
+              <span className="text-[14px] font-black [font-variant-numeric:tabular-nums]" style={{ color: r.color }}>{fmtPesos(r.val)}</span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-amber/[0.06] dark:bg-amber/[0.04]">
+            <span className="text-[11px] font-black uppercase tracking-[0.06em] text-amber-600 dark:text-amber">Objetivo</span>
+            <span className="text-[14px] font-black text-amber-600 dark:text-amber [font-variant-numeric:tabular-nums]">{fmtPesos(vals.objetivo)}</span>
+          </div>
+        </div>
+        <div className="flex flex-col justify-center px-5 py-5 gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">Total en Caja</span>
+            <span className="text-[28px] font-black leading-none [font-variant-numeric:tabular-nums]" style={{ color: "#d97706" }}>{fmtPesos(vals.caja)}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">Resultado neto</span>
+            <span className="text-[20px] font-black leading-none [font-variant-numeric:tabular-nums]" style={{ color: vals.entra - vals.sale >= 0 ? "#16a34a" : "#ef4444" }}>
+              {fmtPesos(vals.entra - vals.sale)}
+            </span>
+          </div>
+          <a href="/caja" className="text-[11px] font-bold text-slate-400 hover:text-amber dark:text-slate-600 dark:hover:text-amber transition-colors no-underline">
+            Ver movimientos →
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard View ────────────────────────────────────────────────────
 export function DashboardView() {
   const rows = useLeadsStore((s) => s.rows);
@@ -781,48 +849,7 @@ export function DashboardView() {
     ),
 
     // ── Resumen de Caja
-    resumen_caja: (
-      <div className="bg-white dark:bg-[#0b1628] border border-slate-200 dark:border-white/[0.06] rounded-[18px] overflow-hidden">
-        <div className="flex items-center justify-between px-[18px] py-[10px] bg-[#07152f]">
-          <span className="text-[13px] font-black text-amber tracking-[0.12em] uppercase">Resumen de Caja</span>
-          <a href="/caja" className="text-[9px] font-bold text-white/[0.35] hover:text-amber uppercase tracking-[0.08em] transition-colors no-underline">Ver caja →</a>
-        </div>
-        <div className="grid grid-cols-2 gap-0 divide-x divide-slate-100 dark:divide-white/[0.04]">
-          <div>
-            {[
-              { label: "↑ Transfer.",  val: "$3.870.000", color: "#2563eb" },
-              { label: "↓ Transfer.",  val: "$680.000",   color: "#ef4444" },
-              { label: "↑ Efectivo",   val: "$980.000",   color: "#16a34a" },
-              { label: "↓ Efectivo",   val: "$320.000",   color: "#ef4444" },
-              { label: "↑ Servicios",  val: "$4.200.000", color: "#16a34a" },
-              { label: "↑ Inversión",  val: "$650.000",   color: "#16a34a" },
-            ].map((r) => (
-              <div key={r.label} className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-white/[0.04]">
-                <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-400 dark:text-slate-500">{r.label}</span>
-                <span className="text-[13px] font-black [font-variant-numeric:tabular-nums]" style={{ color: r.color }}>{r.val}</span>
-              </div>
-            ))}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-amber/[0.06] dark:bg-amber/[0.04]">
-              <span className="text-[11px] font-black uppercase tracking-[0.06em] text-amber-600 dark:text-amber">Total ↑</span>
-              <span className="text-[16px] font-black text-amber-600 dark:text-amber [font-variant-numeric:tabular-nums]">$4.850.000</span>
-            </div>
-          </div>
-          <div className="flex flex-col justify-center px-5 py-5 gap-3">
-            {[
-              { label: "Total entrada mes",       val: "$4.850.000", color: "#16a34a" },
-              { label: "Total salidas mes",        val: "$2.130.000", color: "#ef4444" },
-              { label: "Total en caja",            val: "$2.720.000", color: "#d97706" },
-              { label: "Total en calle (me deben)", val: "$980.000",  color: "#7c3aed" },
-            ].map((r) => (
-              <div key={r.label} className="flex items-center justify-between gap-4">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">{r.label}</span>
-                <span className="text-[15px] font-black [font-variant-numeric:tabular-nums] whitespace-nowrap" style={{ color: r.color }}>{r.val}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
+    resumen_caja: <ResumenCajaDash />,
   };
 
   /* Agrupar mes + anio side-by-side */
