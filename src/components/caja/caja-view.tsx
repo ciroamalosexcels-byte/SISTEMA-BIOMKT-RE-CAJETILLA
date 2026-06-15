@@ -184,12 +184,12 @@ export function CajaView() {
               <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 42 }} />
-                  <col />
-                  <col style={{ width: 34 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 60 }} />
-                  <col style={{ width: 60 }} />
-                  <col style={{ width: 80 }} />
+                  <col style={{ width: 110 }} />
+                  <col style={{ width: 30 }} />
+                  <col style={{ width: 82 }} />
+                  <col style={{ width: 68 }} />
+                  <col style={{ width: 62 }} />
+                  <col style={{ width: 82 }} />
                 </colgroup>
                 <thead>
                   <tr>
