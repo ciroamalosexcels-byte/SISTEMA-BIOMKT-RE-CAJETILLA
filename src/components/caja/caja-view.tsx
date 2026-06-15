@@ -36,8 +36,8 @@ function SumCard({ title, amount, color, sub }: { title: string; amount: React.R
 
 const thCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-3 py-[7px] text-left border-b border-slate-200 whitespace-nowrap";
 const tdCls = "px-3 py-2 text-[12px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle";
-const movThCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-[6px] py-[5px] text-left border-b border-slate-200 whitespace-nowrap";
-const movTdCls = "px-[6px] py-[5px] text-[11px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle whitespace-nowrap";
+const movThCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-[4px] py-[5px] text-left border-b border-slate-200 whitespace-nowrap";
+const movTdCls = "px-[4px] py-[4px] text-[11px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle whitespace-nowrap";
 const addBtnCls = "flex items-center gap-[6px] px-[14px] py-[9px] text-[11px] font-black tracking-[0.02em] uppercase border-none cursor-pointer w-full text-left font-sans border-t border-[#fde68a]";
 
 function EntradaBadge() {
@@ -181,37 +181,44 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="border-collapse" style={{ width: "auto" }}>
+              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+                <colgroup>
+                  <col style={{ width: 44 }} />
+                  <col />
+                  <col style={{ width: 82 }} />
+                  <col style={{ width: 66 }} />
+                  <col style={{ width: 62 }} />
+                  <col style={{ width: 80 }} />
+                </colgroup>
                 <thead>
                   <tr>
-                    {["Día","Concepto","Tipo","Monto","Detalle","Medio","Saldo"].map(h => <th key={h} className={movThCls}>{h}</th>)}
+                    {["Día","Concepto","Monto","Cat.","Medio","Saldo"].map(h => <th key={h} className={movThCls}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { day:"01/06", concepto:"Marcos Ruiz",    tipo:"entrada", monto:"+$450.000", detalle:"Servicios",  medio:"tf",  saldo:"$2.340.000" },
-                    { day:"02/06", concepto:"Alquiler oficina",tipo:"salida",  monto:"−$120.000", detalle:"Alquiler",   medio:"ef",  saldo:"$2.220.000" },
-                    { day:"05/06", concepto:"Laura González",  tipo:"entrada", monto:"+$680.000", detalle:"Audiovisual",medio:"tf",  saldo:"$2.900.000" },
-                    { day:"07/06", concepto:"Proveedores",     tipo:"salida",  monto:"−$85.000",  detalle:"Proveedor",  medio:"ef",  saldo:"$2.815.000" },
-                    { day:"10/06", concepto:"Carlos Medina",   tipo:"entrada", monto:"+$900.000", detalle:"Branding",   medio:"tf",  saldo:"$3.715.000" },
-                    { day:"14/06", concepto:"Sueldos equipo",  tipo:"salida",  monto:"−$800.000", detalle:"Equipos",    medio:"tf",  saldo:"$2.915.000" },
+                    { day:"01/06", concepto:"Marcos Ruiz",     entrada:true,  monto:"+$450.000", cat:"Servicios",   medio:"tf", saldo:"$2.340.000" },
+                    { day:"02/06", concepto:"Alquiler oficina", entrada:false, monto:"−$120.000", cat:"Alquiler",    medio:"ef", saldo:"$2.220.000" },
+                    { day:"05/06", concepto:"Laura González",   entrada:true,  monto:"+$680.000", cat:"Audiovisual", medio:"tf", saldo:"$2.900.000" },
+                    { day:"07/06", concepto:"Proveedores",      entrada:false, monto:"−$85.000",  cat:"Proveedor",   medio:"ef", saldo:"$2.815.000" },
+                    { day:"10/06", concepto:"Carlos Medina",    entrada:true,  monto:"+$900.000", cat:"Branding",    medio:"tf", saldo:"$3.715.000" },
+                    { day:"14/06", concepto:"Sueldos equipo",   entrada:false, monto:"−$800.000", cat:"Equipos",     medio:"tf", saldo:"$2.915.000" },
                   ].map((r, i) => (
                     <tr key={i} className="hover:bg-[#fafafa]">
                       <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
-                      <td className={movTdCls}>{r.concepto}</td>
-                      <td className={movTdCls}>{r.tipo === "entrada" ? <EntradaBadge /> : <SalidaBadge />}</td>
-                      <td className={`${movTdCls} font-black`} style={{ color: r.tipo === "entrada" ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
-                      <td className={movTdCls} style={{ color: "#64748b" }}>{r.detalle}</td>
+                      <td className={`${movTdCls} truncate`}>{r.concepto}</td>
+                      <td className={`${movTdCls} font-black`} style={{ color: r.entrada ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
+                      <td className={`${movTdCls} truncate`} style={{ color: "#64748b" }}>{r.cat}</td>
                       <td className={movTdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
-                      <td className={`${movTdCls} font-black whitespace-nowrap`} style={{ color: "#d97706" }}>{r.saldo}</td>
+                      <td className={`${movTdCls} font-black`} style={{ color: "#d97706" }}>{r.saldo}</td>
                     </tr>
                   ))}
                   <tr style={{ background: "#fffbeb" }}>
-                    <td colSpan={3} className="px-[6px] py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>TOTAL DEL MES</td>
-                    <td className="px-[6px] py-[5px] font-black text-[11px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>+$4.850k / −$2.130k</td>
-                    <td className="px-[6px] py-[5px] border-t border-[#fde68a]"></td>
-                    <td className="px-[6px] py-[5px] border-t border-[#fde68a]"></td>
-                    <td className="px-[6px] py-[5px] font-black text-[12px] border-t border-[#fde68a] whitespace-nowrap" style={{ color: "#d97706" }}>$2.720.000</td>
+                    <td colSpan={2} className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>TOTAL</td>
+                    <td className="px-[4px] py-[4px] font-black text-[10px] border-t border-[#fde68a]" style={{ color: "#16a34a" }}>+$4.850k</td>
+                    <td className="px-[4px] py-[4px] font-black text-[10px] border-t border-[#fde68a]" style={{ color: "#dc2626" }}>−$2.130k</td>
+                    <td className="px-[4px] py-[4px] border-t border-[#fde68a]"></td>
+                    <td className="px-[4px] py-[4px] font-black text-[11px] border-t border-[#fde68a]" style={{ color: "#d97706" }}>$2.720.000</td>
                   </tr>
                 </tbody>
               </table>
