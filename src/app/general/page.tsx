@@ -207,7 +207,7 @@ const ESTADO_FACES = [
 
 function EstadoClientes() {
   const rows = useLeadsStore((s) => s.rows);
-  const clientes = useMemo(() => rows.filter(r => r.tab === "CLIENTES"), [rows]);
+  const clientes = useMemo(() => rows.filter(r => r.tab === "CLIENTES" && r.activo !== false), [rows]);
 
   const avgIdx = useMemo(() => {
     if (clientes.length === 0) return 1;
