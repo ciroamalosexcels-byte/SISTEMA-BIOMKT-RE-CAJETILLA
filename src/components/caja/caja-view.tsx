@@ -36,8 +36,8 @@ function SumCard({ title, amount, color, sub }: { title: string; amount: React.R
 
 const thCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-3 py-[7px] text-left border-b border-slate-200 whitespace-nowrap";
 const tdCls = "px-3 py-2 text-[12px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle";
-const movThCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-2 py-[5px] text-left border-b border-slate-200 whitespace-nowrap";
-const movTdCls = "px-2 py-[5px] text-[11px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle";
+const movThCls = "bg-[#f8fafc] text-[10px] font-black tracking-[0.02em] uppercase text-slate-400 px-[6px] py-[5px] text-left border-b border-slate-200 whitespace-nowrap";
+const movTdCls = "px-[6px] py-[5px] text-[11px] font-[600] text-[#374151] border-b border-[#f1f5f9] align-middle whitespace-nowrap";
 const addBtnCls = "flex items-center gap-[6px] px-[14px] py-[9px] text-[11px] font-black tracking-[0.02em] uppercase border-none cursor-pointer w-full text-left font-sans border-t border-[#fde68a]";
 
 function EntradaBadge() {
@@ -181,16 +181,7 @@ export function CajaView() {
               <span className="text-[16px] font-black" style={{ color: "#d97706" }}>$1.890.000</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
-                <colgroup>
-                  <col style={{ width: 46 }} />
-                  <col style={{ width: 120 }} />
-                  <col style={{ width: 82 }} />
-                  <col style={{ width: 88 }} />
-                  <col style={{ width: 72 }} />
-                  <col style={{ width: 70 }} />
-                  <col style={{ width: 84 }} />
-                </colgroup>
+              <table className="w-full border-collapse">
                 <thead>
                   <tr>
                     {["Día","Concepto","Tipo","Monto","Detalle","Medio","Saldo"].map(h => <th key={h} className={movThCls}>{h}</th>)}
@@ -207,10 +198,10 @@ export function CajaView() {
                   ].map((r, i) => (
                     <tr key={i} className="hover:bg-[#fafafa]">
                       <td className={movTdCls} style={{ color: "#94a3b8" }}>{r.day}</td>
-                      <td className={`${movTdCls} truncate`}>{r.concepto}</td>
+                      <td className={movTdCls}>{r.concepto}</td>
                       <td className={movTdCls}>{r.tipo === "entrada" ? <EntradaBadge /> : <SalidaBadge />}</td>
-                      <td className={`${movTdCls} font-black whitespace-nowrap`} style={{ color: r.tipo === "entrada" ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
-                      <td className={`${movTdCls} truncate`} style={{ color: "#64748b" }}>{r.detalle}</td>
+                      <td className={`${movTdCls} font-black`} style={{ color: r.tipo === "entrada" ? "#16a34a" : "#dc2626" }}>{r.monto}</td>
+                      <td className={movTdCls} style={{ color: "#64748b" }}>{r.detalle}</td>
                       <td className={movTdCls}>{r.medio === "tf" ? <TfBadge /> : <EfBadge />}</td>
                       <td className={`${movTdCls} font-black whitespace-nowrap`} style={{ color: "#d97706" }}>{r.saldo}</td>
                     </tr>
