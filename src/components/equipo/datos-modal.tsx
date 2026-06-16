@@ -25,6 +25,7 @@ export function DatosModal({ member, onClose, onSave }: Props) {
   const [sueno, setSueno] = useState(member.sueno ?? "");
   const [roles, setRoles] = useState(member.roles ?? "");
   const [horarios, setHorarios] = useState(member.horarios ?? "");
+  const [sueldo, setSueldo] = useState(member.sueldo ?? "");
   const [mail, setMail] = useState(member.mail ?? "");
   const [direccion, setDireccion] = useState(member.direccion ?? "");
   const [notas, setNotas] = useState(member.notas ?? "");
@@ -44,6 +45,7 @@ export function DatosModal({ member, onClose, onSave }: Props) {
       sueno,
       roles,
       horarios,
+      sueldo,
       mail,
       direccion,
       notas,
@@ -106,6 +108,9 @@ export function DatosModal({ member, onClose, onSave }: Props) {
 
             {/* Roles */}
             <input className="field" type="text" placeholder="Roles" value={roles} onChange={(e) => setRoles(e.target.value)} />
+
+            {/* Sueldo */}
+            <input className="field" type="text" placeholder="Sueldo (ej: $800.000)" value={sueldo} onChange={(e) => setSueldo(e.target.value)} />
 
             {/* Mail */}
             <input className="field" type="email" placeholder="Mail" value={mail} onChange={(e) => setMail(e.target.value)} />

@@ -6,7 +6,6 @@ import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
 import { currentMonthBA } from "@/lib/dates";
 import { WelcomeAreaChart } from "@/components/ui/welcome-area-chart";
-import { STATUS91_ITEMS } from "@/lib/constants";
 
 const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -237,33 +236,63 @@ function EstadoClientes() {
   );
 }
 
-/* ── Estado del Líder ────────────────────────────────────────────── */
+/* ── Equipo ──────────────────────────────────────────────────────── */
 
-function LiderBloque() {
+function EquipoBloque() {
   const members = useTeamStore((s) => s.members);
-  const lider = members.find((m) => /l[ií]der/i.test(m.roles ?? ""));
 
-  if (!lider) return (
-    <Card title="Estado del Líder">
-      <div className="flex-1 flex items-center justify-center p-8 text-[13px] text-slate-300 dark:text-slate-600">
-        Sin líder asignado en el equipo
-      </div>
-    </Card>
-  );
-
-  const S91_SCORE: Record<string, number> = { red: 0, yellow: 1, green: 2, lime: 3 };
-  const S91_COLOR = ["#ff1616", "#ffc21a", "#157a4d", "#52ff00"];
-  const s91Vals = STATUS91_ITEMS.map(k => lider.status91?.[k] ?? "").filter(v => v in S91_SCORE);
-  const avgColor = s91Vals.length === 0 ? "#d1d5db" : (() => {
-    const avg = s91Vals.reduce((sum, v) => sum + S91_SCORE[v], 0) / s91Vals.length;
-    return S91_COLOR[Math.round(avg)];
-  })();
+  const sorted = [...members].sort((a, b) => {
+    const aLider = /l[ií]der/i.test(a.roles ?? "");
+    const bLider = /l[ií]der/i.test(b.roles ?? "");
+    if (aLider && !bLider) return -1;
+    if (!aLider && bLider) return 1;
+    return 0;
+  });
 
   return (
-    <Card title="Estado del Líder">
-      <div className="flex-1 flex flex-col items-center justify-center p-3 gap-2">
-        <div className="w-[88px] h-[88px] rounded-full shadow-lg" style={{ background: avgColor }} />
-        <span className="text-[31px] font-black text-slate-900 dark:text-white">{lider.nombre}</span>
+    <Card title="Equipo">
+      <div className="flex flex-col flex-1 divide-y divide-slate-100 dark:divide-white/[0.04]">
+        {sorted.length === 0 && (
+          <div className="flex-1 flex items-center justify-center p-8 text-[13px] text-slate-300 dark:text-slate-600">
+            Sin integrantes
+          </div>
+        )}
+        {sorted.map((m) => {
+          const isLider = /l[ií]der/i.test(m.roles ?? "");
+          return (
+            <a
+              key={m.id}
+              href={`/equipo/${m.id}`}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors no-underline group"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-black text-slate-900 dark:text-white truncate">
+                    {m.nombre}
+                  </span>
+                  {isLider && (
+                    <span className="text-[9px] font-black uppercase tracking-[0.06em] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "#f6bf2620", color: "#d97706" }}>
+                      Líder
+                    </span>
+                  )}
+                </div>
+                {m.roles && (
+                  <div className="text-[10px] font-[600] text-slate-400 dark:text-slate-500 truncate mt-0.5">{m.roles}</div>
+                )}
+              </div>
+              {m.horarios && (
+                <div className="text-[10px] font-[600] text-slate-400 dark:text-slate-500 truncate max-w-[90px] text-right hidden sm:block">
+                  {m.horarios}
+                </div>
+              )}
+              {m.sueldo && (
+                <div className="text-[12px] font-black text-amber-600 dark:text-amber flex-shrink-0 whitespace-nowrap">
+                  {m.sueldo}
+                </div>
+              )}
+            </a>
+          );
+        })}
       </div>
     </Card>
   );
@@ -515,7 +544,7 @@ export default function GeneralPage() {
           <ResumenCaja />
           <ClientesTicket />
           <EstadoClientes />
-          <LiderBloque />
+          <EquipoBloque />
         </div>
         <GraficoCrecimiento />
         <FaroMetaObjetivo />

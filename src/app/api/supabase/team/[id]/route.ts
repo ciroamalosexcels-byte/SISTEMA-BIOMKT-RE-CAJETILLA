@@ -24,6 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     equipo:           str(body.equipo),
     roles:            str(body.roles),
     horarios:         str(body.horarios),
+    sueldo:           str(body.sueldo),
     sueno:            str(body.sueno),
     telefono:         str(body.telefono),
     mail:             str(body.mail),
@@ -35,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     badges:           Array.isArray(body.badges) ? body.badges : [],
   };
 
-  const { error } = await admin.from("team_members").update(row).eq("id", id);
+  const { error } = await admin.from("team_members").update(row as any).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

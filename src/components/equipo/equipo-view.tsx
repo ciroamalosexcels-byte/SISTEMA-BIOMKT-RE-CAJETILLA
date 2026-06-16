@@ -154,7 +154,14 @@ function MemberCard({
     <div className="team-member" onClick={onClick}>
       <div className="team-member-head">
         <div>
-          <div className="team-member-name">{member.nombre}</div>
+          <div className="team-member-name flex items-center gap-2">
+            {member.nombre}
+            {member.sueldo && (
+              <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
+                {member.sueldo}
+              </span>
+            )}
+          </div>
           <div className="team-member-meta">
             Asignado en {closings} lead{closings !== 1 ? "s" : ""}
           </div>

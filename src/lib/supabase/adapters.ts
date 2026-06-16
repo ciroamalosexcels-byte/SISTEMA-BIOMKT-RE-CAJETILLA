@@ -42,7 +42,7 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     activo: row.activo,
     ticket: (row as any).ticket ?? undefined,
     claveEmail: (row as any).clave_email ?? undefined,
-    clientOrder: (row as any).client_order ?? undefined,
+    clientOrder: row.client_order ?? undefined,
     // clave no se mapea desde DB — se gestiona via Vault (clave_secret_id)
   };
 }
@@ -75,6 +75,7 @@ export function adaptTeamMember(
     equipo: row.equipo ?? undefined,
     roles: row.roles ?? undefined,
     horarios: row.horarios ?? undefined,
+    sueldo: (row as any).sueldo ?? undefined,
     sueno: row.sueno ?? undefined,
     telefono: row.telefono ?? undefined,
     mail: row.mail ?? undefined,
