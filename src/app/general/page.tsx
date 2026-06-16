@@ -90,6 +90,13 @@ function ResumenCaja() {
 /* ── Clientes + Ticket ───────────────────────────────────────────── */
 const TICKET_STORAGE  = "biomarketing_ticket_v1";
 const OBJETIVO_CLI_STORAGE = "biomarketing_objetivo_clientes_v1";
+const ESTADO_FACES = [
+  { emoji: "😄", label: "Excelente", color: "#22c55e", bg: "#dcfce7" },
+  { emoji: "😊", label: "Bien",      color: "#3b82f6", bg: "#dbeafe" },
+  { emoji: "😐", label: "Regular",   color: "#f59e0b", bg: "#fef9c3" },
+  { emoji: "😟", label: "Mal",       color: "#f97316", bg: "#ffedd5" },
+  { emoji: "😢", label: "Muy mal",   color: "#ef4444", bg: "#fee2e2" },
+];
 
 function ClientesTicket() {
   const rows    = useLeadsStore((s) => s.rows);
@@ -191,20 +198,34 @@ function ClientesTicket() {
             </div>
           </div>
         </div>
+        {/* Estado de clientes */}
+        {(() => {
+          if (clientesRows.length === 0) return null;
+          let total = 0;
+          clientesRows.forEach(c => {
+            try {
+              const v = localStorage.getItem(`biomarketing_client_estado_${c.id}`);
+              total += v !== null ? Number(v) : 1;
+            } catch { total += 1; }
+          });
+          const avgIdx = Math.round(total / clientesRows.length);
+          const e = ESTADO_FACES[avgIdx] ?? ESTADO_FACES[1];
+          return (
+            <div className="flex items-center justify-between pl-5 pr-5 py-[9px]" style={{ background: `${e.bg}30` }}>
+              <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.06em]">Estado de clientes</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] leading-none">{e.emoji}</span>
+                <span className="text-[12px] font-black" style={{ color: e.color }}>{e.label}</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </Card>
   );
 }
 
 /* ── Estado de Clientes ──────────────────────────────────────────── */
-const ESTADO_FACES = [
-  { emoji: "😄", label: "Excelente", color: "#22c55e", bg: "#dcfce7" },
-  { emoji: "😊", label: "Bien",      color: "#3b82f6", bg: "#dbeafe" },
-  { emoji: "😐", label: "Regular",   color: "#f59e0b", bg: "#fef9c3" },
-  { emoji: "😟", label: "Mal",       color: "#f97316", bg: "#ffedd5" },
-  { emoji: "😢", label: "Muy mal",   color: "#ef4444", bg: "#fee2e2" },
-];
-
 function EstadoClientes() {
   const rows = useLeadsStore((s) => s.rows);
   const clientes = useMemo(() => rows.filter(r => r.tab === "CLIENTES" && r.activo !== false), [rows]);
