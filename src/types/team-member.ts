@@ -19,6 +19,7 @@ export interface TeamMember {
   roles?: string;
   horarios?: string;
   sueldo?: string;
+  activo?: boolean;
   sueno?: string;
   telefono?: string;
   mail?: string;

@@ -76,6 +76,7 @@ export function adaptTeamMember(
     roles: row.roles ?? undefined,
     horarios: row.horarios ?? undefined,
     sueldo: (row as any).sueldo ?? undefined,
+    activo: (row as any).activo ?? true,
     sueno: row.sueno ?? undefined,
     telefono: row.telefono ?? undefined,
     mail: row.mail ?? undefined,

@@ -6,6 +6,7 @@ import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
 import { currentMonthBA } from "@/lib/dates";
 import { WelcomeAreaChart } from "@/components/ui/welcome-area-chart";
+import { STATUS91_ITEMS } from "@/lib/constants";
 
 const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -238,16 +239,28 @@ function EstadoClientes() {
 
 /* ── Equipo ──────────────────────────────────────────────────────── */
 
+const S91_SCORE: Record<string, number> = { red: 0, yellow: 1, green: 2, lime: 3 };
+const S91_COLOR = ["#ff1616", "#ffc21a", "#157a4d", "#52ff00"];
+
+function s91Color(member: ReturnType<typeof useTeamStore.getState>["members"][0]): string {
+  const vals = STATUS91_ITEMS.map((k) => S91_SCORE[member.status91?.[k] ?? ""] ?? -1).filter((v) => v >= 0);
+  if (vals.length === 0) return "#94a3b8";
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return S91_COLOR[Math.round(avg)] ?? "#94a3b8";
+}
+
 function EquipoBloque() {
   const members = useTeamStore((s) => s.members);
 
-  const sorted = [...members].sort((a, b) => {
-    const aLider = /l[ií]der/i.test(a.roles ?? "");
-    const bLider = /l[ií]der/i.test(b.roles ?? "");
-    if (aLider && !bLider) return -1;
-    if (!aLider && bLider) return 1;
-    return 0;
-  });
+  const sorted = [...members]
+    .filter((m) => m.activo !== false)
+    .sort((a, b) => {
+      const aLider = /l[ií]der/i.test(a.roles ?? "");
+      const bLider = /l[ií]der/i.test(b.roles ?? "");
+      if (aLider && !bLider) return -1;
+      if (!aLider && bLider) return 1;
+      return 0;
+    });
 
   return (
     <Card title="Equipo">
@@ -258,28 +271,29 @@ function EquipoBloque() {
           </div>
         )}
         {sorted.map((m) => {
-          const isLider = /l[ií]der/i.test(m.roles ?? "");
+          const dotColor = s91Color(m);
           return (
             <a
               key={m.id}
               href={`/equipo/${m.id}`}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors no-underline group"
             >
+              {/* Punto 9.1 */}
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: dotColor }} />
+
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[13px] font-black text-slate-900 dark:text-white truncate">
                     {m.nombre}
                   </span>
-                  {isLider && (
-                    <span className="text-[9px] font-black uppercase tracking-[0.06em] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "#f6bf2620", color: "#d97706" }}>
-                      Líder
+                  {m.roles && (
+                    <span className="text-[9px] font-black uppercase tracking-[0.06em] px-1.5 py-0.5 rounded-full flex-shrink-0 bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400">
+                      {m.roles}
                     </span>
                   )}
                 </div>
-                {m.roles && (
-                  <div className="text-[10px] font-[600] text-slate-400 dark:text-slate-500 truncate mt-0.5">{m.roles}</div>
-                )}
               </div>
+
               {m.horarios && (
                 <div className="text-[10px] font-[600] text-slate-400 dark:text-slate-500 truncate max-w-[90px] text-right hidden sm:block">
                   {m.horarios}

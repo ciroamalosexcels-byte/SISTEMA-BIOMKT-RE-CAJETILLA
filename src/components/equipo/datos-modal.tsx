@@ -15,9 +15,10 @@ interface Props {
   member: TeamMember;
   onClose: () => void;
   onSave: (patch: Partial<TeamMember>) => void;
+  onToggleActivo?: () => void;
 }
 
-export function DatosModal({ member, onClose, onSave }: Props) {
+export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
   const [nombre, setNombre] = useState(member.nombre);
   const [fechaNacimiento, setFechaNacimiento] = useState(member.fechaNacimiento ?? "");
   const [equipo, setEquipo] = useState(member.equipo ?? "");
@@ -151,6 +152,16 @@ export function DatosModal({ member, onClose, onSave }: Props) {
         <div className="modal-footer">
           <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
           <button className="btn btn-amber" type="button" onClick={handleSave}>Guardar</button>
+          {onToggleActivo && (
+            <button
+              className="btn btn-outline ml-auto"
+              type="button"
+              style={(member.activo ?? true) ? { color: "#64748b" } : { color: "#16a34a", borderColor: "#16a34a" }}
+              onClick={() => { onToggleActivo(); onClose(); }}
+            >
+              {(member.activo ?? true) ? "Marcar inactivo" : "Marcar activo"}
+            </button>
+          )}
         </div>
       </div>
     </div>

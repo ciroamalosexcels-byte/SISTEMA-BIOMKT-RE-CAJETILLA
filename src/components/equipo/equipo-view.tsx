@@ -142,16 +142,19 @@ function MemberCard({
   closings,
   onClick,
   onDelete,
+  onToggleActivo,
 }: {
   member: TeamMember;
   closings: number;
   onClick: () => void;
   onDelete: () => void;
+  onToggleActivo: () => void;
 }) {
   const { settings } = useAppSettings();
+  const isActivo = member.activo !== false;
 
   return (
-    <div className="team-member" onClick={onClick}>
+    <div className="team-member" onClick={onClick} style={!isActivo ? { opacity: 0.6 } : undefined}>
       <div className="team-member-head">
         <div>
           <div className="team-member-name flex items-center gap-2">
@@ -166,16 +169,23 @@ function MemberCard({
             Asignado en {closings} lead{closings !== 1 ? "s" : ""}
           </div>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (confirm(`¿Eliminar a ${member.nombre}?`)) onDelete();
-          }}
-          className="btn btn-sm btn-danger"
-          type="button"
-        >
-          Eliminar
-        </button>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={onToggleActivo}
+            className="btn btn-sm btn-outline"
+            type="button"
+            style={isActivo ? { color: "#64748b", fontSize: 11 } : { color: "#16a34a", borderColor: "#16a34a", fontSize: 11 }}
+          >
+            {isActivo ? "Inactivar" : "Activar"}
+          </button>
+          <button
+            onClick={() => { if (confirm(`¿Eliminar a ${member.nombre}?`)) onDelete(); }}
+            className="btn btn-sm btn-danger"
+            type="button"
+          >
+            Eliminar
+          </button>
+        </div>
       </div>
 
       <div className="badges">
@@ -203,6 +213,9 @@ export function EquipoView() {
   const { members, addMember, updateMember, deleteMember, save: teamSave } = useTeamStore();
   const [showAdd, setShowAdd] = useState(false);
 
+  const activos   = members.filter((m) => m.activo !== false);
+  const inactivos = members.filter((m) => m.activo === false);
+
   function closingsFor(nombre: string) {
     return rows.filter(
       (r) => r.tab === "CLIENTES" && (r.responsable1 === nombre || r.responsable2 === nombre)
@@ -220,6 +233,19 @@ export function EquipoView() {
     teamSave();
   }
 
+  function renderCard(m: TeamMember) {
+    return (
+      <MemberCard
+        key={m.id}
+        member={m}
+        closings={closingsFor(m.nombre)}
+        onClick={() => router.push(`/equipo/${m.id}`)}
+        onDelete={() => { deleteMember(m.id); teamSave(); }}
+        onToggleActivo={() => { updateMember(m.id, { activo: !(m.activo ?? true) }); teamSave(); }}
+      />
+    );
+  }
+
   return (
     <section className="team-card">
       <div className="team-top table-top">
@@ -232,16 +258,24 @@ export function EquipoView() {
         </button>
       </div>
       <div className="team-body">
-        {members.map((m) => (
-          <MemberCard
-            key={m.id}
-            member={m}
-            closings={closingsFor(m.nombre)}
-            onClick={() => router.push(`/equipo/${m.id}`)}
-            onDelete={() => { deleteMember(m.id); teamSave(); }}
-          />
-        ))}
+        {activos.map(renderCard)}
       </div>
+
+      {inactivos.length > 0 && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "18px 20px 10px" }}>
+            <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+              Inactivos · {inactivos.length}
+            </span>
+            <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
+          </div>
+          <div className="team-body">
+            {inactivos.map(renderCard)}
+          </div>
+        </>
+      )}
+
       {showAdd && (
         <DatosModal
           member={EMPTY_MEMBER}

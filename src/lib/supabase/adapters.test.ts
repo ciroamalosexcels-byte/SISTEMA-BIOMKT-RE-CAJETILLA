@@ -85,6 +85,7 @@ describe("adaptLead", () => {
     expect(lead.proximoSeguimientoFecha).toBe("2024-06-08");
     expect(lead.meetingDatetime).toBe("2024-06-10T15:00:00Z");
     expect(lead.planId).toBe("plan-uuid");
+    expect(lead.clientOrder).toBeUndefined();
   });
 
   it("usa stage_id → stageMap con fallback a sheet_stage cuando la etapa no está en el mapa", () => {
@@ -103,7 +104,7 @@ describe("adaptLead", () => {
       "email", "instagram", "rubro", "servicio", "source", "mesEntrada",
       "objetivos", "planAudiovisual", "cumpleanos", "cumpleanos2",
       "proximoSeguimientoDias", "proximoSeguimientoFecha",
-      "meetingDatetime", "planId",
+      "meetingDatetime", "planId", "clientOrder",
     ];
 
     // Campos intencionalmente excluidos del adapter (gestionados por fuera de la DB normal)

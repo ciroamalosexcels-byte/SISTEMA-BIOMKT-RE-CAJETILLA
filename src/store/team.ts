@@ -85,6 +85,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
   deleteMember(id) {
     set((s) => ({ members: s.members.filter((m) => m.id !== id), dirty: true }));
     storage.setTeam(get().members);
+    supabase(`/api/supabase/team/${id}`, "DELETE", {});
   },
 
   awardBadge(id, badge) {
