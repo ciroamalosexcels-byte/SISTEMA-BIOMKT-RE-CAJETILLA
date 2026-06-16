@@ -596,6 +596,11 @@ export function DashboardView() {
 
   const monthShort = MONTH_NAMES[mo - 1]?.slice(0, 3) ?? "";
   const cats = dailySeries.map((d) => d.label);
+  const DIAS_ES = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const tooltipLabelsMensual = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = new Date(y, mo - 1, i + 1);
+    return `${DIAS_ES[d.getDay()]} ${i + 1}`;
+  });
 
   // ── Conversión
   const convR1 = monthContacts  > 0 ? Math.round((monthMeetings / monthContacts)  * 100) : 0;
@@ -702,6 +707,7 @@ export function DashboardView() {
         reuniones={dailySeries.map((d) => d.reuniones)}
         cierres={dailySeries.map((d) => d.clientes)}
         dark={dark}
+        tooltipLabels={tooltipLabelsMensual}
       />
     ),
 

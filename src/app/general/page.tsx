@@ -295,6 +295,11 @@ function GraficoCrecimiento() {
   }), [rows, selectedMonth, days]); // eslint-disable-line
 
   const cats = Array.from({ length: days }, (_, i) => String(i + 1));
+  const DIAS_ES = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const tooltipLabels = Array.from({ length: days }, (_, i) => {
+    const d = new Date(y, (mo ?? 1) - 1, i + 1);
+    return `${DIAS_ES[d.getDay()]} ${i + 1}`;
+  });
 
   const selector = (
     <div className="flex items-center gap-2">
@@ -316,6 +321,7 @@ function GraficoCrecimiento() {
       cierres={daily.map(d => d.cierres)}
       dark={dark}
       actions={selector}
+      tooltipLabels={tooltipLabels}
     />
   );
 }

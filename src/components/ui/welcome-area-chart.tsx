@@ -12,11 +12,12 @@ function getChart() {
 }
 
 export function WelcomeAreaChart({
-  categories, contactos, reuniones, cierres, title, dark, actions,
+  categories, contactos, reuniones, cierres, title, dark, actions, tooltipLabels,
 }: {
   categories: string[]; contactos: number[]; reuniones: number[];
   cierres: number[]; title: string; dark: boolean;
   actions?: React.ReactNode;
+  tooltipLabels?: string[];
 }) {
   const maxVal = Math.max(...contactos, ...reuniones, ...cierres, 1);
 
@@ -69,7 +70,10 @@ export function WelcomeAreaChart({
       theme: dark ? "dark" : "light",
       shared: true,
       intersect: false,
-      x: { formatter: (v: string | number) => `Día ${v}` },
+      x: {
+        formatter: (v: string | number, opts?: { dataPointIndex?: number }) =>
+          tooltipLabels?.[opts?.dataPointIndex ?? -1] ?? `Día ${v}`,
+      },
     },
   };
 
