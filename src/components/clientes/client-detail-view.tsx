@@ -787,10 +787,13 @@ function EditContentModal({ event, memberNames, onSave, onClose }: {
 const QUICK_LOAD_PROMPT = (raw: string, today: string) => `Hoy es ${today}. Tenés el siguiente contenido de un cliente de marketing digital. Necesito que lo dividas en piezas de contenido individuales y formatees el resultado como un JSON array.
 
 Cada objeto del array debe tener EXACTAMENTE estos campos (usá "" para los que no tengan valor):
-- "titulo": título corto y descriptivo del contenido
+- "titulo": descripción corta y específica de QUÉ se va a publicar. MUY IMPORTANTE:
+    · NUNCA uses el nombre del negocio o cliente como título. Los nombres de negocios son 1 o 2 palabras (ej: "Bois", "La Esquina", "Mila's"), NO son títulos de contenido.
+    · El título debe describir el tema del post, por ejemplo: "Oferta de milanesas", "Especial bois de pollo", "15% off en efectivo", "Tapeo sin vergüenza"
+    · Si no encontrás un tema específico, inventá uno descriptivo basado en el contenido
 - "tipo": uno de estos valores EXACTOS: "CARRUSEL", "REEL", "PLACA", "HISTORIA" (o "" si no aplica)
 - "estado": uno de estos valores EXACTOS: "SIN EDITAR", "EDITANDO", "COMPLETO", "CALENDARIZADO" (usá "SIN EDITAR" por defecto)
-- "scheduledDate": fecha y hora en formato "YYYY-MM-DDTHH:mm" — MUY IMPORTANTE: detectá cualquier mención de fecha u hora en el texto y convertila. Ejemplos:
+- "scheduledDate": fecha y hora en formato "YYYY-MM-DDTHH:mm" — detectá cualquier mención de fecha u hora en el texto y convertila. Ejemplos:
     · "mediodía" o "12hs" → T12:00
     · "merienda" o "16hs" o "a la tarde" → T16:00
     · "mañana temprano" o "desayuno" o "9hs" → T09:00
@@ -825,11 +828,13 @@ function QuickLoadModal({
   onAdd: (events: Omit<ContentEvent, "id" | "order">[]) => void;
   onClose: () => void;
 }) {
-  const [raw, setRaw]       = useState("");
-  const [json, setJson]     = useState("");
-  const [copied, setCopied] = useState(false);
-  const [parseErr, setErr]  = useState("");
+  const [raw, setRaw]         = useState("");
+  const [json, setJson]       = useState("");
+  const [copied, setCopied]   = useState(false);
+  const [parseErr, setErr]    = useState("");
   const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[]>([]);
+  const [encargado, setEncargado] = useState(defaultAssignee ?? "");
+  const [defaultDate, setDefaultDate] = useState("");
 
   /* ── helpers para editar preview ──────────────────────────────── */
   function updateRow(idx: number, patch: Partial<Omit<ContentEvent, "id" | "order">>) {
@@ -846,13 +851,13 @@ function QuickLoadModal({
       setErr("");
       setPreview(arr.map((item: Record<string, unknown>) => ({
         clientId,
-        title:         String(item.titulo ?? item.title ?? "Sin título").trim() || "Sin título",
+        title:         String(item.titulo ?? item.title ?? "").trim() || "",
         type:          (["CARRUSEL","REEL","PLACA","HISTORIA"].includes(String(item.tipo ?? item.type ?? ""))
                          ? String(item.tipo ?? item.type ?? "") : "") as ContentEvent["type"],
         status:        (["SIN EDITAR","EDITANDO","COMPLETO","CALENDARIZADO"].includes(String(item.estado ?? item.status ?? ""))
                          ? String(item.estado ?? item.status ?? "SIN EDITAR") : "SIN EDITAR") as ContentEvent["status"],
-        scheduledDate: String(item.scheduledDate ?? "").trim() || undefined,
-        assignee:      String(item.assignee ?? "").trim() || defaultAssignee || undefined,
+        scheduledDate: String(item.scheduledDate ?? "").trim() || defaultDate || undefined,
+        assignee:      String(item.assignee ?? "").trim() || encargado.trim() || undefined,
         frase:         String(item.frase ?? "").trim() || undefined,
         notes:         String(item.notes ?? "").trim() || undefined,
         objetivo:      String(item.objetivo ?? "").trim() || undefined,
@@ -862,7 +867,7 @@ function QuickLoadModal({
       setErr("JSON inválido — revisá que la respuesta de la IA sea un array correcto.");
       setPreview([]);
     }
-  }, [json]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [json, encargado, defaultDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function copyPrompt() {
     if (!raw.trim()) return;
@@ -885,6 +890,30 @@ function QuickLoadModal({
         </div>
 
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16, overflowY: "auto", maxHeight: "calc(92vh - 130px)" }}>
+
+          {/* Encargado + Fecha por defecto */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "12px 14px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>¿Quién carga?</label>
+              <input
+                className="field"
+                style={{ fontSize: 13 }}
+                value={encargado}
+                onChange={e => setEncargado(e.target.value)}
+                placeholder="Nombre (opcional)"
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha y hora por defecto</label>
+              <input
+                type="datetime-local"
+                className="field"
+                style={{ fontSize: 13 }}
+                value={defaultDate}
+                onChange={e => setDefaultDate(e.target.value)}
+              />
+            </div>
+          </div>
 
           {/* Paso 1 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
