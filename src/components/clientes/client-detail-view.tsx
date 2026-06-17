@@ -540,6 +540,8 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
     return `${initialDate}T00:00`;
   });
   const [objetivo, setObj]    = useState("");
+  const [frase, setFrase]     = useState("");
+  const [notes, setNotes]     = useState("");
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -549,13 +551,15 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
       assignee: assignee || undefined,
       scheduledDate: scheduled || undefined,
       objetivo: objetivo || undefined,
+      frase: frase || undefined,
+      notes: notes || undefined,
       done: false, timerSeconds: 0, timerRunning: false,
     });
   }
 
   return (
     <div className="modal-backdrop open" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Añadir contenido</h2>
           <button className="icon-btn" onClick={onClose}>✕</button>
@@ -564,6 +568,17 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
             <label className="field-label">Título *</label>
             <input autoFocus className="field" value={title} onChange={e => setTitle(e.target.value)} placeholder="Título del contenido…" required />
+          </div>
+          <div className="field-group">
+            <label className="field-label">Encargado</label>
+            <select className="field" value={assignee} onChange={e => setAss(e.target.value)}>
+              <option value="">—</option>
+              {memberNames.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+          <div className="field-group">
+            <label className="field-label">Fecha de publicación</label>
+            <input type="datetime-local" className="field" value={scheduled} onChange={e => setSched(e.target.value)} />
           </div>
           <div className="field-group">
             <label className="field-label">Tipo</label>
@@ -578,16 +593,13 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
               {CONTENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-          <div className="field-group">
-            <label className="field-label">Encargado</label>
-            <select className="field" value={assignee} onChange={e => setAss(e.target.value)}>
-              <option value="">—</option>
-              {memberNames.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Idea</label>
+            <input className="field" value={frase} onChange={e => setFrase(e.target.value)} placeholder="Idea del contenido…" />
           </div>
-          <div className="field-group">
-            <label className="field-label">Fecha de publicación</label>
-            <input type="datetime-local" className="field" value={scheduled} onChange={e => setSched(e.target.value)} />
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Feedback</label>
+            <input className="field" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Feedback…" />
           </div>
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
             <label className="field-label">Objetivo</label>
