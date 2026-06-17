@@ -104,7 +104,21 @@ function slotToDate(slot: string, year: number, month: number): string | undefin
   return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
 }
 
-type CalEvent = { id: string; scheduledDate?: string; type: string; title: string };
+type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string };
+
+const TYPE_ABBREV: Record<string, string> = {
+  CARRUSEL: "CAR",
+  REEL:     "REE",
+  PLACA:    "PLA",
+  HISTORIA: "HIS",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  "SIN EDITAR":    "#ef4444",
+  "EDITANDO":      "#f59e0b",
+  "COMPLETO":      "#3b82f6",
+  "CALENDARIZADO": "#22c55e",
+};
 
 /* ── Mini calendar ──────────────────────────────────────────────────── */
 function ClientCalendarCard({
@@ -160,11 +174,12 @@ function ClientCalendarCard({
               <span style={{ display: "inline-flex", width: 20, height: 20, alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: 10, fontWeight: 900, background: isToday ? "var(--dark)" : "transparent", color: isToday ? "#fff" : inMonth ? "#475569" : "#cbd5e1" }}>
                 {parseInt(date.slice(8))}
               </span>
-              {dayEvs.slice(0, 3).map(ev => {
-                const color = TYPE_COLOR[ev.type] ?? "#94a3b8";
+              {dayEvs.slice(0, 4).map(ev => {
+                const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
+                const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 3) || ev.title.slice(0, 3));
                 return (
-                  <div key={ev.id} title={ev.title} style={{ marginTop: 2, padding: "1px 4px", borderRadius: 5, borderLeft: `3px solid ${color}`, background: color + "18", fontSize: 9, fontWeight: 800, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {ev.type || ev.title}
+                  <div key={ev.id} title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`} style={{ marginTop: 2, padding: "1px 4px", borderRadius: 5, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 9, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {label}
                   </div>
                 );
               })}
