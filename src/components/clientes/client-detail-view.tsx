@@ -616,13 +616,23 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
 }
 
 /* ── Quick load modal ───────────────────────────────────────────────── */
-const QUICK_LOAD_PROMPT = (raw: string) => `Tenés el siguiente contenido de un cliente de marketing digital. Necesito que lo dividas en piezas de contenido individuales y formatees el resultado como un JSON array.
+const QUICK_LOAD_PROMPT = (raw: string, today: string) => `Hoy es ${today}. Tenés el siguiente contenido de un cliente de marketing digital. Necesito que lo dividas en piezas de contenido individuales y formatees el resultado como un JSON array.
 
 Cada objeto del array debe tener EXACTAMENTE estos campos (usá "" para los que no tengan valor):
 - "titulo": título corto y descriptivo del contenido
 - "tipo": uno de estos valores EXACTOS: "CARRUSEL", "REEL", "PLACA", "HISTORIA" (o "" si no aplica)
 - "estado": uno de estos valores EXACTOS: "SIN EDITAR", "EDITANDO", "COMPLETO", "CALENDARIZADO" (usá "SIN EDITAR" por defecto)
-- "scheduledDate": fecha y hora en formato "YYYY-MM-DDTHH:mm" (o "" si no hay fecha)
+- "scheduledDate": fecha y hora en formato "YYYY-MM-DDTHH:mm" — MUY IMPORTANTE: detectá cualquier mención de fecha u hora en el texto y convertila. Ejemplos:
+    · "mediodía" o "12hs" → T12:00
+    · "merienda" o "16hs" o "a la tarde" → T16:00
+    · "mañana temprano" o "desayuno" o "9hs" → T09:00
+    · "almuerzo" o "al mediodía" → T12:00
+    · "noche" o "después de las 20" → T20:00
+    · "tarde" sin hora exacta → T17:00
+    · Si hay día de la semana (ej: "el lunes", "el viernes") calculá la fecha exacta a partir de hoy (${today})
+    · Si hay fecha exacta como "15 de julio" o "15/07" usá el año actual o el próximo según corresponda
+    · Si hay fecha y hora, combiná ambas en "YYYY-MM-DDTHH:mm"
+    · Si no hay ninguna mención de fecha ni hora, dejá ""
 - "assignee": nombre del encargado (o "" si no hay)
 - "frase": idea principal o concepto del contenido
 - "notes": feedback, observaciones o notas (o "" si no hay)
@@ -638,10 +648,12 @@ ${raw}`;
 
 function QuickLoadModal({
   clientId,
+  defaultAssignee,
   onAdd,
   onClose,
 }: {
   clientId: string;
+  defaultAssignee?: string;
   onAdd: (events: Omit<ContentEvent, "id" | "order">[]) => void;
   onClose: () => void;
 }) {
@@ -651,9 +663,15 @@ function QuickLoadModal({
   const [parseErr, setErr]    = useState("");
   const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[] | null>(null);
 
+  function updatePreviewDate(idx: number, value: string) {
+    setPreview(prev => prev ? prev.map((ev, i) => i === idx ? { ...ev, scheduledDate: value || undefined } : ev) : prev);
+  }
+
   function copyPrompt() {
     if (!raw.trim()) return;
-    navigator.clipboard.writeText(QUICK_LOAD_PROMPT(raw.trim()))
+    const { year, month, day } = baParts();
+    const today = `${year}-${month}-${day}`;
+    navigator.clipboard.writeText(QUICK_LOAD_PROMPT(raw.trim(), today))
       .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
       .catch(() => {});
   }
@@ -674,7 +692,7 @@ function QuickLoadModal({
         status:        (["SIN EDITAR","EDITANDO","COMPLETO","CALENDARIZADO"].includes(String(item.estado ?? item.status ?? ""))
                          ? String(item.estado ?? item.status ?? "SIN EDITAR") : "SIN EDITAR") as ContentEvent["status"],
         scheduledDate: String(item.scheduledDate ?? "").trim() || undefined,
-        assignee:      String(item.assignee ?? "").trim() || undefined,
+        assignee:      String(item.assignee ?? "").trim() || defaultAssignee || undefined,
         frase:         String(item.frase ?? "").trim() || undefined,
         notes:         String(item.notes ?? "").trim() || undefined,
         objetivo:      String(item.objetivo ?? "").trim() || undefined,
@@ -761,17 +779,37 @@ function QuickLoadModal({
 
           {/* Preview */}
           {preview && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>
                 ✓ {preview.length} contenido{preview.length !== 1 ? "s" : ""} listo{preview.length !== 1 ? "s" : ""} para cargar
               </span>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto", border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 10, padding: "8px 12px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto", border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 12, padding: "10px 14px" }}>
                 {preview.map((ev, i) => (
-                  <div key={i} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontWeight: 900, color: "var(--amber)", flexShrink: 0 }}>#{i + 1}</span>
-                    <span style={{ fontWeight: 700, color: "#1e293b" }}>{ev.title}</span>
-                    {ev.type && <span style={{ fontSize: 10, background: "#f1f5f9", borderRadius: 6, padding: "1px 6px", color: "#64748b", fontWeight: 700 }}>{ev.type}</span>}
-                    {ev.scheduledDate && <span style={{ fontSize: 10, color: "#94a3b8" }}>{ev.scheduledDate.slice(0, 10)}</span>}
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: "var(--amber)", flexShrink: 0 }}>#{i + 1}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", flex: 1, minWidth: 80 }}>{ev.title}</span>
+                    {ev.type && (
+                      <span style={{ fontSize: 10, background: "#f1f5f9", borderRadius: 6, padding: "1px 6px", color: "#64748b", fontWeight: 700, flexShrink: 0 }}>
+                        {ev.type}
+                      </span>
+                    )}
+                    {ev.scheduledDate ? (
+                      <input
+                        type="datetime-local"
+                        value={ev.scheduledDate.includes("T") ? ev.scheduledDate.slice(0, 16) : `${ev.scheduledDate}T00:00`}
+                        onChange={e => updatePreviewDate(i, e.target.value)}
+                        style={{ fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 8, padding: "2px 6px", color: "#475569", background: "#f8fafc", flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, color: "#f97316", fontWeight: 700 }}>Sin fecha</span>
+                        <input
+                          type="datetime-local"
+                          onChange={e => updatePreviewDate(i, e.target.value)}
+                          style={{ fontSize: 11, border: "1px solid #fed7aa", borderRadius: 8, padding: "2px 6px", color: "#9a3412", background: "#fff7ed", flexShrink: 0 }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1088,6 +1126,7 @@ export function ClientDetailView({ clientId }: Props) {
       {showQuickLoad && (
         <QuickLoadModal
           clientId={clientId}
+          defaultAssignee={lead.responsable1 || undefined}
           onAdd={events => { events.forEach(ev => addContentEvent(ev)); }}
           onClose={() => setShowQuickLoad(false)}
         />
