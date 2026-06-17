@@ -178,6 +178,7 @@ function ContentRow({
   onTimerStart,
   onTimerStop,
   onTimerReset,
+  onOpenText,
 }: {
   event: ContentEvent;
   clients: { id: string; name: string }[];
@@ -188,20 +189,11 @@ function ContentRow({
   onTimerStart: () => void;
   onTimerStop: () => void;
   onTimerReset: () => void;
+  onOpenText: (field: "frase" | "notes", label: string) => void;
 }) {
   const statusClass = STATUS_ROW_CLASS[event.status] ?? "";
-  const [textModal, setTextModal] = useState<{ field: "frase" | "notes"; label: string } | null>(null);
 
   return (
-    <>
-    {textModal && (
-      <TextParagraphModal
-        label={textModal.label}
-        value={textModal.field === "frase" ? (event.frase ?? "") : (event.notes ?? "")}
-        onSave={(v) => onUpdate({ [textModal.field]: v })}
-        onClose={() => setTextModal(null)}
-      />
-    )}
     <tr style={{ height: rowHeight }} className={`${event.done ? "opacity-50" : ""} ${statusClass}`}>
 
       {/* timer */}
@@ -257,7 +249,7 @@ function ContentRow({
           type="button"
           className="cell-input"
           style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: event.frase ? "inherit" : "var(--slate-400, #94a3b8)" }}
-          onClick={() => setTextModal({ field: "frase", label: "Idea" })}
+          onClick={() => onOpenText("frase", "Idea")}
           title={event.frase ?? ""}
         >
           {event.frase || "Idea…"}
@@ -270,7 +262,7 @@ function ContentRow({
           type="button"
           className="cell-input"
           style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: event.notes ? "inherit" : "var(--slate-400, #94a3b8)" }}
-          onClick={() => setTextModal({ field: "notes", label: "Feedback" })}
+          onClick={() => onOpenText("notes", "Feedback")}
           title={event.notes ?? ""}
         >
           {event.notes || "Feedback…"}
@@ -287,7 +279,6 @@ function ContentRow({
         </div>
       </td>
     </tr>
-    </>
   );
 }
 
@@ -412,6 +403,7 @@ export function PlanificacionView() {
   const [showAdd, setShowAdd] = useState(false);
   const [monthKey, setMonthKey] = useState(planTodayKey);
   const [clickedDate, setClickedDate] = useState<string | undefined>(undefined);
+  const [textModal, setTextModal] = useState<{ eventId: string; field: "frase" | "notes"; label: string } | null>(null);
 
   const tableRef = useRef<HTMLTableElement>(null);
   const dragRef  = useRef<{
@@ -676,6 +668,7 @@ export function PlanificacionView() {
                   onTimerStart={() => handleTimerStart(ev.id)}
                   onTimerStop={() => handleTimerStop(ev)}
                   onTimerReset={() => handleTimerReset(ev.id)}
+                  onOpenText={(field, label) => setTextModal({ eventId: ev.id, field, label })}
                 />
               ))}
             </tbody>
@@ -692,6 +685,18 @@ export function PlanificacionView() {
           onClose={() => { setShowAdd(false); setClickedDate(undefined); }}
         />
       )}
+      {textModal && (() => {
+        const ev = contentEvents.find(e => e.id === textModal.eventId);
+        if (!ev) return null;
+        return (
+          <TextParagraphModal
+            label={textModal.label}
+            value={textModal.field === "frase" ? (ev.frase ?? "") : (ev.notes ?? "")}
+            onSave={(v) => updateContentEvent(textModal.eventId, { [textModal.field]: v })}
+            onClose={() => setTextModal(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
