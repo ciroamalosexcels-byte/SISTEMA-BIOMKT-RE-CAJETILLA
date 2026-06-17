@@ -199,9 +199,45 @@ function ClientCalendarCard({
   );
 }
 
+/* ── Text Paragraph Modal ───────────────────────────────────────────── */
+function TextParagraphModal({ label, value, onSave, onClose }: {
+  label: string; value: string;
+  onSave: (v: string) => void; onClose: () => void;
+}) {
+  const [text, setText] = useState(value);
+  return (
+    <div className="modal-backdrop open" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="modal" style={{ maxWidth: 540, width: "100%" }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">{label}</h2>
+          <button className="icon-btn" type="button" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div className="modal-body" style={{ padding: 20 }}>
+          <textarea
+            autoFocus
+            className="textarea"
+            style={{ width: "100%", minHeight: 160, resize: "vertical", fontSize: 14 }}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder={`Escribí el ${label.toLowerCase()}…`}
+          />
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" type="button" onClick={() => { onSave(text); onClose(); }}>Guardar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Content table row ──────────────────────────────────────────────── */
 function ContentRow({
-  ev, tick, rowHeight, memberNames, onUpdate, onDelete,
+  ev, tick, rowHeight, memberNames, onUpdate, onDelete, onOpenText,
 }: {
   ev: ContentEvent;
   tick: number;
@@ -209,6 +245,7 @@ function ContentRow({
   memberNames: string[];
   onUpdate: (p: Partial<ContentEvent>) => void;
   onDelete: () => void;
+  onOpenText: (field: "frase" | "notes", label: string) => void;
 }) {
   void tick;
   const secs    = getTimerSecs(ev);
@@ -261,10 +298,26 @@ function ContentRow({
         </select>
       </td>
       <td>
-        <input className="cell-input" value={ev.frase ?? ""} onChange={e => onUpdate({ frase: e.target.value })} placeholder="Idea…" />
+        <button
+          type="button"
+          className="cell-input"
+          style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: ev.frase ? "inherit" : "var(--slate-400, #94a3b8)" }}
+          onClick={() => onOpenText("frase", "Idea")}
+          title={ev.frase ?? ""}
+        >
+          {ev.frase || "Idea…"}
+        </button>
       </td>
       <td>
-        <input className="cell-input" value={ev.notes ?? ""} onChange={e => onUpdate({ notes: e.target.value })} placeholder="Feedback…" />
+        <button
+          type="button"
+          className="cell-input"
+          style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: ev.notes ? "inherit" : "var(--slate-400, #94a3b8)" }}
+          onClick={() => onOpenText("notes", "Feedback")}
+          title={ev.notes ?? ""}
+        >
+          {ev.notes || "Feedback…"}
+        </button>
       </td>
       <td>
         <div style={{ display: "flex", justifyContent: "center", padding: "0 6px" }}>
@@ -994,6 +1047,7 @@ export function ClientDetailView({ clientId }: Props) {
   const [showQuickLoad, setShowQuickLoad]   = useState(false);
   const [clickedDate, setClickedDate]       = useState<string | undefined>(undefined);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [textModal, setTextModal]           = useState<{ eventId: string; field: "frase" | "notes"; label: string } | null>(null);
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
 
@@ -1219,6 +1273,7 @@ export function ClientDetailView({ clientId }: Props) {
                         memberNames={memberNames}
                         onUpdate={p => updateContentEvent(ev.id, p)}
                         onDelete={() => deleteContentEvent(ev.id)}
+                        onOpenText={(field, label) => setTextModal({ eventId: ev.id, field, label })}
                       />
                     ))
                   )}
@@ -1265,6 +1320,18 @@ export function ClientDetailView({ clientId }: Props) {
             memberNames={memberNames}
             onSave={patch => { updateContentEvent(editingEventId, patch); setEditingEventId(null); }}
             onClose={() => setEditingEventId(null)}
+          />
+        );
+      })()}
+      {textModal && (() => {
+        const ev = contentEvents.find(e => e.id === textModal.eventId);
+        if (!ev) return null;
+        return (
+          <TextParagraphModal
+            label={textModal.label}
+            value={textModal.field === "frase" ? (ev.frase ?? "") : (ev.notes ?? "")}
+            onSave={v => updateContentEvent(textModal.eventId, { [textModal.field]: v })}
+            onClose={() => setTextModal(null)}
           />
         );
       })()}
