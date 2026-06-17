@@ -174,15 +174,17 @@ function ClientCalendarCard({
               <span style={{ display: "inline-flex", width: 20, height: 20, alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: 10, fontWeight: 900, background: isToday ? "var(--dark)" : "transparent", color: isToday ? "#fff" : inMonth ? "#475569" : "#cbd5e1" }}>
                 {parseInt(date.slice(8))}
               </span>
-              {dayEvs.slice(0, 4).map(ev => {
-                const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
-                const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 3) || ev.title.slice(0, 3));
-                return (
-                  <div key={ev.id} title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`} style={{ marginTop: 2, padding: "1px 4px", borderRadius: 5, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 9, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {label}
-                  </div>
-                );
-              })}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: 2 }}>
+                {dayEvs.slice(0, 6).map(ev => {
+                  const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
+                  const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 3) || ev.title.slice(0, 3));
+                  return (
+                    <div key={ev.id} title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`} style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {label}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
