@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLeadsStore } from "@/store/leads";
+import { useTeamStore } from "@/store/team";
 import { usePipelineStore } from "@/store/pipeline";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
@@ -61,7 +62,7 @@ function parseBlock(raw: string): ParsedLead {
   return {
     _key: Math.random().toString(36).slice(2),
     nombre, empresa,
-    fechaContacto: fechaContacto || new Date().toISOString().slice(0, 16),
+    fechaContacto: fechaContacto || "",
     direccion, observaciones: obs.join(" · "), telefono: "", accepted: true,
   };
 }
@@ -158,8 +159,12 @@ function parseWAContent(content: string, fechaContacto: string): ParsedLead | nu
   }
 
   const remaining = words.slice(empresaStart);
-  const { empresa, direccion } = splitEmpresaAddress(remaining);
-  const observaciones = [obsPart, ...phones.slice(1)].filter(Boolean).join(" · ");
+  const { empresa: empresaRaw, direccion } = splitEmpresaAddress(remaining);
+  // Los nombres de negocios suelen ser 1-3 palabras; el exceso va a observaciones
+  const empresaWords = empresaRaw.trim().split(/\s+/);
+  const empresa = empresaWords.slice(0, 3).join(" ");
+  const empresaExtra = empresaWords.slice(3).join(" ");
+  const observaciones = [empresaExtra, obsPart, ...phones.slice(1)].filter(Boolean).join(" · ");
 
   return {
     _key: Math.random().toString(36).slice(2),
@@ -232,11 +237,14 @@ export function CargaRapidaModal({ onClose }: Props) {
   const { addLead } = useLeadsStore();
   const stages      = usePipelineStore(s => s.stages);
   const crmStage    = stages.find(s => s.id === "CRM") ?? stages[0];
+  const memberNames = useTeamStore(s => s.members.filter(m => m.activo !== false).map(m => m.nombre));
 
-  const [step, setStep]       = useState<Step>("paste");
-  const [raw, setRaw]         = useState("");
-  const [leads, setLeads]     = useState<ParsedLead[]>([]);
-  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [step, setStep]             = useState<Step>("paste");
+  const [raw, setRaw]               = useState("");
+  const [leads, setLeads]           = useState<ParsedLead[]>([]);
+  const [editIdx, setEditIdx]       = useState<number | null>(null);
+  const [responsable, setResp]      = useState("");
+  const [defaultDate, setDefDate]   = useState("");
 
   function procesar() {
     const parsed = parseText(raw);
@@ -259,7 +267,8 @@ export function CargaRapidaModal({ onClose }: Props) {
         nombre: p.nombre, nombre2: "", empresa: p.empresa,
         observaciones: p.observaciones,
         telefono: p.telefono, telefono2: "",
-        responsable1: "", responsable2: "",
+        responsable1: responsable,
+        responsable2: "",
         direccion: p.direccion,
         empresaBio: "BIOMARKETING", medio: "PRESENCIAL",
         email: "", instagram: "", rubro: "", servicio: "",
@@ -269,7 +278,7 @@ export function CargaRapidaModal({ onClose }: Props) {
         activo: true, mesEntrada: "",
         cumpleanos: "", cumpleanos2: "", planId: "",
         proximoSeguimientoDias: 0,
-      }, crmStage?.id ?? "CRM");
+      }, crmStage?.id ?? "CRM", p.fechaContacto || defaultDate || undefined);
     });
     onClose();
   }
@@ -320,6 +329,31 @@ export function CargaRapidaModal({ onClose }: Props) {
                 {isWA && <span style={{ color: "#10b981", fontWeight: 600 }}>● formato WhatsApp</span>}
               </div>
             )}
+
+            {/* Responsable + fecha por defecto */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>¿Quién cargó estos contactos?</label>
+                <select
+                  className={inputCls}
+                  value={responsable}
+                  onChange={e => setResp(e.target.value)}
+                >
+                  <option value="">— sin especificar —</option>
+                  {memberNames.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha y hora por defecto</label>
+                <input
+                  type="datetime-local"
+                  className={inputCls}
+                  value={defaultDate}
+                  onChange={e => setDefDate(e.target.value)}
+                />
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>Se aplica solo a contactos sin fecha detectada</span>
+              </div>
+            </div>
           </div>
 
           <div className="modal-footer">

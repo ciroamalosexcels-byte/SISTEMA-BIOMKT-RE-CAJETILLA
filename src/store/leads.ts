@@ -14,7 +14,7 @@ interface LeadsStore {
   future: Lead[][];
   highlightLeadId: string | null;
   load: () => void;
-  addLead: (data: LeadFormData, tab: TabKey) => void;
+  addLead: (data: LeadFormData, tab: TabKey, fechaContactoOverride?: string) => void;
   updateLead: (id: string, patch: Partial<Lead>) => void;
   deleteLead: (id: string) => void;
   moveLeadTo: (id: string, tab: TabKey) => void;
@@ -77,9 +77,9 @@ export const useLeadsStore = create<LeadsStore>((set, get) => ({
     set({ rows });
   },
 
-  addLead(data, tab) {
+  addLead(data, tab, fechaContactoOverride?) {
     const { rows, past } = get();
-    const lead: Lead = { ...data, id: nextId(), tab, fechaContacto: nowDatetimeBA() };
+    const lead: Lead = { ...data, id: nextId(), tab, fechaContacto: fechaContactoOverride || nowDatetimeBA() };
     set({ rows: [...rows, lead], dirty: true, past: [...past.slice(-(MAX_HISTORY - 1)), rows], future: [] });
     storage.setLeads(get().rows);
     supabase("/api/supabase/leads", "POST", lead);
