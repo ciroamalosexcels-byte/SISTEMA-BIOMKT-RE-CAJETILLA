@@ -107,10 +107,10 @@ function slotToDate(slot: string, year: number, month: number): string | undefin
 type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string };
 
 const TYPE_ABBREV: Record<string, string> = {
-  CARRUSEL: "CAR",
-  REEL:     "REE",
-  PLACA:    "PLA",
-  HISTORIA: "HIS",
+  CARRUSEL: "CARR",
+  REEL:     "REEL",
+  PLACA:    "PLAC",
+  HISTORIA: "HIST",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -177,7 +177,7 @@ function ClientCalendarCard({
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: 2 }}>
                 {dayEvs.slice(0, 6).map(ev => {
                   const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
-                  const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 3) || ev.title.slice(0, 3));
+                  const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 4) || ev.title.slice(0, 4));
                   return (
                     <div key={ev.id} title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`} style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {label}
