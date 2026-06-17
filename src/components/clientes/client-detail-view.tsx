@@ -615,6 +615,186 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
   );
 }
 
+/* ── Quick load modal ───────────────────────────────────────────────── */
+const QUICK_LOAD_PROMPT = (raw: string) => `Tenés el siguiente contenido de un cliente de marketing digital. Necesito que lo dividas en piezas de contenido individuales y formatees el resultado como un JSON array.
+
+Cada objeto del array debe tener EXACTAMENTE estos campos (usá "" para los que no tengan valor):
+- "titulo": título corto y descriptivo del contenido
+- "tipo": uno de estos valores EXACTOS: "CARRUSEL", "REEL", "PLACA", "HISTORIA" (o "" si no aplica)
+- "estado": uno de estos valores EXACTOS: "SIN EDITAR", "EDITANDO", "COMPLETO", "CALENDARIZADO" (usá "SIN EDITAR" por defecto)
+- "scheduledDate": fecha y hora en formato "YYYY-MM-DDTHH:mm" (o "" si no hay fecha)
+- "assignee": nombre del encargado (o "" si no hay)
+- "frase": idea principal o concepto del contenido
+- "notes": feedback, observaciones o notas (o "" si no hay)
+- "objetivo": objetivo o meta del contenido (o "" si no hay)
+
+Reglas importantes:
+- Devolvé SOLO el JSON array, sin texto adicional, sin markdown, sin explicaciones
+- Si el contenido tiene múltiples piezas, hacé un objeto por cada una
+- Si parece un solo contenido, hacé un solo objeto
+
+CONTENIDO DEL CLIENTE:
+${raw}`;
+
+function QuickLoadModal({
+  clientId,
+  onAdd,
+  onClose,
+}: {
+  clientId: string;
+  onAdd: (events: Omit<ContentEvent, "id" | "order">[]) => void;
+  onClose: () => void;
+}) {
+  const [raw, setRaw]         = useState("");
+  const [json, setJson]       = useState("");
+  const [copied, setCopied]   = useState(false);
+  const [parseErr, setErr]    = useState("");
+  const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[] | null>(null);
+
+  function copyPrompt() {
+    if (!raw.trim()) return;
+    navigator.clipboard.writeText(QUICK_LOAD_PROMPT(raw.trim()))
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
+      .catch(() => {});
+  }
+
+  function parseJson() {
+    setErr("");
+    setPreview(null);
+    try {
+      const text = json.trim().replace(/^```[a-z]*\n?/, "").replace(/```$/, "").trim();
+      const arr = JSON.parse(text);
+      if (!Array.isArray(arr)) { setErr("La respuesta debe ser un JSON array [ ... ]"); return; }
+      const events: Omit<ContentEvent, "id" | "order">[] = arr.map((item: Record<string, unknown>) => ({
+        clientId,
+        title:         String(item.titulo ?? item.title ?? "Sin título").trim() || "Sin título",
+        tipo:          undefined,
+        type:          (["CARRUSEL","REEL","PLACA","HISTORIA"].includes(String(item.tipo ?? item.type ?? ""))
+                         ? String(item.tipo ?? item.type ?? "") : "") as ContentEvent["type"],
+        status:        (["SIN EDITAR","EDITANDO","COMPLETO","CALENDARIZADO"].includes(String(item.estado ?? item.status ?? ""))
+                         ? String(item.estado ?? item.status ?? "SIN EDITAR") : "SIN EDITAR") as ContentEvent["status"],
+        scheduledDate: String(item.scheduledDate ?? "").trim() || undefined,
+        assignee:      String(item.assignee ?? "").trim() || undefined,
+        frase:         String(item.frase ?? "").trim() || undefined,
+        notes:         String(item.notes ?? "").trim() || undefined,
+        objetivo:      String(item.objetivo ?? "").trim() || undefined,
+        done: false, timerSeconds: 0, timerRunning: false,
+      }));
+      setPreview(events);
+    } catch {
+      setErr("No se pudo parsear el JSON. Revisá que la respuesta de la IA sea un array válido.");
+    }
+  }
+
+  function confirm() {
+    if (preview) { onAdd(preview); onClose(); }
+  }
+
+  return (
+    <div className="modal-backdrop open" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 620, width: "96vw" }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Carga Rápida de Contenidos</h2>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 18, overflowY: "auto", maxHeight: "calc(92vh - 130px)" }}>
+
+          {/* Paso 1 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá el contenido que te pasó el cliente</span>
+            </div>
+            <textarea
+              className="textarea"
+              rows={6}
+              value={raw}
+              onChange={e => setRaw(e.target.value)}
+              placeholder="Pegá acá el documento, lista o párrafo con el contenido del cliente…"
+              style={{ resize: "vertical" }}
+            />
+            <button
+              type="button"
+              className="btn btn-amber btn-sm"
+              style={{ alignSelf: "flex-start" }}
+              onClick={copyPrompt}
+              disabled={!raw.trim()}
+            >
+              {copied ? "¡Prompt copiado!" : "Copiar prompt para IA"}
+            </button>
+            <span style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.4 }}>
+              Copiá el prompt, pegalo en ChatGPT, Claude, Gemini o cualquier IA junto al contenido del cliente, y obtené el JSON formateado.
+            </span>
+          </div>
+
+          {/* Divisor */}
+          <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+
+          {/* Paso 2 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>2</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá la respuesta de la IA</span>
+            </div>
+            <textarea
+              className="textarea"
+              rows={6}
+              value={json}
+              onChange={e => { setJson(e.target.value); setErr(""); setPreview(null); }}
+              placeholder='[ { "titulo": "Carrusel verano", "tipo": "CARRUSEL", ... } ]'
+              style={{ resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
+            />
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              style={{ alignSelf: "flex-start" }}
+              onClick={parseJson}
+              disabled={!json.trim()}
+            >
+              Verificar contenidos
+            </button>
+            {parseErr && (
+              <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{parseErr}</span>
+            )}
+          </div>
+
+          {/* Preview */}
+          {preview && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>
+                ✓ {preview.length} contenido{preview.length !== 1 ? "s" : ""} listo{preview.length !== 1 ? "s" : ""} para cargar
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto", border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 10, padding: "8px 12px" }}>
+                {preview.map((ev, i) => (
+                  <div key={i} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontWeight: 900, color: "var(--amber)", flexShrink: 0 }}>#{i + 1}</span>
+                    <span style={{ fontWeight: 700, color: "#1e293b" }}>{ev.title}</span>
+                    {ev.type && <span style={{ fontSize: 10, background: "#f1f5f9", borderRadius: 6, padding: "1px 6px", color: "#64748b", fontWeight: 700 }}>{ev.type}</span>}
+                    {ev.scheduledDate && <span style={{ fontSize: 10, color: "#94a3b8" }}>{ev.scheduledDate.slice(0, 10)}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="modal-footer">
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button
+            type="button"
+            className="btn btn-amber"
+            onClick={confirm}
+            disabled={!preview}
+          >
+            Cargar {preview ? preview.length : ""} contenido{preview && preview.length !== 1 ? "s" : ""}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main view ──────────────────────────────────────────────────────── */
 
 interface Props { clientId: string; }
@@ -649,8 +829,9 @@ export function ClientDetailView({ clientId }: Props) {
   /* state */
   const [monthKey, setMonthKey]     = useState(todayKey);
   const [search, setSearch] = useState("");
-  const [showAdd, setShowAdd]       = useState(false);
-  const [clickedDate, setClickedDate] = useState<string | undefined>(undefined);
+  const [showAdd, setShowAdd]           = useState(false);
+  const [showQuickLoad, setShowQuickLoad] = useState(false);
+  const [clickedDate, setClickedDate]   = useState<string | undefined>(undefined);
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
 
@@ -836,6 +1017,9 @@ export function ClientDetailView({ clientId }: Props) {
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
+                <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowQuickLoad(true)}>
+                  + Carga Rápida
+                </button>
                 <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowAdd(true)}>
                   + Añadir contenido
                 </button>
@@ -899,6 +1083,13 @@ export function ClientDetailView({ clientId }: Props) {
           initialDate={clickedDate}
           onAdd={ev => { addContentEvent(ev); setShowAdd(false); setClickedDate(undefined); }}
           onClose={() => { setShowAdd(false); setClickedDate(undefined); }}
+        />
+      )}
+      {showQuickLoad && (
+        <QuickLoadModal
+          clientId={clientId}
+          onAdd={events => { events.forEach(ev => addContentEvent(ev)); }}
+          onClose={() => setShowQuickLoad(false)}
         />
       )}
     </section>
