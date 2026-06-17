@@ -122,13 +122,14 @@ const STATUS_COLOR: Record<string, string> = {
 
 /* ── Mini calendar ──────────────────────────────────────────────────── */
 function ClientCalendarCard({
-  title, monthKey, onShift, contentEvents: cevs, onDayClick,
+  title, monthKey, onShift, contentEvents: cevs, onDayClick, onEventClick,
 }: {
   title: string;
   monthKey: string;
   onShift: (d: 1 | -1) => void;
   contentEvents: CalEvent[];
   onDayClick?: (date: string) => void;
+  onEventClick?: (id: string) => void;
 }) {
   const isContent = title.includes("CONTENIDO");
   const grid      = useMemo(() => buildGrid(monthKey), [monthKey]);
@@ -179,7 +180,12 @@ function ClientCalendarCard({
                   const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
                   const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 4) || ev.title.slice(0, 4));
                   return (
-                    <div key={ev.id} title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`} style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div
+                      key={ev.id}
+                      title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`}
+                      onClick={onEventClick ? e => { e.stopPropagation(); onEventClick(ev.id); } : undefined}
+                      style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: onEventClick ? "pointer" : "default" }}
+                    >
                       {label}
                     </div>
                   );
@@ -632,6 +638,98 @@ function AddContentModal({ clientId, memberNames, initialDate, onAdd, onClose }:
   );
 }
 
+/* ── Edit content modal ─────────────────────────────────────────────── */
+function EditContentModal({ event, memberNames, onSave, onClose }: {
+  event: ContentEvent;
+  memberNames: string[];
+  onSave: (patch: Partial<ContentEvent>) => void;
+  onClose: () => void;
+}) {
+  const [title,     setTitle]   = useState(event.title);
+  const [type,      setType]    = useState<ContentEvent["type"]>(event.type);
+  const [status,    setStatus]  = useState<ContentEvent["status"]>(event.status);
+  const [assignee,  setAss]     = useState(event.assignee ?? "");
+  const [scheduled, setSched]   = useState(
+    event.scheduledDate
+      ? (event.scheduledDate.includes("T") ? event.scheduledDate.slice(0, 16) : `${event.scheduledDate}T00:00`)
+      : ""
+  );
+  const [frase,   setFrase]   = useState(event.frase ?? "");
+  const [notes,   setNotes]   = useState(event.notes ?? "");
+  const [objetivo, setObj]    = useState(event.objetivo ?? "");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    onSave({
+      title: title.trim(),
+      type, status,
+      assignee:     assignee || undefined,
+      scheduledDate: scheduled || undefined,
+      frase:         frase || undefined,
+      notes:         notes || undefined,
+      objetivo:      objetivo || undefined,
+    });
+  }
+
+  return (
+    <div className="modal-backdrop open" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Editar contenido</h2>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        <form id="edit-content-form" onSubmit={submit} style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Título *</label>
+            <input autoFocus className="field" value={title} onChange={e => setTitle(e.target.value)} required />
+          </div>
+          <div className="field-group">
+            <label className="field-label">Encargado</label>
+            <select className="field" value={assignee} onChange={e => setAss(e.target.value)}>
+              <option value="">—</option>
+              {memberNames.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+          <div className="field-group">
+            <label className="field-label">Fecha de publicación</label>
+            <input type="datetime-local" className="field" value={scheduled} onChange={e => setSched(e.target.value)} />
+          </div>
+          <div className="field-group">
+            <label className="field-label">Tipo</label>
+            <select className="field" value={type} onChange={e => setType(e.target.value as ContentEvent["type"])}>
+              <option value="">—</option>
+              {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="field-group">
+            <label className="field-label">Estado</label>
+            <select className="field" value={status} onChange={e => setStatus(e.target.value as ContentEvent["status"])}>
+              {CONTENT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Idea</label>
+            <input className="field" value={frase} onChange={e => setFrase(e.target.value)} placeholder="Idea del contenido…" />
+          </div>
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Feedback</label>
+            <input className="field" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Feedback…" />
+          </div>
+          <div className="field-group" style={{ gridColumn: "1/-1" }}>
+            <label className="field-label">Objetivo</label>
+            <input className="field" value={objetivo} onChange={e => setObj(e.target.value)} placeholder="Objetivo del contenido…" />
+          </div>
+        </form>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="submit" form="edit-content-form" className="btn btn-amber">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Quick load modal ───────────────────────────────────────────────── */
 const QUICK_LOAD_PROMPT = (raw: string, today: string) => `Hoy es ${today}. Tenés el siguiente contenido de un cliente de marketing digital. Necesito que lo dividas en piezas de contenido individuales y formatees el resultado como un JSON array.
 
@@ -892,9 +990,10 @@ export function ClientDetailView({ clientId }: Props) {
   /* state */
   const [monthKey, setMonthKey]     = useState(todayKey);
   const [search, setSearch] = useState("");
-  const [showAdd, setShowAdd]           = useState(false);
-  const [showQuickLoad, setShowQuickLoad] = useState(false);
-  const [clickedDate, setClickedDate]   = useState<string | undefined>(undefined);
+  const [showAdd, setShowAdd]               = useState(false);
+  const [showQuickLoad, setShowQuickLoad]   = useState(false);
+  const [clickedDate, setClickedDate]       = useState<string | undefined>(undefined);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
 
@@ -1053,6 +1152,7 @@ export function ClientDetailView({ clientId }: Props) {
               onShift={d => setMonthKey(k => shiftMonth(k, d))}
               contentEvents={[...myContent, ...myPlanEvents]}
               onDayClick={date => { setClickedDate(date); setShowAdd(true); }}
+              onEventClick={id => setEditingEventId(id)}
             />
           </div>
       </div>
@@ -1156,6 +1256,18 @@ export function ClientDetailView({ clientId }: Props) {
           onClose={() => setShowQuickLoad(false)}
         />
       )}
+      {editingEventId && (() => {
+        const ev = contentEvents.find(e => e.id === editingEventId);
+        if (!ev) return null;
+        return (
+          <EditContentModal
+            event={ev}
+            memberNames={memberNames}
+            onSave={patch => { updateContentEvent(editingEventId, patch); setEditingEventId(null); }}
+            onClose={() => setEditingEventId(null)}
+          />
+        );
+      })()}
     </section>
   );
 }
