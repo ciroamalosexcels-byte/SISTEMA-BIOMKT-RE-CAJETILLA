@@ -114,6 +114,58 @@ function TimerCell({
   );
 }
 
+/* ─── Text Paragraph Modal ──────────────────────────────────────────────── */
+
+function TextParagraphModal({
+  label,
+  value,
+  onSave,
+  onClose,
+}: {
+  label: string;
+  value: string;
+  onSave: (v: string) => void;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState(value);
+  return (
+    <div
+      className="modal-backdrop open"
+      onClick={onClose}
+      style={{ zIndex: 9999 }}
+    >
+      <div
+        className="modal"
+        style={{ maxWidth: 540, width: "100%" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h2 className="modal-title">{label}</h2>
+          <button className="icon-btn" type="button" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div className="modal-body" style={{ padding: 20 }}>
+          <textarea
+            autoFocus
+            className="textarea"
+            style={{ width: "100%", minHeight: 160, resize: "vertical", fontSize: 14 }}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={`Escribí el ${label.toLowerCase()}…`}
+          />
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" type="button" onClick={() => { onSave(text); onClose(); }}>Guardar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Content row ───────────────────────────────────────────────────────── */
 
 function ContentRow({
@@ -138,8 +190,18 @@ function ContentRow({
   onTimerReset: () => void;
 }) {
   const statusClass = STATUS_ROW_CLASS[event.status] ?? "";
+  const [textModal, setTextModal] = useState<{ field: "frase" | "notes"; label: string } | null>(null);
 
   return (
+    <>
+    {textModal && (
+      <TextParagraphModal
+        label={textModal.label}
+        value={textModal.field === "frase" ? (event.frase ?? "") : (event.notes ?? "")}
+        onSave={(v) => onUpdate({ [textModal.field]: v })}
+        onClose={() => setTextModal(null)}
+      />
+    )}
     <tr style={{ height: rowHeight }} className={`${event.done ? "opacity-50" : ""} ${statusClass}`}>
 
       {/* timer */}
@@ -191,12 +253,28 @@ function ContentRow({
 
       {/* idea */}
       <td>
-        <input className="cell-input" value={event.frase ?? ""} onChange={(e) => onUpdate({ frase: e.target.value })} placeholder="Idea…" />
+        <button
+          type="button"
+          className="cell-input"
+          style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: event.frase ? "inherit" : "var(--slate-400, #94a3b8)" }}
+          onClick={() => setTextModal({ field: "frase", label: "Idea" })}
+          title={event.frase ?? ""}
+        >
+          {event.frase || "Idea…"}
+        </button>
       </td>
 
       {/* notas */}
       <td>
-        <input className="cell-input" value={event.notes ?? ""} onChange={(e) => onUpdate({ notes: e.target.value })} placeholder="Feedback…" />
+        <button
+          type="button"
+          className="cell-input"
+          style={{ textAlign: "left", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", width: "100%", background: "none", border: "none", padding: "0 6px", color: event.notes ? "inherit" : "var(--slate-400, #94a3b8)" }}
+          onClick={() => setTextModal({ field: "notes", label: "Feedback" })}
+          title={event.notes ?? ""}
+        >
+          {event.notes || "Feedback…"}
+        </button>
       </td>
 
       {/* delete */}
@@ -209,6 +287,7 @@ function ContentRow({
         </div>
       </td>
     </tr>
+    </>
   );
 }
 
