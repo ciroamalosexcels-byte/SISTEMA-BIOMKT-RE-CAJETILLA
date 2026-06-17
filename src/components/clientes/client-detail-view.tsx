@@ -657,36 +657,28 @@ function QuickLoadModal({
   onAdd: (events: Omit<ContentEvent, "id" | "order">[]) => void;
   onClose: () => void;
 }) {
-  const [raw, setRaw]         = useState("");
-  const [json, setJson]       = useState("");
-  const [copied, setCopied]   = useState(false);
-  const [parseErr, setErr]    = useState("");
-  const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[] | null>(null);
+  const [raw, setRaw]       = useState("");
+  const [json, setJson]     = useState("");
+  const [copied, setCopied] = useState(false);
+  const [parseErr, setErr]  = useState("");
+  const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[]>([]);
 
-  function updatePreviewDate(idx: number, value: string) {
-    setPreview(prev => prev ? prev.map((ev, i) => i === idx ? { ...ev, scheduledDate: value || undefined } : ev) : prev);
+  /* ── helpers para editar preview ──────────────────────────────── */
+  function updateRow(idx: number, patch: Partial<Omit<ContentEvent, "id" | "order">>) {
+    setPreview(prev => prev.map((ev, i) => i === idx ? { ...ev, ...patch } : ev));
   }
 
-  function copyPrompt() {
-    if (!raw.trim()) return;
-    const { year, month, day } = baParts();
-    const today = `${year}-${month}-${day}`;
-    navigator.clipboard.writeText(QUICK_LOAD_PROMPT(raw.trim(), today))
-      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
-      .catch(() => {});
-  }
-
-  function parseJson() {
-    setErr("");
-    setPreview(null);
+  /* ── auto-parse cada vez que cambia el JSON ───────────────────── */
+  useEffect(() => {
+    const text = json.trim().replace(/^```[a-z]*\n?/, "").replace(/```$/, "").trim();
+    if (!text) { setPreview([]); setErr(""); return; }
     try {
-      const text = json.trim().replace(/^```[a-z]*\n?/, "").replace(/```$/, "").trim();
       const arr = JSON.parse(text);
       if (!Array.isArray(arr)) { setErr("La respuesta debe ser un JSON array [ ... ]"); return; }
-      const events: Omit<ContentEvent, "id" | "order">[] = arr.map((item: Record<string, unknown>) => ({
+      setErr("");
+      setPreview(arr.map((item: Record<string, unknown>) => ({
         clientId,
         title:         String(item.titulo ?? item.title ?? "Sin título").trim() || "Sin título",
-        tipo:          undefined,
         type:          (["CARRUSEL","REEL","PLACA","HISTORIA"].includes(String(item.tipo ?? item.type ?? ""))
                          ? String(item.tipo ?? item.type ?? "") : "") as ContentEvent["type"],
         status:        (["SIN EDITAR","EDITANDO","COMPLETO","CALENDARIZADO"].includes(String(item.estado ?? item.status ?? ""))
@@ -697,26 +689,34 @@ function QuickLoadModal({
         notes:         String(item.notes ?? "").trim() || undefined,
         objetivo:      String(item.objetivo ?? "").trim() || undefined,
         done: false, timerSeconds: 0, timerRunning: false,
-      }));
-      setPreview(events);
+      })));
     } catch {
-      setErr("No se pudo parsear el JSON. Revisá que la respuesta de la IA sea un array válido.");
+      setErr("JSON inválido — revisá que la respuesta de la IA sea un array correcto.");
+      setPreview([]);
     }
+  }, [json]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function copyPrompt() {
+    if (!raw.trim()) return;
+    const { year, month, day } = baParts();
+    const today = `${year}-${month}-${day}`;
+    navigator.clipboard.writeText(QUICK_LOAD_PROMPT(raw.trim(), today))
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
+      .catch(() => {});
   }
 
-  function confirm() {
-    if (preview) { onAdd(preview); onClose(); }
-  }
+  const inputSm = { fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 8, padding: "3px 7px", background: "#f8fafc", color: "#334155", outline: "none" } as const;
+  const inputSmOrange = { ...inputSm, border: "1px solid #fed7aa", background: "#fff7ed", color: "#9a3412" } as const;
 
   return (
     <div className="modal-backdrop open" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: 620, width: "96vw" }} onClick={e => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: 680, width: "96vw" }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Carga Rápida de Contenidos</h2>
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
 
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 18, overflowY: "auto", maxHeight: "calc(92vh - 130px)" }}>
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16, overflowY: "auto", maxHeight: "calc(92vh - 130px)" }}>
 
           {/* Paso 1 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -726,24 +726,18 @@ function QuickLoadModal({
             </div>
             <textarea
               className="textarea"
-              rows={6}
+              rows={4}
               value={raw}
               onChange={e => setRaw(e.target.value)}
               placeholder="Pegá acá el documento, lista o párrafo con el contenido del cliente…"
               style={{ resize: "vertical" }}
             />
-            <button
-              type="button"
-              className="btn btn-amber btn-sm"
-              style={{ alignSelf: "flex-start" }}
-              onClick={copyPrompt}
-              disabled={!raw.trim()}
-            >
-              {copied ? "¡Prompt copiado!" : "Copiar prompt para IA"}
-            </button>
-            <span style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.4 }}>
-              Copiá el prompt, pegalo en ChatGPT, Claude, Gemini o cualquier IA junto al contenido del cliente, y obtené el JSON formateado.
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <button type="button" className="btn btn-amber btn-sm" onClick={copyPrompt} disabled={!raw.trim()}>
+                {copied ? "¡Prompt copiado!" : "Copiar prompt para IA"}
+              </button>
+              <span style={{ fontSize: 11, color: "#94a3b8" }}>Pegalo en ChatGPT, Claude, Gemini, etc.</span>
+            </div>
           </div>
 
           {/* Divisor */}
@@ -757,64 +751,78 @@ function QuickLoadModal({
             </div>
             <textarea
               className="textarea"
-              rows={6}
+              rows={4}
               value={json}
-              onChange={e => { setJson(e.target.value); setErr(""); setPreview(null); }}
+              onChange={e => setJson(e.target.value)}
               placeholder='[ { "titulo": "Carrusel verano", "tipo": "CARRUSEL", ... } ]'
               style={{ resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
             />
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              style={{ alignSelf: "flex-start" }}
-              onClick={parseJson}
-              disabled={!json.trim()}
-            >
-              Verificar contenidos
-            </button>
-            {parseErr && (
-              <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{parseErr}</span>
-            )}
+            {parseErr && <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{parseErr}</span>}
           </div>
 
-          {/* Preview */}
-          {preview && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>
-                ✓ {preview.length} contenido{preview.length !== 1 ? "s" : ""} listo{preview.length !== 1 ? "s" : ""} para cargar
+          {/* Divisor */}
+          <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+
+          {/* Verificación — siempre visible */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ background: preview.length > 0 ? "#22c55e" : "#e2e8f0", color: preview.length > 0 ? "#fff" : "#94a3b8", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0, transition: "background 0.2s" }}>3</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>
+                Verificá y editá antes de cargar
+                {preview.length > 0 && <span style={{ marginLeft: 8, fontSize: 11, color: "#22c55e", fontWeight: 700 }}>✓ {preview.length} contenido{preview.length !== 1 ? "s" : ""}</span>}
               </span>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto", border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 12, padding: "10px 14px" }}>
-                {preview.map((ev, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: "var(--amber)", flexShrink: 0 }}>#{i + 1}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", flex: 1, minWidth: 80 }}>{ev.title}</span>
-                    {ev.type && (
-                      <span style={{ fontSize: 10, background: "#f1f5f9", borderRadius: 6, padding: "1px 6px", color: "#64748b", fontWeight: 700, flexShrink: 0 }}>
-                        {ev.type}
-                      </span>
-                    )}
-                    {ev.scheduledDate ? (
-                      <input
-                        type="datetime-local"
-                        value={ev.scheduledDate.includes("T") ? ev.scheduledDate.slice(0, 16) : `${ev.scheduledDate}T00:00`}
-                        onChange={e => updatePreviewDate(i, e.target.value)}
-                        style={{ fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 8, padding: "2px 6px", color: "#475569", background: "#f8fafc", flexShrink: 0 }}
-                      />
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                        <span style={{ fontSize: 10, color: "#f97316", fontWeight: 700 }}>Sin fecha</span>
+            </div>
+
+            <div style={{ border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 12, overflow: "hidden", minHeight: 48 }}>
+              {preview.length === 0 ? (
+                <div style={{ padding: "16px 14px", fontSize: 12, color: "#94a3b8", textAlign: "center" }}>
+                  {json.trim() ? "..." : "La verificación aparecerá aquí cuando pegues la respuesta de la IA"}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px", gap: 8, padding: "6px 12px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                    {["#", "Título", "Tipo", "Fecha pub."].map(h => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</span>
+                    ))}
+                  </div>
+                  {/* Filas */}
+                  <div style={{ maxHeight: 260, overflowY: "auto" }}>
+                    {preview.map((ev, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px", gap: 8, padding: "7px 12px", borderBottom: i < preview.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
+                        {/* # */}
+                        <span style={{ fontSize: 11, fontWeight: 900, color: "var(--amber)" }}>{i + 1}</span>
+                        {/* Título editable */}
+                        <input
+                          style={{ ...inputSm, fontWeight: 700, width: "100%" }}
+                          value={ev.title}
+                          onChange={e => updateRow(i, { title: e.target.value })}
+                        />
+                        {/* Tipo editable */}
+                        <select
+                          style={{ ...inputSm, cursor: "pointer", width: "100%" }}
+                          value={ev.type}
+                          onChange={e => updateRow(i, { type: e.target.value as ContentEvent["type"] })}
+                        >
+                          <option value="">—</option>
+                          {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        {/* Fecha editable */}
                         <input
                           type="datetime-local"
-                          onChange={e => updatePreviewDate(i, e.target.value)}
-                          style={{ fontSize: 11, border: "1px solid #fed7aa", borderRadius: 8, padding: "2px 6px", color: "#9a3412", background: "#fff7ed", flexShrink: 0 }}
+                          style={ev.scheduledDate ? inputSm : inputSmOrange}
+                          value={ev.scheduledDate ? (ev.scheduledDate.includes("T") ? ev.scheduledDate.slice(0, 16) : `${ev.scheduledDate}T00:00`) : ""}
+                          onChange={e => updateRow(i, { scheduledDate: e.target.value || undefined })}
+                          placeholder="Sin fecha"
                         />
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
         </div>
 
         <div className="modal-footer">
@@ -822,10 +830,10 @@ function QuickLoadModal({
           <button
             type="button"
             className="btn btn-amber"
-            onClick={confirm}
-            disabled={!preview}
+            onClick={() => { if (preview.length) { onAdd(preview); onClose(); } }}
+            disabled={preview.length === 0}
           >
-            Cargar {preview ? preview.length : ""} contenido{preview && preview.length !== 1 ? "s" : ""}
+            Cargar {preview.length > 0 ? preview.length : ""} contenido{preview.length !== 1 ? "s" : ""}
           </button>
         </div>
       </div>
