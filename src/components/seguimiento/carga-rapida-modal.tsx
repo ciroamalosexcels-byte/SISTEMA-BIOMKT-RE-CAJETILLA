@@ -16,6 +16,8 @@ export interface ParsedLead {
   observaciones: string;
   telefono: string;
   accepted: boolean;
+  sender?: string; // nombre WA del remitente, para mapear a responsable1
+  responsable1?: string; // resultado del mapeo sender → miembro
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
@@ -70,7 +72,7 @@ function parseBlock(raw: string): ParsedLead {
 /* ── Parser: formato WhatsApp ────────────────────────────────────────── */
 
 // [HH:MM, D/M/YYYY] Sender: content  (with optional seconds)
-const WA_LINE_RE = /^\[(\d{1,2}):(\d{2})(?::\d{2})?,\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\]\s+[^:]+:\s*(.*)/;
+const WA_LINE_RE = /^\[(\d{1,2}):(\d{2})(?::\d{2})?,\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\]\s+([^:]+):\s*(.*)/;
 
 // Phone: digit, 4-13 mixed chars (digits/spaces/dashes/dots), digit
 const PHONE_RE = /\b(\d[\d\s\-\.]{4,13}\d)\b/g;
@@ -129,7 +131,7 @@ function splitEmpresaAddress(words: string[]): { empresa: string; direccion: str
   };
 }
 
-function parseWAContent(content: string, fechaContacto: string): ParsedLead | null {
+function parseWAContent(content: string, fechaContacto: string, sender?: string): ParsedLead | null {
   const { phones, clean } = extractPhones(content);
 
   const obsMatch = OBS_RE.exec(clean);
@@ -175,6 +177,7 @@ function parseWAContent(content: string, fechaContacto: string): ParsedLead | nu
     observaciones,
     telefono: phones[0] ?? "",
     accepted: true,
+    sender: sender?.trim(),
   };
 }
 
@@ -196,7 +199,7 @@ function parseWhatsApp(text: string): ParsedLead[] {
       continue;
     }
 
-    const [, hh, mm, day, mon, year, content] = m;
+    const [, hh, mm, day, mon, year, sender, content] = m;
     const fechaContacto = `${year}-${mon.padStart(2, "0")}-${day.padStart(2, "0")}T${hh.padStart(2, "0")}:${mm}`;
     if (!content.trim()) continue;
 
@@ -211,7 +214,7 @@ function parseWhatsApp(text: string): ParsedLead[] {
       continue;
     }
 
-    const lead = parseWAContent(content, fechaContacto);
+    const lead = parseWAContent(content, fechaContacto, sender);
     if (lead?.nombre) results.push(lead);
   }
 
@@ -246,10 +249,25 @@ export function CargaRapidaModal({ onClose }: Props) {
   const [responsable, setResp]      = useState("");
   const [defaultDate, setDefDate]   = useState("");
 
+  function matchSender(sender: string): string {
+    if (!sender) return "";
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const sn = norm(sender);
+    for (const m of memberNames) {
+      const mn = norm(m);
+      if (sn === mn || sn.startsWith(mn) || mn.startsWith(sn)) return m;
+    }
+    return "";
+  }
+
   function procesar() {
     const parsed = parseText(raw);
     if (parsed.length === 0) return;
-    setLeads(parsed);
+    const withResp = parsed.map(p => ({
+      ...p,
+      responsable1: p.sender ? (matchSender(p.sender) || responsable) : responsable,
+    }));
+    setLeads(withResp);
     setStep("preview");
   }
 
@@ -267,7 +285,7 @@ export function CargaRapidaModal({ onClose }: Props) {
         nombre: p.nombre, nombre2: "", empresa: p.empresa,
         observaciones: p.observaciones,
         telefono: p.telefono, telefono2: "",
-        responsable1: responsable,
+        responsable1: p.responsable1 ?? responsable,
         responsable2: "",
         direccion: p.direccion,
         empresaBio: "BIOMARKETING", medio: "PRESENCIAL",
@@ -425,6 +443,13 @@ export function CargaRapidaModal({ onClose }: Props) {
                     <label style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Dirección</label>
                     <input className={inputCls} value={lead.direccion} onChange={e => update(lead._key, { direccion: e.target.value })} />
                   </div>
+                  <div>
+                    <label style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Responsable</label>
+                    <select className={inputCls} value={lead.responsable1 ?? ""} onChange={e => update(lead._key, { responsable1: e.target.value })}>
+                      <option value="">— sin especificar —</option>
+                      {memberNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: 3 }}>Observaciones</label>
                     <input className={inputCls} value={lead.observaciones} onChange={e => update(lead._key, { observaciones: e.target.value })} />
@@ -440,8 +465,9 @@ export function CargaRapidaModal({ onClose }: Props) {
                   </div>
                   {lead.empresa && <div style={{ fontSize: 12, color: "#64748b" }}>{lead.empresa}</div>}
                   <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3, display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <span>📅 {lead.fechaContacto.replace("T", " ").slice(0, 16)}</span>
+                    <span>📅 {lead.fechaContacto ? lead.fechaContacto.replace("T", " ").slice(0, 16) : "sin fecha"}</span>
                     {lead.telefono && <span>📞 {lead.telefono}</span>}
+                    {lead.responsable1 && <span style={{ color: "#f6bf26", fontWeight: 800 }}>👤 {lead.responsable1}{lead.sender && lead.sender !== lead.responsable1 ? ` (${lead.sender})` : ""}</span>}
                     {lead.direccion && <span>📍 {lead.direccion}</span>}
                     {lead.observaciones && (
                       <span>💬 {lead.observaciones.slice(0, 60)}{lead.observaciones.length > 60 ? "…" : ""}</span>
