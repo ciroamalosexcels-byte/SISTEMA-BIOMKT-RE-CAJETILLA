@@ -6,10 +6,10 @@ import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
 import { usePlansStore } from "@/store/plans";
-import { CONTENT_TYPES, CONTENT_STATUS } from "@/lib/constants";
+import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
 import { baParts } from "@/lib/dates";
-import type { Lead, ContentEvent } from "@/types";
+import type { Lead, ContentEvent, ManagementEvent } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
 const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
@@ -104,7 +104,7 @@ function slotToDate(slot: string, year: number, month: number): string | undefin
   return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
 }
 
-type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string };
+type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string; dotColor?: string };
 
 const TYPE_ABBREV: Record<string, string> = {
   CARRUSEL: "CARR",
@@ -113,11 +113,31 @@ const TYPE_ABBREV: Record<string, string> = {
   HISTORIA: "HIST",
 };
 
+const MGMT_ABBREV: Record<string, string> = {
+  "Acompañamiento": "ACO",
+  "Llamada":        "LLA",
+  "Visita":         "VIS",
+  "Cobro":          "COB",
+  "Reunión":        "REU",
+  "Producción":     "PRO",
+  "Pago":           "PAG",
+};
+
 const STATUS_COLOR: Record<string, string> = {
   "SIN EDITAR":    "#ef4444",
   "EDITANDO":      "#f59e0b",
   "COMPLETO":      "#3b82f6",
   "CALENDARIZADO": "#22c55e",
+};
+
+const MGMT_TYPE_COLOR: Record<string, string> = {
+  "Acompañamiento": "#8b5cf6",
+  "Llamada":        "#3b82f6",
+  "Visita":         "#22c55e",
+  "Cobro":          "#f59e0b",
+  "Reunión":        "#ef4444",
+  "Producción":     "#06b6d4",
+  "Pago":           "#16a34a",
 };
 
 /* ── Mini calendar ──────────────────────────────────────────────────── */
@@ -131,12 +151,10 @@ function ClientCalendarCard({
   onDayClick?: (date: string) => void;
   onEventClick?: (id: string) => void;
 }) {
-  const isContent = title.includes("CONTENIDO");
-  const grid      = useMemo(() => buildGrid(monthKey), [monthKey]);
-  const today     = todayDate();
+  const grid  = useMemo(() => buildGrid(monthKey), [monthKey]);
+  const today = todayDate();
 
-  const contentByDay = useMemo(() => {
-    if (!isContent) return {} as Record<string, CalEvent[]>;
+  const dayMap = useMemo(() => {
     const map: Record<string, CalEvent[]> = {};
     for (const ev of cevs) {
       const d = (ev.scheduledDate ?? "").slice(0, 10);
@@ -144,7 +162,7 @@ function ClientCalendarCard({
       (map[d] ??= []).push(ev);
     }
     return map;
-  }, [cevs, isContent]);
+  }, [cevs]);
 
   return (
     <div style={{ background: "#fff", border: "1px solid var(--slate-200)", borderRadius: 22, overflow: "hidden" }}>
@@ -164,7 +182,7 @@ function ClientCalendarCard({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, padding: 6, background: "linear-gradient(160deg,#f1f5f9 0%,#f8fafc 50%,#ffffff 100%)", borderRadius: "0 0 22px 22px" }}>
         {grid.map(({ date, inMonth }, idx) => {
           const isToday = date === today;
-          const dayEvs  = inMonth && isContent ? (contentByDay[date] ?? []) : [];
+          const dayEvs  = inMonth ? (dayMap[date] ?? []) : [];
           return (
             <div
               key={idx}
@@ -177,8 +195,8 @@ function ClientCalendarCard({
               </span>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: 2 }}>
                 {dayEvs.slice(0, 6).map(ev => {
-                  const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
-                  const label = TYPE_ABBREV[ev.type] ?? (ev.type.slice(0, 4) || ev.title.slice(0, 4));
+                  const color = ev.dotColor ?? STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
+                  const label = TYPE_ABBREV[ev.type] ?? MGMT_ABBREV[ev.type] ?? (ev.type.slice(0, 3).toUpperCase() || ev.title.slice(0, 3).toUpperCase());
                   return (
                     <div
                       key={ev.id}
@@ -194,6 +212,144 @@ function ClientCalendarCard({
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Management day modal ───────────────────────────────────────────── */
+function ManagementDayModal({
+  date, clientId, clientName, events, onAdd, onDelete, onToggleDone, onClose,
+}: {
+  date: string;
+  clientId: string;
+  clientName: string;
+  events: ManagementEvent[];
+  onAdd: (ev: Omit<ManagementEvent, "id">) => void;
+  onDelete: (id: string) => void;
+  onToggleDone: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [hora, setHora]     = useState("");
+  const [tipo, setTipo]     = useState<string>("");
+  const [motivo, setMotivo] = useState("");
+
+  const dd = date.slice(8), mm = date.slice(5, 7), yyyy = date.slice(0, 4);
+  const dateLabel = `${dd}/${mm}/${yyyy}`;
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!tipo) return;
+    onAdd({
+      clientId,
+      title: motivo.trim() || tipo,
+      type: tipo as ManagementEvent["type"],
+      datetime: hora ? `${date}T${hora}` : date,
+      done: false,
+    });
+    setHora(""); setTipo(""); setMotivo("");
+  }
+
+  return (
+    <div className="modal-backdrop open" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h2 className="modal-title">Calendario de gestión</h2>
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+              {dateLabel} · {clientName}
+            </p>
+          </div>
+          <button className="icon-btn" type="button" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div className="modal-body" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", maxHeight: "calc(90vh - 140px)" }}>
+          {/* Cargado previamente */}
+          <div>
+            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: ".04em" }}>Cargado previamente</p>
+            {events.length === 0 ? (
+              <div style={{ padding: "14px 16px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 13, color: "#94a3b8", textAlign: "center" }}>
+                No hay eventos cargados para este día.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {events.map(ev => {
+                  const color = MGMT_TYPE_COLOR[ev.type ?? ""] ?? "#94a3b8";
+                  const timeStr = ev.datetime && ev.datetime.length > 10 ? ev.datetime.slice(11, 16) : "";
+                  return (
+                    <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "#f8fafc", border: `1.5px solid ${color}33` }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 800, color }}>{ev.type}</span>
+                          {timeStr && <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>{timeStr}</span>}
+                        </div>
+                        {ev.title && ev.title !== ev.type && (
+                          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.title}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onToggleDone(ev.id)}
+                        title={ev.done ? "Marcar pendiente" : "Marcar hecho"}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: "0 2px", color: ev.done ? "#22c55e" : "#cbd5e1", flexShrink: 0, lineHeight: 1 }}
+                      >
+                        {ev.done ? "✓" : "○"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-danger"
+                        onClick={() => { if (confirm("¿Eliminar este evento?")) onDelete(ev.id); }}
+                        title="Eliminar"
+                        style={{ flexShrink: 0 }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ height: 1, background: "#e2e8f0" }} />
+
+          {/* Agregar al día */}
+          <form id="mgmt-add-form" onSubmit={submit}>
+            <p style={{ margin: "0 0 14px", fontSize: 12, fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: ".04em" }}>Agregar al día</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="field-group" style={{ margin: 0 }}>
+                <label className="field-label">Hora</label>
+                <input type="time" className="field" value={hora} onChange={e => setHora(e.target.value)} />
+              </div>
+              <div className="field-group" style={{ margin: 0 }}>
+                <label className="field-label">Tipo</label>
+                <select className="field" value={tipo} onChange={e => setTipo(e.target.value)} required>
+                  <option value="">Seleccionar…</option>
+                  {MANAGEMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="field-group" style={{ margin: 0, gridColumn: "1/-1" }}>
+                <label className="field-label">Motivo / detalle</label>
+                <textarea
+                  className="textarea"
+                  value={motivo}
+                  onChange={e => setMotivo(e.target.value)}
+                  placeholder="Escribí el motivo o detalle…"
+                  rows={3}
+                  style={{ resize: "vertical" }}
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="submit" form="mgmt-add-form" className="btn btn-amber" disabled={!tipo}>Agregar</button>
+        </div>
       </div>
     </div>
   );
@@ -1022,7 +1178,9 @@ export function ClientDetailView({ clientId }: Props) {
   const members     = useTeamStore(s => s.members);
   const {
     contentEvents,
+    managementEvents,
     addContentEvent, updateContentEvent, deleteContentEvent,
+    addManagementEvent, deleteManagementEvent, toggleManagementDone,
   } = useContentEventsStore();
   const { plans, planEvents } = usePlansStore();
 
@@ -1043,6 +1201,7 @@ export function ClientDetailView({ clientId }: Props) {
   /* state */
   const [monthKey, setMonthKey]     = useState(todayKey);
   const [search, setSearch] = useState("");
+  const [mgmtDate, setMgmtDate]             = useState<string | null>(null);
   const [showAdd, setShowAdd]               = useState(false);
   const [showQuickLoad, setShowQuickLoad]   = useState(false);
   const [clickedDate, setClickedDate]       = useState<string | undefined>(undefined);
@@ -1086,6 +1245,20 @@ export function ClientDetailView({ clientId }: Props) {
       .filter(e => e.clientId === clientId)
       .sort((a, b) => new Date(b.scheduledDate ?? "").getTime() - new Date(a.scheduledDate ?? "").getTime()),
     [contentEvents, clientId]
+  );
+
+  /* management events para el calendario de gestión */
+  const myMgmtEventsForCal = useMemo(() =>
+    managementEvents
+      .filter(e => e.clientId === clientId)
+      .map(e => ({
+        id: e.id,
+        scheduledDate: (e.datetime ?? "").slice(0, 10) || undefined,
+        type: e.type ?? "",
+        title: e.title || e.type || "",
+        dotColor: MGMT_TYPE_COLOR[e.type ?? ""] ?? "#94a3b8",
+      })),
+    [managementEvents, clientId]
   );
 
   /* eventos del plan asignado — slots resueltos al mes visible */
@@ -1197,8 +1370,8 @@ export function ClientDetailView({ clientId }: Props) {
               title="CALENDARIO DE GESTIÓN"
               monthKey={monthKey}
               onShift={d => setMonthKey(k => shiftMonth(k, d))}
-              contentEvents={[]}
-              onDayClick={date => { setClickedDate(date); setShowAdd(true); }}
+              contentEvents={myMgmtEventsForCal}
+              onDayClick={date => setMgmtDate(date)}
             />
             <ClientCalendarCard
               title="CALENDARIO DE CONTENIDO"
@@ -1283,6 +1456,23 @@ export function ClientDetailView({ clientId }: Props) {
           </div>
 
       {/* ── Modals ──────────────────────────────────────────────────── */}
+      {mgmtDate && (() => {
+        const dayEvents = managementEvents.filter(
+          e => e.clientId === clientId && (e.datetime ?? "").slice(0, 10) === mgmtDate
+        );
+        return (
+          <ManagementDayModal
+            date={mgmtDate}
+            clientId={clientId}
+            clientName={title}
+            events={dayEvents}
+            onAdd={ev => addManagementEvent(ev)}
+            onDelete={id => deleteManagementEvent(id)}
+            onToggleDone={id => toggleManagementDone(id)}
+            onClose={() => setMgmtDate(null)}
+          />
+        );
+      })()}
       {showData && (
         <ClientDataModal
           lead={lead}
