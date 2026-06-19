@@ -243,6 +243,17 @@ function ContentRow({
         </select>
       </td>
 
+      {/* título */}
+      <td>
+        <input
+          type="text"
+          className="cell-input"
+          value={event.title}
+          onChange={(e) => onUpdate({ title: e.target.value })}
+          placeholder="Título…"
+        />
+      </td>
+
       {/* idea */}
       <td>
         <button

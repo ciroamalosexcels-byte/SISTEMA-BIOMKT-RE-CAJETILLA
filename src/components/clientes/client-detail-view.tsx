@@ -454,6 +454,15 @@ function ContentRow({
         </select>
       </td>
       <td>
+        <input
+          type="text"
+          className="cell-input"
+          value={ev.title}
+          onChange={e => onUpdate({ title: e.target.value })}
+          placeholder="Título…"
+        />
+      </td>
+      <td>
         <button
           type="button"
           className="cell-input"

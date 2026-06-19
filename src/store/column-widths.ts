@@ -17,11 +17,12 @@ export const COLUMN_FIELDS = [
 
 export const PLAN_COLUMN_FIELDS = [
   { key: "timer",    label: "Tiempo",      defaultWidth: 110 },
-  { key: "assignee", label: "Encargado",   defaultWidth: 120 },
+  { key: "assignee", label: "Encargado",   defaultWidth: 80  },
   { key: "fecha",    label: "Fecha pub.",  defaultWidth: 140 },
   { key: "cliente",  label: "Cliente",     defaultWidth: 140 },
   { key: "tipo",     label: "Tipo",        defaultWidth: 110 },
-  { key: "estado",   label: "Estado",      defaultWidth: 140 },
+  { key: "estado",   label: "Estado",      defaultWidth: 93  },
+  { key: "titulo",   label: "Título",      defaultWidth: 160 },
   { key: "frase",    label: "Idea",        defaultWidth: 240 },
   { key: "notas",    label: "Feedback",    defaultWidth: 160 },
   { key: "del",      label: "",            defaultWidth: 44  },
