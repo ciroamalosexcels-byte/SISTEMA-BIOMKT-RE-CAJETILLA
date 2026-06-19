@@ -139,12 +139,14 @@ const EMPTY_MEMBER: TeamMember = {
 
 function MemberCard({
   member,
+  assignedLeads,
   closings,
   onClick,
   onDelete,
   onToggleActivo,
 }: {
   member: TeamMember;
+  assignedLeads: number;
   closings: number;
   onClick: () => void;
   onDelete: () => void;
@@ -153,20 +155,23 @@ function MemberCard({
   const { settings } = useAppSettings();
   const isActivo = member.activo !== false;
 
+  const sueldoNum = member.sueldo ? parseInt(member.sueldo.replace(/\D/g, ""), 10) : null;
+  const sueldoLabel = sueldoNum ? `$${sueldoNum.toLocaleString("es-AR")}` : null;
+
   return (
     <div className="team-member" onClick={onClick} style={!isActivo ? { opacity: 0.6 } : undefined}>
       <div className="team-member-head">
         <div>
           <div className="team-member-name flex items-center gap-2">
             {member.nombre}
-            {member.sueldo && (
+            {sueldoLabel && (
               <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
-                {member.sueldo}
+                {sueldoLabel}
               </span>
             )}
           </div>
           <div className="team-member-meta">
-            Asignado en {closings} lead{closings !== 1 ? "s" : ""}
+            Asignado en {assignedLeads} lead{assignedLeads !== 1 ? "s" : ""}
           </div>
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -190,13 +195,13 @@ function MemberCard({
 
       <div className="badges">
         {BADGES.map((b) => {
-          const badges = Array.isArray(member.badges) ? member.badges : [];
-          const earned = badges.includes(b.key);
+          const req    = settings.badgeRequirements[b.key] ?? Infinity;
+          const earned = closings >= req;
           return (
             <span
               key={b.key}
               className={`badge${earned ? ` ${b.className}` : " locked"}`}
-              title={`${b.label} — ${settings.badgeRequirements[b.key]} cierres`}
+              title={`${b.label} — ${req} cierres (tenés ${closings})`}
             >
               {b.icon} {b.label}
             </span>
@@ -215,6 +220,12 @@ export function EquipoView() {
 
   const activos   = members.filter((m) => m.activo !== false);
   const inactivos = members.filter((m) => m.activo === false);
+
+  function leadsFor(nombre: string) {
+    return rows.filter(
+      (r) => r.responsable1 === nombre || r.responsable2 === nombre
+    ).length;
+  }
 
   function closingsFor(nombre: string) {
     return rows.filter(
@@ -238,6 +249,7 @@ export function EquipoView() {
       <MemberCard
         key={m.id}
         member={m}
+        assignedLeads={leadsFor(m.nombre)}
         closings={closingsFor(m.nombre)}
         onClick={() => router.push(`/equipo/${m.id}`)}
         onDelete={() => { deleteMember(m.id); teamSave(); }}
