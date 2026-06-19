@@ -100,12 +100,18 @@ function ClientCard({
 export function ClientesView() {
   const rows         = useLeadsStore((s) => s.rows);
   const updateLead   = useLeadsStore((s) => s.updateLead);
-  const managementEvents = useContentEventsStore((s) => s.managementEvents);
-  const contentEvents    = useContentEventsStore((s) => s.contentEvents);
+  const contentEvents = useContentEventsStore((s) => s.contentEvents);
   const router = useRouter();
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  const STATUS_SCORE: Record<string, number> = {
+    "SIN EDITAR":    0,
+    "EDITANDO":      0.5,
+    "COMPLETO":      0.7,
+    "CALENDARIZADO": 1.0,
+  };
 
   const { activos, inactivos } = useMemo(() => {
     const list = rows.filter((r) => r.tab === "CLIENTES");
@@ -122,9 +128,10 @@ export function ClientesView() {
   const clients = useMemo(() => [...activos, ...inactivos], [activos, inactivos]);
 
   function getProgress(clientId: string) {
-    const events = managementEvents.filter((e) => e.clientId === clientId);
+    const events = contentEvents.filter((e) => e.clientId === clientId);
     if (events.length === 0) return 0;
-    return events.filter((e) => e.done).length / events.length;
+    const total = events.reduce((sum, e) => sum + (STATUS_SCORE[e.status ?? ""] ?? 0), 0);
+    return total / events.length;
   }
 
   function getContentCount(clientId: string) {
