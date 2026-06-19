@@ -126,7 +126,7 @@ const MGMT_ABBREV: Record<string, string> = {
 const STATUS_COLOR: Record<string, string> = {
   "SIN EDITAR":    "#ef4444",
   "EDITANDO":      "#f59e0b",
-  "COMPLETO":      "#3b82f6",
+  "COMPLETO":      "#eab308",
   "CALENDARIZADO": "#22c55e",
 };
 
@@ -212,6 +212,138 @@ function ClientCalendarCard({
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Content day modal ──────────────────────────────────────────────── */
+function ContentDayModal({
+  date, clientId, clientName, events, onAdd, onDelete, onClose,
+}: {
+  date: string;
+  clientId: string;
+  clientName: string;
+  events: ContentEvent[];
+  onAdd: (ev: Omit<ContentEvent, "id" | "order">) => void;
+  onDelete: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [hora, setHora]     = useState("");
+  const [tipo, setTipo]     = useState<ContentEvent["type"]>("");
+  const [titulo, setTitulo] = useState("");
+
+  const dd = date.slice(8), mm = date.slice(5, 7), yyyy = date.slice(0, 4);
+  const dateLabel = `${dd}/${mm}/${yyyy}`;
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    onAdd({
+      clientId,
+      title: titulo.trim() || tipo || "Sin título",
+      type: tipo,
+      status: "SIN EDITAR",
+      scheduledDate: hora ? `${date}T${hora}` : `${date}T00:00`,
+      done: false,
+      timerSeconds: 0,
+      timerRunning: false,
+    });
+    setHora(""); setTipo(""); setTitulo("");
+  }
+
+  return (
+    <div className="modal-backdrop open" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h2 className="modal-title">Calendario de contenido</h2>
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+              {dateLabel} · {clientName}
+            </p>
+          </div>
+          <button className="icon-btn" type="button" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div className="modal-body" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", maxHeight: "calc(90vh - 140px)" }}>
+
+          {/* Cargado previamente */}
+          <div>
+            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: ".04em" }}>Cargado previamente</p>
+            {events.length === 0 ? (
+              <div style={{ padding: "14px 16px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 13, color: "#94a3b8", textAlign: "center" }}>
+                No hay contenidos cargados para este día.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {events.map(ev => {
+                  const color = STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
+                  const timeStr = ev.scheduledDate && ev.scheduledDate.length > 10 ? ev.scheduledDate.slice(11, 16) : "";
+                  return (
+                    <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "#f8fafc", border: `1.5px solid ${color}33` }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          {ev.type && <span style={{ fontSize: 12, fontWeight: 800, color }}>{ev.type}</span>}
+                          {timeStr && <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>{timeStr}</span>}
+                          {ev.status && <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{ev.status}</span>}
+                        </div>
+                        {ev.title && (
+                          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.title}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-danger"
+                        onClick={() => { if (confirm("¿Eliminar este contenido?")) onDelete(ev.id); }}
+                        title="Eliminar"
+                        style={{ flexShrink: 0 }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ height: 1, background: "#e2e8f0" }} />
+
+          {/* Agregar al día */}
+          <form id="content-day-form" onSubmit={submit}>
+            <p style={{ margin: "0 0 14px", fontSize: 12, fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: ".04em" }}>Agregar al día</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="field-group" style={{ margin: 0 }}>
+                <label className="field-label">Hora</label>
+                <input type="time" className="field" value={hora} onChange={e => setHora(e.target.value)} />
+              </div>
+              <div className="field-group" style={{ margin: 0 }}>
+                <label className="field-label">Tipo</label>
+                <select className="field" value={tipo} onChange={e => setTipo(e.target.value as ContentEvent["type"])}>
+                  <option value="">Seleccionar…</option>
+                  {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="field-group" style={{ margin: 0, gridColumn: "1/-1" }}>
+                <label className="field-label">Título</label>
+                <input
+                  autoFocus
+                  className="field"
+                  value={titulo}
+                  onChange={e => setTitulo(e.target.value)}
+                  placeholder="Título del contenido…"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="submit" form="content-day-form" className="btn btn-amber">Agregar</button>
+        </div>
       </div>
     </div>
   );
@@ -1211,6 +1343,7 @@ export function ClientDetailView({ clientId }: Props) {
   const [monthKey, setMonthKey]     = useState(todayKey);
   const [search, setSearch] = useState("");
   const [mgmtDate, setMgmtDate]             = useState<string | null>(null);
+  const [contentDayDate, setContentDayDate] = useState<string | null>(null);
   const [showAdd, setShowAdd]               = useState(false);
   const [showQuickLoad, setShowQuickLoad]   = useState(false);
   const [clickedDate, setClickedDate]       = useState<string | undefined>(undefined);
@@ -1387,7 +1520,7 @@ export function ClientDetailView({ clientId }: Props) {
               monthKey={monthKey}
               onShift={d => setMonthKey(k => shiftMonth(k, d))}
               contentEvents={[...myContent, ...myPlanEvents]}
-              onDayClick={date => { setClickedDate(date); setShowAdd(true); }}
+              onDayClick={date => setContentDayDate(date)}
               onEventClick={id => setEditingEventId(id)}
             />
           </div>
@@ -1465,6 +1598,22 @@ export function ClientDetailView({ clientId }: Props) {
           </div>
 
       {/* ── Modals ──────────────────────────────────────────────────── */}
+      {contentDayDate && (() => {
+        const dayEvents = myContent.filter(
+          e => (e.scheduledDate ?? "").slice(0, 10) === contentDayDate
+        );
+        return (
+          <ContentDayModal
+            date={contentDayDate}
+            clientId={clientId}
+            clientName={title}
+            events={dayEvents}
+            onAdd={ev => addContentEvent(ev)}
+            onDelete={id => deleteContentEvent(id)}
+            onClose={() => setContentDayDate(null)}
+          />
+        );
+      })()}
       {mgmtDate && (() => {
         const dayEvents = managementEvents.filter(
           e => e.clientId === clientId && (e.datetime ?? "").slice(0, 10) === mgmtDate
