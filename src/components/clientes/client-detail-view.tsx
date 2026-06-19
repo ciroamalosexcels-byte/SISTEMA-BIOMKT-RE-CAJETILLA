@@ -1419,14 +1419,19 @@ export function ClientDetailView({ clientId }: Props) {
       });
   }, [planEvents, lead?.planId, monthKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* filter content by search — all months */
+  /* filter content by month and search */
   const filtered = useMemo(() => {
-    if (!search) return myContent;
-    const q = search.toLowerCase();
-    return myContent.filter(e =>
-      [e.title, e.type, e.status, e.assignee, e.frase, e.notes].some(f => (f ?? "").toLowerCase().includes(q))
+    let result = myContent.filter(e =>
+      (e.scheduledDate ?? "").startsWith(monthKey)
     );
-  }, [myContent, search]);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(e =>
+        [e.title, e.type, e.status, e.assignee, e.frase, e.notes].some(f => (f ?? "").toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [myContent, search, monthKey]);
 
   function navigate(delta: 1 | -1) {
     const next = clients[(curIdx + delta + clients.length) % clients.length];
@@ -1571,8 +1576,8 @@ export function ClientDetailView({ clientId }: Props) {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: "center", padding: "32px 16px", color: "#94a3b8", fontWeight: 700 }}>
-                        Sin contenidos.{" "}
+                      <td colSpan={9} style={{ textAlign: "center", padding: "32px 16px", color: "#94a3b8", fontWeight: 700 }}>
+                        Sin contenidos para {monthLabel(monthKey)}.{" "}
                         <button type="button" onClick={() => setShowAdd(true)} style={{ color: "var(--amber)", fontWeight: 900, textDecoration: "underline", cursor: "pointer" }}>
                           Añadir contenido
                         </button>
