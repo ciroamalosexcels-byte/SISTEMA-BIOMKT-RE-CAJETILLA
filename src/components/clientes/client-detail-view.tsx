@@ -1377,7 +1377,18 @@ export function ClientDetailView({ clientId }: Props) {
   }, []);
 
   const lead    = rows.find(r => r.id === clientId);
-  const clients = useMemo(() => rows.filter(r => r.tab === "CLIENTES"), [rows]);
+  const clients = useMemo(() => {
+    const list   = rows.filter(r => r.tab === "CLIENTES");
+    const sorted = [...list].sort((a, b) => {
+      const ao = a.clientOrder ?? Infinity;
+      const bo = b.clientOrder ?? Infinity;
+      return ao !== bo ? ao - bo : 0;
+    });
+    return [
+      ...sorted.filter(c => c.activo !== false),
+      ...sorted.filter(c => c.activo === false),
+    ];
+  }, [rows]);
   const curIdx  = clients.findIndex(r => r.id === clientId);
 
   const memberNames = members.map(m => m.nombre);
