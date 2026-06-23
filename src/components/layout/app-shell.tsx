@@ -134,11 +134,11 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div
-      className="flex h-screen overflow-hidden bg-bio-bg dark:bg-[#060e1c]"
+      className="flex h-dvh min-h-0 overflow-hidden bg-bio-bg dark:bg-[#060e1c]"
       style={{ zoom: settings.systemScale }}
     >
       <Sidebar />
-      <div className="flex-1 overflow-y-auto flex flex-col min-w-0 bg-bio-bg dark:bg-[#060e1c] [scrollbar-width:thin]">
+      <div className="flex-1 h-full min-h-0 overflow-y-auto overscroll-contain flex flex-col min-w-0 bg-bio-bg dark:bg-[#060e1c] [scrollbar-width:thin]">
         {children}
       </div>
       {toasts.length > 0 && (

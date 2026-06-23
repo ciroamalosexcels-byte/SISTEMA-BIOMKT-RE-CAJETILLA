@@ -295,7 +295,7 @@ export function Sidebar(_props: SidebarProps) {
     <>
       {/* ── Barra única ──────────────────────────────────────────── */}
       <aside
-        className="bg-[#07152f] flex flex-col z-50 border-r border-white/[0.05] flex-shrink-0 overflow-hidden"
+        className="bg-[#07152f] h-full min-h-0 flex flex-col z-50 border-r border-white/[0.05] flex-shrink-0 overflow-hidden"
         style={{ width: sidebarW, transition: "width 0.2s cubic-bezier(0.4,0,0.2,1)" }}
       >
         {/* Logo / toggle */}
