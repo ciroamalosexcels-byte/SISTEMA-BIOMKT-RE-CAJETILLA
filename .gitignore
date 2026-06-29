@@ -25,3 +25,6 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# mobile-crm configuration
+mobile-crm/js/config.js
