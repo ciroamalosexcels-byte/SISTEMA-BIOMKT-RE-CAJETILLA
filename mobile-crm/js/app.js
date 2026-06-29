@@ -76,7 +76,7 @@
       return '<div class="lead-card">' +
         '<div class="lead-name">' + escHtml(lead.nombre || '') + '</div>' +
         '<div class="lead-meta">' + escHtml(lead.empresa || '—') + '</div>' +
-        (lead.telefono ? '<div class="lead-meta">' + escHtml(lead.telefono) + (lead.medio ? ' · ' + lead.medio : '') + '</div>' : '') +
+        (lead.telefono ? '<div class="lead-meta">' + escHtml(lead.telefono) + (lead.medio ? ' · ' + escHtml(lead.medio) : '') + '</div>' : '') +
         '<div class="lead-date">' + formatDate(lead.fechaContacto) + '</div>' +
         '</div>';
     }).join('');
@@ -167,6 +167,7 @@
   }
 
   fabVoice.addEventListener('click', function () {
+    if (state.recognition) return;
     voiceOverlay.classList.remove('hidden');
     voiceTranscript.textContent = '';
     fabVoice.classList.add('recording');
@@ -183,5 +184,9 @@
   });
 
   // ── Init ────────────────────────────────────────────────
+  if (!document.querySelector('.nav-item.active')) {
+    var first = document.querySelector('.nav-item[data-tab="CRM"]');
+    if (first) first.classList.add('active');
+  }
   loadLeads();
 })();
