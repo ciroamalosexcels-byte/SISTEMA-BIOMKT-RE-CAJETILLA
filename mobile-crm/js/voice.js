@@ -39,6 +39,11 @@
       }
     }
 
+    // Normalizar teléfono: quitar espacios y guiones
+    if (result.telefono) {
+      result.telefono = result.telefono.replace(/[\s\-]/g, '');
+    }
+
     // Fallback: detectar teléfono por regex si no se capturó por keyword
     if (!result.telefono) {
       var m = text.match(/\b\d[\d\s\-]{6,}\b/);
