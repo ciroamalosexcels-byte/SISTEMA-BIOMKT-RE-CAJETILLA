@@ -272,6 +272,11 @@ html, body {
 }
 .modal-close svg { width: 16px; height: 16px; }
 
+.modal-form {
+  display: flex;
+  flex-direction: column;
+}
+
 .form-group {
   margin-bottom: 14px;
 }
