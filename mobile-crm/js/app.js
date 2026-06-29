@@ -158,6 +158,7 @@
 
   function stopVoice() {
     if (state.recognition) {
+      if (state.recognition._cancel) state.recognition._cancel();
       state.recognition.stop();
       state.recognition = null;
     }
@@ -179,6 +180,14 @@
       },
       function onTranscript(text) {
         voiceTranscript.textContent = text;
+      },
+      function onError(errType) {
+        stopVoice();
+        voiceTranscript.textContent = '';
+        var msg = errType === 'not-allowed'
+          ? 'Permiso de micrófono denegado'
+          : 'Error de reconocimiento. Intentá de nuevo.';
+        alert(msg);
       }
     );
   });

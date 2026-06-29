@@ -53,7 +53,7 @@
     return result;
   };
 
-  window.startVoice = function (onResult, onTranscript) {
+  window.startVoice = function (onResult, onTranscript, onError) {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       alert('Reconocimiento de voz no disponible. Usá Chrome en Android.');
@@ -67,6 +67,7 @@
     recognition.maxAlternatives = 1;
 
     var finalTranscript = '';
+    var cancelled = false;
 
     recognition.onresult = function (e) {
       var interim = '';
@@ -82,16 +83,18 @@
     };
 
     recognition.onend = function () {
-      if (finalTranscript && onResult) {
+      if (!cancelled && finalTranscript && onResult) {
         onResult(window.parseTranscript(finalTranscript));
       }
     };
 
     recognition.onerror = function (e) {
       console.error('[BIOMKT voice]', e.error);
+      if (onError) onError(e.error);
     };
 
     recognition.start();
+    recognition._cancel = function () { cancelled = true; };
     return recognition;
   };
 })();
