@@ -1,0 +1,47 @@
+name: Deploy mobile-crm to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile-crm/**'
+      - '.github/workflows/deploy-mobile-crm.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Crear config.js con credenciales
+        run: |
+          cat > mobile-crm/js/config.js << EOF
+          window.SUPABASE_URL = '${{ secrets.SUPABASE_URL }}';
+          window.SUPABASE_ANON_KEY = '${{ secrets.SUPABASE_ANON_KEY }}';
+          EOF
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v4
+
+      - name: Subir carpeta mobile-crm
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: mobile-crm/
+
+      - name: Deploy a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
