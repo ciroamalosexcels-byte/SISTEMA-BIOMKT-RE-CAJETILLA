@@ -189,4 +189,11 @@
     if (first) first.classList.add('active');
   }
   loadLeads();
+
+  // ── Service worker ──────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function (err) {
+      console.warn('[BIOMKT sw]', err);
+    });
+  }
 })();
