@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, memo } from "react";
-import { Calendar, RefreshCw, Trash2, ChevronLeft, ChevronRight, Phone, MessageCircle } from "lucide-react";
+import { Calendar, RefreshCw, Trash2, ChevronLeft, ChevronRight, Phone, MessageCircle, Copy, Check } from "lucide-react";
 import { todayBA } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
 import type { Lead } from "@/types";
@@ -14,6 +14,40 @@ const MEDIO_COLOR: Record<string, string> = {
   MAIL:       "#3b82f6",
   PRESENCIAL: "#eab308",
 };
+
+const TAB_LABELS: Record<string, string> = {
+  CRM:        "CRM / Primer contacto",
+  REUNION_1:  "Reunión 1 – Auditoría",
+  REUNION_2:  "Reunión 2 – Cierre",
+  SEGUIMIENTO:"Seguimiento",
+  BASE:       "Base general",
+  CLIENTES:   "Cliente activo",
+};
+
+function formatLeadForCopy(lead: Lead): string {
+  const f = (label: string, val: string | undefined) =>
+    val?.trim() ? `${label}: ${val.trim()}` : null;
+  return [
+    f("Nombre",            [lead.nombre, lead.nombre2].filter(Boolean).join(" / ")),
+    f("Empresa",           lead.empresa),
+    f("Teléfono",          [lead.telefono, lead.telefono2].filter(Boolean).join(" / ")),
+    f("Email",             lead.email),
+    f("Instagram",         lead.instagram),
+    f("Dirección",         lead.direccion),
+    f("Rubro",             lead.rubro),
+    f("Servicio",          lead.servicio),
+    f("Medio de contacto", lead.medio),
+    f("Etapa",             TAB_LABELS[lead.tab ?? ""] ?? lead.tab),
+    f("Responsable",       [lead.responsable1, lead.responsable2].filter(Boolean).join(" / ")),
+    f("Fecha de contacto", lead.fechaContacto?.replace("T", " ").slice(0, 16)),
+    f("Observaciones",     lead.observaciones),
+    f("Objetivos",         lead.objetivos),
+    f("Plan audiovisual",  lead.planAudiovisual),
+    f("Próximo seguimiento", lead.proximoSeguimientoFecha),
+    f("Reunión pactada",   lead.meetingDatetime?.replace("T", " ").slice(0, 16)),
+    f("Ticket",            lead.ticket ? String(lead.ticket) : undefined),
+  ].filter(Boolean).join("\n");
+}
 
 
 interface MoveTarget { fn: () => void; label: string; }
@@ -51,6 +85,7 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
   const moveLeadTo  = useLeadsStore((s) => s.moveLeadTo);
   const [ctxMenu, setCtxMenu]   = useState<{ x: number; y: number } | null>(null);
   const [exiting, setExiting]   = useState<"left" | "right" | null>(null);
+  const [copied, setCopied]     = useState(false);
 
   const today = todayBA();
   const isFollowUpToday = lead.proximoSeguimientoFecha?.startsWith(today);
@@ -87,6 +122,14 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
 
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation(); deleteLead(lead.id); setCtxMenu(null);
+  }
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(formatLeadForCopy(lead)).then(() => {
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setCtxMenu(null); }, 1200);
+    }).catch(() => setCtxMenu(null));
   }
 
   function handleMove(dir: "left" | "right", cb: (() => void) | null) {
@@ -183,6 +226,12 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
               <MessageCircle size={13} /> WhatsApp
             </button>
           )}
+          {lead.telefono && <div className="mx-3 my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />}
+          <button className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06] border-none bg-transparent cursor-pointer"
+            onClick={handleCopy}>
+            {copied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+            {copied ? "¡Copiado!" : "Copiar info"}
+          </button>
           <div className="mx-3 my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />
           <button className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] border-none bg-transparent cursor-pointer"
             onClick={() => { moveLeadTo(lead.id, "CLIENTES"); setCtxMenu(null); }}>
