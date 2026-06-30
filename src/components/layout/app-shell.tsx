@@ -28,7 +28,7 @@ export function AppShell({ children }: AppShellProps) {
   const dismissToast = useAppSettings((s) => s.dismissToast);
   const addNotification = useAppSettings((s) => s.addNotification);
 
-  const { load: loadLeads } = useLeadsStore();
+  const loadLeads = useLeadsStore((s) => s.load);
   const loadTeam = useTeamStore((s) => s.load);
   const loadEvents = useContentEventsStore((s) => s.load);
   const loadColumnWidths = useColumnWidthsStore((s) => s.load);

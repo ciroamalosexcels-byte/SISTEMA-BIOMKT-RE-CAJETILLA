@@ -30,6 +30,12 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
   const [mail, setMail] = useState(member.mail ?? "");
   const [direccion, setDireccion] = useState(member.direccion ?? "");
   const [notas, setNotas] = useState(member.notas ?? "");
+  const [color, setColor] = useState(member.color ?? "");
+
+  const PALETTE = [
+    "#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6",
+    "#ec4899","#8b5cf6","#06b6d4","#f97316","#84cc16",
+  ];
 
   /* Auto-derived values — recompute on render so they update live */
   const edad = calcAge(fechaNacimiento);
@@ -52,6 +58,7 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
       notas,
       signo: signoAstro,
       signoChino,
+      color: color || undefined,
     });
   }
 
@@ -144,6 +151,42 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
               </div>
               <div>
                 SIGNO CHINO: {signoChino || "—"}
+              </div>
+            </div>
+
+            {/* Color del integrante */}
+            <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                Color del integrante
+              </span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {PALETTE.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(color === c ? "" : c)}
+                    title={c}
+                    style={{
+                      width: 28, height: 28, borderRadius: "50%",
+                      background: c,
+                      border: color === c ? "3px solid #0f172a" : "3px solid transparent",
+                      outline: color === c ? `2px solid ${c}` : "none",
+                      outlineOffset: 2,
+                      cursor: "pointer",
+                      transition: "border 0.1s, outline 0.1s",
+                      padding: 0,
+                    }}
+                  />
+                ))}
+                {color && (
+                  <button
+                    type="button"
+                    onClick={() => setColor("")}
+                    style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", background: "none", border: "none", cursor: "pointer", alignSelf: "center", padding: 0 }}
+                  >
+                    Quitar
+                  </button>
+                )}
               </div>
             </div>
           </div>

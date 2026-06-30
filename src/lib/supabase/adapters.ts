@@ -41,8 +41,8 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     planId: row.plan_id ?? undefined,
     activo: row.activo,
     ticket: (row as any).ticket ?? undefined,
-    clave: (row as any).clave ?? undefined,
-    claveEmail: (row as any).clave_email ?? undefined,
+    clave: row.clave ?? undefined,
+    claveEmail: row.clave_email ?? undefined,
     clientOrder: row.client_order ?? undefined,
   };
 }
@@ -86,6 +86,7 @@ export function adaptTeamMember(
     signo: row.signo ?? undefined,
     signoChino: row.signo_chino ?? undefined,
     badges: (row.badges as BadgeKey[]) ?? [],
+    color: row.color ?? undefined,
     status91,
     monthlyPoints,
   };

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
+import { useTeamStore } from "@/store/team";
 import type { Lead } from "@/types";
 
 function progressClass(pct: number) {
@@ -12,10 +13,13 @@ function progressClass(pct: number) {
   return "progress-red";
 }
 
+const DEFAULT_MEMBER_COLOR = "#94a3b8";
+
 function ClientCard({
   lead, progress, contentCount, onClick,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
+  memberColorMap,
 }: {
   lead: Lead;
   progress: number;
@@ -27,11 +31,14 @@ function ClientCard({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
+  memberColorMap: Map<string, string>;
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
   const service = lead.servicio || "—";
   const pct     = Math.round(progress * 100);
   const activo  = lead.activo ?? true;
+
+  const responsables = [lead.responsable1, lead.responsable2].filter(Boolean) as string[];
 
   return (
     <div
@@ -70,6 +77,32 @@ function ClientCard({
         <div className="client-card-text-v11">
           <h3 style={{ margin: 0, paddingRight: 18 }}>{title}</h3>
           <div className="client-card-v11-service">{service}</div>
+          {responsables.length > 0 && (
+            <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
+              {responsables.map(nombre => {
+                const color = memberColorMap.get(nombre) ?? DEFAULT_MEMBER_COLOR;
+                return (
+                  <span
+                    key={nombre}
+                    style={{
+                      fontSize: 10, fontWeight: 700,
+                      color,
+                      background: color + "22",
+                      border: `1px solid ${color}66`,
+                      borderRadius: 20,
+                      padding: "2px 8px",
+                      whiteSpace: "nowrap",
+                      maxWidth: 120,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {nombre}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginTop: 3 }}>
             {contentCount} contenido{contentCount !== 1 ? "s" : ""}
           </div>
@@ -98,10 +131,19 @@ function ClientCard({
 }
 
 export function ClientesView() {
-  const rows         = useLeadsStore((s) => s.rows);
-  const updateLead   = useLeadsStore((s) => s.updateLead);
+  const rows          = useLeadsStore((s) => s.rows);
+  const updateLead    = useLeadsStore((s) => s.updateLead);
   const contentEvents = useContentEventsStore((s) => s.contentEvents);
+  const members       = useTeamStore((s) => s.members);
   const router = useRouter();
+
+  const memberColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const m of members) {
+      if (m.color) map.set(m.nombre, m.color);
+    }
+    return map;
+  }, [members]);
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -239,6 +281,7 @@ export function ClientesView() {
                 onDragOver={(e) => handleDragOver(e, lead.id)}
                 onDrop={(e) => handleDrop(e, lead.id)}
                 onDragEnd={handleDragEnd}
+                memberColorMap={memberColorMap}
               />
             ))}
           </div>
@@ -266,6 +309,7 @@ export function ClientesView() {
                     onDragOver={(e) => handleDragOver(e, lead.id)}
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
+                    memberColorMap={memberColorMap}
                   />
                 ))}
               </div>

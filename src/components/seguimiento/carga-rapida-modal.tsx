@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { usePipelineStore } from "@/store/pipeline";
@@ -240,7 +241,7 @@ export function CargaRapidaModal({ onClose }: Props) {
   const { addLead } = useLeadsStore();
   const stages      = usePipelineStore(s => s.stages);
   const crmStage    = stages.find(s => s.id === "CRM") ?? stages[0];
-  const memberNames = useTeamStore(s => s.members.filter(m => m.activo !== false).map(m => m.nombre));
+  const memberNames = useTeamStore(useShallow(s => s.members.filter(m => m.activo !== false).map(m => m.nombre)));
 
   const [step, setStep]             = useState<Step>("paste");
   const [raw, setRaw]               = useState("");

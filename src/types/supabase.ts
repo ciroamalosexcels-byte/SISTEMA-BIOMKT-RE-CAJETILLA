@@ -94,6 +94,8 @@ export type Database = {
       leads: {
         Row: {
           activo: boolean
+          clave: string | null
+          clave_email: string | null
           clave_secret_id: string | null
           client_order: number | null
           created_at: string
@@ -136,6 +138,8 @@ export type Database = {
         }
         Insert: {
           activo?: boolean
+          clave?: string | null
+          clave_email?: string | null
           clave_secret_id?: string | null
           client_order?: number | null
           created_at?: string
@@ -178,6 +182,8 @@ export type Database = {
         }
         Update: {
           activo?: boolean
+          clave?: string | null
+          clave_email?: string | null
           clave_secret_id?: string | null
           client_order?: number | null
           created_at?: string
@@ -554,6 +560,7 @@ export type Database = {
       team_members: {
         Row: {
           badges: string[]
+          color: string | null
           created_at: string
           deleted_at: string | null
           direccion: string | null
@@ -576,6 +583,7 @@ export type Database = {
         }
         Insert: {
           badges?: string[]
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
           direccion?: string | null
@@ -598,6 +606,7 @@ export type Database = {
         }
         Update: {
           badges?: string[]
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
           direccion?: string | null

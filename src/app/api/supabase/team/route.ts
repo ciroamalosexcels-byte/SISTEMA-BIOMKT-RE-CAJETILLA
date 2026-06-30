@@ -42,6 +42,7 @@ export async function GET() {
       signoChino: m.signo_chino ?? undefined,
       sueldo: (m as any).sueldo ?? undefined,
       activo: (m as any).activo ?? true,
+      color: m.color ?? undefined,
       badges: m.badges as ("wood" | "bronze" | "silver" | "gold")[],
       status91: s91,
       monthlyPoints: (points ?? [])
