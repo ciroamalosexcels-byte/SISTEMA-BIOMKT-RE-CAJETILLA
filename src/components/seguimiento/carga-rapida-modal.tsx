@@ -222,12 +222,110 @@ function parseWhatsApp(text: string): ParsedLead[] {
   return results;
 }
 
+/* ── Formato línea-por-línea (una línea = un contacto) ──────────────── */
+
+// Primeras palabras que indican que la línea es continuación del contacto anterior.
+const CONTINUATION_FIRSTS = new Set([
+  'cosas','el','la','los','las','un','una','nos','me','le','se',
+  'y','pero','que','en','de','a','con','por','para','tiene','sin',
+  'este','esta','estos','estas','también','tambien','además','ademas',
+  'cuando','donde','hay','era','fue','son','no','si','al','del','lo',
+  'sus','su','van','va','otro','otra','tiene','tienen',
+]);
+
+// Timestamp opcional al inicio: "30/06 14:30 " | "30/06/2026 14:30 " | "14:30 " | "14:30hs "
+const LINE_TS_RE = /^(?:(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s+)?(\d{1,2}:\d{2})(?:\s*hs?)?\s+/;
+
+function stripLineTimestamp(line: string): { ts: string; rest: string } {
+  const m = line.match(LINE_TS_RE);
+  if (m) {
+    const [full, datePart, timePart] = m;
+    let ts: string;
+    if (datePart) {
+      ts = parseDateTime(datePart + " " + timePart) ?? "";
+    } else {
+      // Solo hora → fecha de hoy
+      const d = new Date();
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, "0");
+      const dy = String(d.getDate()).padStart(2, "0");
+      const [h, min] = timePart.split(":");
+      ts = `${y}-${mo}-${dy}T${h.padStart(2, "0")}:${min}`;
+    }
+    return { ts, rest: line.slice(full.length) };
+  }
+  // Solo fecha (sin hora): "30/06 " | "30/06/2026 "
+  const dateOnly = line.match(/^(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s+/);
+  if (dateOnly) {
+    return { ts: parseDateTime(dateOnly[1]) ?? "", rest: line.slice(dateOnly[0].length) };
+  }
+  return { ts: "", rest: line };
+}
+
+function startsNewContact(line: string): boolean {
+  const { rest } = stripLineTimestamp(line);
+  if (!rest) return false;
+  // Empieza con minúscula → continuación
+  if (/^[a-záéíóúñü]/.test(rest)) return false;
+  const firstWord = rest.split(/\s+/)[0]
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+  return !CONTINUATION_FIRSTS.has(firstWord);
+}
+
+function parseLineContact(lines: string[]): ParsedLead {
+  const { ts: fechaContacto, rest: firstRest } = stripLineTimestamp(lines[0]);
+  // Unir todas las líneas del bloque en un solo texto
+  const allText = [firstRest, ...lines.slice(1)].join(" ").replace(/\s+/g, " ").trim();
+  const words = allText.split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return { _key: Math.random().toString(36).slice(2), nombre: "", empresa: "", fechaContacto, direccion: "", observaciones: "", telefono: "", accepted: true };
+  }
+  // Primera palabra = nombre de la persona
+  const nombre = words[0];
+  // Palabras siguientes en MAYÚSCULA = nombre del negocio
+  let i = 1;
+  const empresaWords: string[] = [];
+  while (i < words.length && /^[A-ZÁÉÍÓÚÑÜ]/.test(words[i])) {
+    empresaWords.push(words[i]);
+    i++;
+  }
+  return {
+    _key: Math.random().toString(36).slice(2),
+    nombre,
+    empresa: empresaWords.join(" "),
+    fechaContacto,
+    direccion: "",
+    observaciones: words.slice(i).join(" "),
+    telefono: "",
+    accepted: true,
+  };
+}
+
+function parseLineByLine(text: string): ParsedLead[] {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const groups: string[][] = [];
+  for (const line of lines) {
+    if (!groups.length || startsNewContact(line)) {
+      groups.push([line]);
+    } else {
+      groups[groups.length - 1].push(line);
+    }
+  }
+  return groups.map(parseLineContact).filter(p => p.nombre);
+}
+
 /* ── Unified entry point ─────────────────────────────────────────────── */
 
 function parseText(text: string): ParsedLead[] {
   if (isWhatsAppFormat(text)) return parseWhatsApp(text);
-  const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
-  return blocks.map(parseBlock).filter(p => p.nombre);
+  // Si hay líneas en blanco → formato de bloques (comportamiento original)
+  const blank = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  if (blank.length > 1) return blank.map(parseBlock).filter(p => p.nombre);
+  // Sin líneas en blanco → una línea por contacto
+  return parseLineByLine(text);
 }
 
 /* ── Component ───────────────────────────────────────────────────────── */
