@@ -205,14 +205,6 @@ function telUrl(tel: string) {
 }
 
 /* ── Menú contextual ─────────────────────────────────────────────── */
-const TAB_LABELS: Record<string, string> = {
-  CRM: "CRM / Primer contacto",
-  REUNION_1: "Reunión 1 – Auditoría",
-  REUNION_2: "Reunión 2 – Cierre",
-  SEGUIMIENTO: "Seguimiento",
-  BASE: "Base general",
-  CLIENTES: "Cliente activo",
-};
 
 function formatLeadForCopy(lead: Lead): string {
   const f = (label: string, val: string | undefined) =>

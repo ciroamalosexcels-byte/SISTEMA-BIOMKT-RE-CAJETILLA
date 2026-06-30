@@ -50,7 +50,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
   },
 
   addMember(nombre, patch = {}) {
-    const member = { ...makeMember(nombre), ...patch, nombre };
+    const member: TeamMember = { ...makeMember(nombre), ...(patch as Partial<TeamMember>), nombre };
     set((s) => ({ members: [...s.members, member], dirty: true }));
     storage.setTeam(get().members);
     supabase("/api/supabase/team", "POST", member);
