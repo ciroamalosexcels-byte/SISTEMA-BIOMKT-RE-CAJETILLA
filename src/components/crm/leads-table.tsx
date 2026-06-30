@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Phone } from "lucide-react";
+import { Phone, Copy, Check } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useColumnWidthsStore } from "@/store/column-widths";
@@ -205,12 +205,48 @@ function telUrl(tel: string) {
 }
 
 /* ── Menú contextual ─────────────────────────────────────────────── */
+const TAB_LABELS: Record<string, string> = {
+  CRM: "CRM / Primer contacto",
+  REUNION_1: "Reunión 1 – Auditoría",
+  REUNION_2: "Reunión 2 – Cierre",
+  SEGUIMIENTO: "Seguimiento",
+  BASE: "Base general",
+  CLIENTES: "Cliente activo",
+};
+
+function formatLeadForCopy(lead: Lead): string {
+  const f = (label: string, val: string | undefined) =>
+    val?.trim() ? `${label}: ${val.trim()}` : null;
+  return [
+    f("Nombre",             [lead.nombre, lead.nombre2].filter(Boolean).join(" / ")),
+    f("Empresa",            lead.empresa),
+    f("Teléfono",           [lead.telefono, lead.telefono2].filter(Boolean).join(" / ")),
+    f("Email",              lead.email),
+    f("Instagram",          lead.instagram),
+    f("Dirección",          lead.direccion),
+    f("Rubro",              lead.rubro),
+    f("Servicio",           lead.servicio),
+    f("Medio de contacto",  lead.medio),
+    f("Etapa",              TAB_LABELS[lead.tab ?? ""] ?? lead.tab),
+    f("Responsable",        [lead.responsable1, lead.responsable2].filter(Boolean).join(" / ")),
+    f("Fecha de contacto",  lead.fechaContacto?.replace("T", " ").slice(0, 16)),
+    f("Observaciones",      lead.observaciones),
+    f("Objetivos",          lead.objetivos),
+    f("Plan audiovisual",   lead.planAudiovisual),
+    f("Próximo seguimiento",lead.proximoSeguimientoFecha),
+    f("Reunión pactada",    lead.meetingDatetime?.replace("T", " ").slice(0, 16)),
+    f("Ticket",             lead.ticket ? String(lead.ticket) : undefined),
+  ].filter(Boolean).join("\n");
+}
+
 function RowCtxMenu({
-  x, y, telefono, nombre, onClose,
+  x, y, lead, onClose,
 }: {
-  x: number; y: number; telefono: string; nombre: string; onClose: () => void;
+  x: number; y: number; lead: Lead; onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+  const { telefono, nombre } = lead;
   const hasPhone = cleanPhone(telefono).length >= 6;
 
   useEffect(() => {
@@ -275,6 +311,19 @@ function RowCtxMenu({
           Sin teléfono cargado
         </div>
       )}
+      <div style={{ margin: "4px 8px", height: 1, background: "rgba(255,255,255,0.08)" }} />
+      <button
+        style={{ ...btnStyle, color: copied ? "#4ade80" : "rgba(255,255,255,0.8)" }}
+        onClick={() => {
+          navigator.clipboard.writeText(formatLeadForCopy(lead)).then(() => {
+            setCopied(true);
+            setTimeout(() => { setCopied(false); onClose(); }, 1200);
+          }).catch(() => onClose());
+        }}
+      >
+        {copied ? <Check size={15} /> : <Copy size={15} />}
+        {copied ? "¡Copiado!" : "Copiar info"}
+      </button>
     </div>
   );
 }
@@ -289,7 +338,7 @@ export function LeadsTable({ tab, query }: Props) {
   const { getWidth, setWidth, resizeModeEnabled, toggleResizeMode } = useColumnWidthsStore();
   const allWidths = useColumnWidthsStore((s) => s.widths);
   const [page, setPage] = useState(1);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; telefono: string; nombre: string } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; lead: Lead } | null>(null);
   const [datePending, setDatePending] = useState<{
     leadId: string;
     to: TabKey;
@@ -489,7 +538,7 @@ export function LeadsTable({ tab, query }: Props) {
                   onUpdate={(patch) => updateLead(row.id, patch)}
                   onDelete={() => deleteLead(row.id)}
                   onMove={(to) => handleMove(row.id, to)}
-                  onCtxMenu={(x, y) => setCtxMenu({ x, y, telefono: row.telefono, nombre: row.nombre })}
+                  onCtxMenu={(x, y) => setCtxMenu({ x, y, lead: row })}
                 />
               ))}
             </tbody>
@@ -526,8 +575,7 @@ export function LeadsTable({ tab, query }: Props) {
         <RowCtxMenu
           x={ctxMenu.x}
           y={ctxMenu.y}
-          telefono={ctxMenu.telefono}
-          nombre={ctxMenu.nombre}
+          lead={ctxMenu.lead}
           onClose={() => setCtxMenu(null)}
         />
       )}
