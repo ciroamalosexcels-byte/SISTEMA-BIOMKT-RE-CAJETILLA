@@ -5,7 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'mobile-crm/**'
+      - 'mobile-crm/android/**'
+      - '.github/workflows/build-apk.yml'
 
 jobs:
   build-apk:
@@ -13,11 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,35 +24,30 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Instalar Bubblewrap
-        run: npm install -g @bubblewrap/cli
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.1'
 
-      - name: Inicializar proyecto TWA
+      - name: Crear keystore
         run: |
-          mkdir apk-build && cd apk-build
-          bubblewrap init \
-            --manifest https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/manifest.json \
-            --directory . \
-            --packageId com.biomkt.crm \
-            --name "BIOMKT CRM" \
-            --shortName "BIOMKT" \
-            --themeColor "#07152f" \
-            --backgroundColor "#07152f" \
-            --startUrl "/" \
-            --iconUrl https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/icons/icon-512.png \
-            --maskableIconUrl https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/icons/icon-512.png \
-            --signingKeyPath ./key.keystore \
-            --signingKeyAlias biomkt \
-            --signingKeyFullName "Biomarketing" \
-            --signingKeyOrganization "Biomarketing" \
-            --signingKeyOrganizationalUnit "Mobile" \
-            --signingKeyCountry "AR" \
-            --signingKeyPassword "${{ secrets.KEYSTORE_PASSWORD }}" \
-            --signingKeyStorePassword "${{ secrets.KEYSTORE_PASSWORD }}"
+          keytool -genkey -v \
+            -keystore mobile-crm/android/app/keystore.jks \
+            -alias biomkt \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -dname "CN=Biomarketing, OU=Mobile, O=Biomarketing, L=BuenosAires, S=BuenosAires, C=AR"
 
       - name: Build APK
-        working-directory: apk-build
-        run: bubblewrap build --skipPwaValidation
+        working-directory: mobile-crm/android
+        run: gradle assembleRelease
+        env:
+          KEYSTORE_PATH: app/keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: biomkt
 
       - name: Obtener versión
         id: version
@@ -74,5 +65,5 @@ jobs:
             1. Descargá el archivo `.apk`
             2. En Android: Ajustes → Seguridad → activar "Fuentes desconocidas"
             3. Abrí el APK descargado e instalá
-          files: apk-build/app-release-signed.apk
+          files: mobile-crm/android/app/build/outputs/apk/release/app-release.apk
           draft: false
