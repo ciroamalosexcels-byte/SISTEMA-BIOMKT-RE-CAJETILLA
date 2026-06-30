@@ -67,11 +67,32 @@ export async function POST(request: Request) {
   const body = await request.json();
   const admin = createAdminClient();
 
+  const str = (v: unknown): string | null => {
+    if (v == null) return null;
+    const s = String(v).trim();
+    return s || null;
+  };
+
   const { data, error } = await admin.from("team_members").insert({
-    id:     body.id,
-    nombre: body.nombre,
-    badges: body.badges ?? [],
-  }).select("id").single();
+    id:               body.id,
+    nombre:           str(body.nombre) ?? body.nombre,
+    edad:             str(body.edad),
+    equipo:           str(body.equipo),
+    roles:            str(body.roles),
+    horarios:         str(body.horarios),
+    sueldo:           str(body.sueldo),
+    sueno:            str(body.sueno),
+    telefono:         str(body.telefono),
+    mail:             str(body.mail),
+    direccion:        str(body.direccion),
+    fecha_nacimiento: str(body.fechaNacimiento),
+    notas:            str(body.notas),
+    signo:            str(body.signo),
+    signo_chino:      str(body.signoChino),
+    badges:           Array.isArray(body.badges) ? body.badges : [],
+    activo:           typeof body.activo === "boolean" ? body.activo : true,
+    color:            str(body.color),
+  } as any).select("id").single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });

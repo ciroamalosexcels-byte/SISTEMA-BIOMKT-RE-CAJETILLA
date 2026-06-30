@@ -237,11 +237,8 @@ export function EquipoView() {
     const nombre = (patch.nombre ?? "").trim().toUpperCase();
     if (!nombre) { alert("Ingresá un nombre."); return; }
     if (members.some((m) => m.nombre === nombre)) { alert("Ese integrante ya existe."); return; }
-    addMember(nombre);
-    const created = useTeamStore.getState().members.find((m) => m.nombre === nombre);
-    if (created) updateMember(created.id, { ...patch, nombre });
+    addMember(nombre, patch);
     setShowAdd(false);
-    teamSave();
   }
 
   function renderCard(m: TeamMember) {

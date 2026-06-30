@@ -8,7 +8,7 @@ interface TeamStore {
   members: TeamMember[];
   dirty: boolean;
   load: () => void;
-  addMember: (nombre: string) => void;
+  addMember: (nombre: string, patch?: Partial<TeamMember>) => void;
   updateMember: (id: string, patch: Partial<TeamMember>) => void;
   deleteMember: (id: string) => void;
   awardBadge: (id: string, badge: BadgeKey) => void;
@@ -49,8 +49,8 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     set({ members });
   },
 
-  addMember(nombre) {
-    const member = makeMember(nombre);
+  addMember(nombre, patch = {}) {
+    const member = { ...makeMember(nombre), ...patch, nombre };
     set((s) => ({ members: [...s.members, member], dirty: true }));
     storage.setTeam(get().members);
     supabase("/api/supabase/team", "POST", member);
