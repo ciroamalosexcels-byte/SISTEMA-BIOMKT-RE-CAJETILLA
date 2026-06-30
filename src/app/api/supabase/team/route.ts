@@ -58,3 +58,21 @@ export async function GET() {
 
   return NextResponse.json(mapped);
 }
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  const admin = createAdminClient();
+
+  const { data, error } = await admin.from("team_members").insert({
+    id:     body.id,
+    nombre: body.nombre,
+    badges: body.badges ?? [],
+  }).select("id").single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
+}

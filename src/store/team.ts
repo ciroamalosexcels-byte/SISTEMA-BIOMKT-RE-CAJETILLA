@@ -53,6 +53,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     const member = makeMember(nombre);
     set((s) => ({ members: [...s.members, member], dirty: true }));
     storage.setTeam(get().members);
+    supabase("/api/supabase/team", "POST", member);
   },
 
   updateMember(id, patch) {
