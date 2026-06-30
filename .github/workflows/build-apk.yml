@@ -1,0 +1,78 @@
+name: Build APK desde PWA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile-crm/**'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Inicializar proyecto TWA
+        run: |
+          mkdir apk-build && cd apk-build
+          bubblewrap init \
+            --manifest https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/manifest.json \
+            --directory . \
+            --packageId com.biomkt.crm \
+            --name "BIOMKT CRM" \
+            --shortName "BIOMKT" \
+            --themeColor "#07152f" \
+            --backgroundColor "#07152f" \
+            --startUrl "/" \
+            --iconUrl https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/icons/icon-512.png \
+            --maskableIconUrl https://ciroamalosexcels-byte.github.io/SISTEMA-BIOMKT-RE-CAJETILLA/icons/icon-512.png \
+            --signingKeyPath ./key.keystore \
+            --signingKeyAlias biomkt \
+            --signingKeyFullName "Biomarketing" \
+            --signingKeyOrganization "Biomarketing" \
+            --signingKeyOrganizationalUnit "Mobile" \
+            --signingKeyCountry "AR" \
+            --signingKeyPassword "${{ secrets.KEYSTORE_PASSWORD }}" \
+            --signingKeyStorePassword "${{ secrets.KEYSTORE_PASSWORD }}"
+
+      - name: Build APK
+        working-directory: apk-build
+        run: bubblewrap build --skipPwaValidation
+
+      - name: Obtener versión
+        id: version
+        run: echo "tag=v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Crear Release con APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "BIOMKT CRM ${{ steps.version.outputs.tag }}"
+          body: |
+            APK de BIOMKT CRM Mobile.
+
+            **Instalación:**
+            1. Descargá el archivo `.apk`
+            2. En Android: Ajustes → Seguridad → activar "Fuentes desconocidas"
+            3. Abrí el APK descargado e instalá
+          files: apk-build/app-release-signed.apk
+          draft: false
