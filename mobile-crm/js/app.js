@@ -1,10 +1,10 @@
 (function () {
   var MEDIO_COLORS = {
     WHATSAPP:   '#22c55e',
-    LLAMADA:    '#3b82f6',
-    PRESENCIAL: '#a855f7',
-    INSTAGRAM:  '#ec4899',
-    MAIL:       '#f6bf26'
+    LLAMADA:    '#f97316',
+    PRESENCIAL: '#eab308',
+    INSTAGRAM:  '#ef4444',
+    MAIL:       '#3b82f6'
   };
 
   var state = {
@@ -35,8 +35,12 @@
 
   function formatDate(iso) {
     if (!iso) return '';
-    var p = iso.split('-');
-    return p.length < 3 ? iso : p[2] + '/' + p[1] + '/' + p[0];
+    var dt = iso.split('T');
+    var p = dt[0].split('-');
+    if (p.length < 3) return iso;
+    var date = p[2] + '/' + p[1] + '/' + p[0];
+    var time = dt[1] ? ' ' + dt[1].slice(0, 5) : '';
+    return date + time;
   }
 
   function memberColor(nombre) {
@@ -121,7 +125,7 @@
         ? '<span class="badge-medio" style="background:' + medioColor + '22;color:' + medioColor + '">' + escHtml(lead.medio) + '</span>'
         : '';
 
-      var badges = '';
+      var badges = medioBadge;
       if (lead.responsable1) {
         var c1 = memberColor(lead.responsable1);
         badges += '<span class="badge-resp" style="background:' + c1 + '22;color:' + c1 + ';border-color:' + c1 + '44">' + escHtml(lead.responsable1) + '</span>';
@@ -131,18 +135,22 @@
         badges += '<span class="badge-resp" style="background:' + c2 + '22;color:' + c2 + ';border-color:' + c2 + '44">' + escHtml(lead.responsable2) + '</span>';
       }
 
+      var phoneIcon = lead.telefono
+        ? '<a href="tel:' + escHtml(lead.telefono) + '" class="lead-phone-btn" onclick="event.stopPropagation()">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9A16 16 0 0 0 15.1 16.1l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.04z"/></svg>' +
+          '</a>'
+        : '';
+
       return '<div class="lead-card" data-id="' + escHtml(lead.id) + '">' +
         '<div class="lead-top">' +
-          '<span class="lead-name">' + escHtml(lead.nombre || '') + '</span>' +
-          medioBadge +
+          '<span class="lead-empresa">' + escHtml(lead.empresa || '—') + '</span>' +
+          phoneIcon +
         '</div>' +
-        '<div class="lead-meta">' + escHtml(lead.empresa || '—') + '</div>' +
-        (lead.telefono ? '<div class="lead-meta lead-tel">' + escHtml(lead.telefono) + '</div>' : '') +
+        '<div class="lead-nombre">' + escHtml(lead.nombre || '') + '</div>' +
         (lead.observaciones ? '<div class="lead-obs">' + escHtml(lead.observaciones.slice(0, 80)) + (lead.observaciones.length > 80 ? '…' : '') + '</div>' : '') +
-        '<div class="lead-footer">' +
-          '<div class="lead-badges">' + badges + '</div>' +
-          '<span class="lead-date">' + formatDate(lead.fechaContacto) + '</span>' +
-        '</div>' +
+        '<div class="lead-badges-row">' + badges + '</div>' +
+        '<div class="lead-separator"></div>' +
+        '<div class="lead-date">' + formatDate(lead.fechaContacto) + '</div>' +
         '</div>';
     }).join('');
 

@@ -1,10 +1,10 @@
 (function () {
   var KEYWORDS = {
-    nombre:       ['nombre'],
-    empresa:      ['empresa'],
-    telefono:     ['telefono', 'teléfono', 'tel', 'número', 'numero', 'celular'],
-    direccion:    ['dirección', 'direccion'],
-    observaciones:['observaciones', 'observacion', 'nota', 'notas']
+    nombre:        ['nombre'],
+    empresa:       ['empresa'],
+    telefono:      ['telefono', 'teléfono', 'tel', 'número', 'numero', 'celular'],
+    direccion:     ['dirección', 'direccion'],
+    observaciones: ['observaciones', 'observacion', 'nota', 'notas']
   };
 
   var allKeys = [];
@@ -16,9 +16,8 @@
 
   function fieldForKeyword(kw) {
     var lower = kw.toLowerCase();
-    var fields = Object.keys(KEYWORDS);
-    for (var i = 0; i < fields.length; i++) {
-      if (KEYWORDS[fields[i]].indexOf(lower) !== -1) return fields[i];
+    for (var f in KEYWORDS) {
+      if (KEYWORDS[f].indexOf(lower) !== -1) return f;
     }
     return null;
   }
@@ -26,25 +25,30 @@
   window.parseTranscript = function (text) {
     var result = { nombre: '', empresa: '', telefono: '', direccion: '', observaciones: '' };
     var parts = text.split(KEY_PATTERN);
-    var currentField = 'observaciones';
+
+    // Sin keywords: posicional (primer bloque → nombre, segundo → empresa, resto → observaciones)
+    var currentField = null;
+    var positionalStep = 0;
 
     for (var i = 0; i < parts.length; i++) {
       var part = parts[i].trim();
       if (!part) continue;
+
       var field = fieldForKeyword(part);
       if (field) {
         currentField = field;
-      } else {
+      } else if (currentField !== null) {
         result[currentField] = (result[currentField] + ' ' + part).trim();
+      } else {
+        // Modo posicional: nombre → empresa → observaciones
+        if (positionalStep === 0)      { result.nombre   = (result.nombre   + ' ' + part).trim(); positionalStep = 1; }
+        else if (positionalStep === 1) { result.empresa  = (result.empresa  + ' ' + part).trim(); positionalStep = 2; }
+        else                           { result.observaciones = (result.observaciones + ' ' + part).trim(); }
       }
     }
 
-    // Normalizar teléfono: quitar espacios y guiones
-    if (result.telefono) {
-      result.telefono = result.telefono.replace(/[\s\-]/g, '');
-    }
+    if (result.telefono) result.telefono = result.telefono.replace(/[\s\-]/g, '');
 
-    // Fallback: detectar teléfono por regex si no se capturó por keyword
     if (!result.telefono) {
       var m = text.match(/\b\d[\d\s\-]{6,}\b/);
       if (m) result.telefono = m[0].replace(/[\s\-]/g, '');
