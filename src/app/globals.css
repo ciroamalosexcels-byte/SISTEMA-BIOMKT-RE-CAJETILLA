@@ -219,7 +219,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 1; cu
   border: var(--border);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  overflow: clip;
+  flex-shrink: 0;
   position: relative;
 }
 
@@ -483,6 +484,8 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
 .client-progress-circle.progress-red { --progress-color: #ef4444; }
 .client-progress-circle.progress-amber { --progress-color: #f6bf26; }
 .client-progress-circle.progress-green { --progress-color: #22c55e; }
+.client-progress-circle.progress-none { background: #e2e8f0; }
+.client-progress-circle.progress-none span { color: #94a3b8; }
 
 /* ── Team styles ────────────────────────────────────────────────── */
 .team-card { background: #fff; border: var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); overflow: hidden; }

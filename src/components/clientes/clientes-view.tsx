@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
 import { useTeamStore } from "@/store/team";
+import { currentMonthBA } from "@/lib/dates";
 import type { Lead } from "@/types";
 
 function progressClass(pct: number) {
@@ -22,7 +23,7 @@ function ClientCard({
   memberColorMap,
 }: {
   lead: Lead;
-  progress: number;
+  progress: number | null;
   contentCount: number;
   onClick: () => void;
   isDragging: boolean;
@@ -35,7 +36,8 @@ function ClientCard({
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
   const service = lead.servicio || "—";
-  const pct     = Math.round(progress * 100);
+  const hasContent = progress !== null;
+  const pct     = hasContent ? Math.round(progress * 100) : 0;
   const activo  = lead.activo ?? true;
 
   const responsables = [lead.responsable1, lead.responsable2].filter(Boolean) as string[];
@@ -104,14 +106,16 @@ function ClientCard({
             </div>
           )}
           <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginTop: 3 }}>
-            {contentCount} contenido{contentCount !== 1 ? "s" : ""}
+            {hasContent
+              ? `${contentCount} contenido${contentCount !== 1 ? "s" : ""}`
+              : "Sin contenidos este mes"}
           </div>
         </div>
         <div
-          className={`client-progress-circle ${progressClass(progress)}`}
+          className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
           style={{ "--pct": pct } as React.CSSProperties}
         >
-          <span>{pct}%</span>
+          <span>{hasContent ? `${pct}%` : "—"}</span>
         </div>
       </div>
 
@@ -169,15 +173,22 @@ export function ClientesView() {
   }, [rows]);
   const clients = useMemo(() => [...activos, ...inactivos], [activos, inactivos]);
 
-  function getProgress(clientId: string) {
-    const events = contentEvents.filter((e) => e.clientId === clientId);
-    if (events.length === 0) return 0;
+  function getMonthEvents(clientId: string) {
+    const month = currentMonthBA();
+    return contentEvents.filter(
+      (e) => e.clientId === clientId && e.scheduledDate?.slice(0, 7) === month
+    );
+  }
+
+  function getProgress(clientId: string): number | null {
+    const events = getMonthEvents(clientId);
+    if (events.length === 0) return null;
     const total = events.reduce((sum, e) => sum + (STATUS_SCORE[e.status ?? ""] ?? 0), 0);
     return total / events.length;
   }
 
   function getContentCount(clientId: string) {
-    return contentEvents.filter((e) => e.clientId === clientId).length;
+    return getMonthEvents(clientId).length;
   }
 
   function handleDragStart(e: React.DragEvent, id: string) {
