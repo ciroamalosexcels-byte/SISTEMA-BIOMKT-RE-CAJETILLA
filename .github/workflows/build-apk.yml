@@ -48,7 +48,7 @@ jobs:
         working-directory: mobile-crm/android
         run: gradle assembleRelease
         env:
-          KEYSTORE_PATH: app/keystore.jks
+          KEYSTORE_PATH: keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: biomkt
 
