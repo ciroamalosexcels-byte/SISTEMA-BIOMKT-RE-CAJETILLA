@@ -155,11 +155,114 @@
     }).join('');
 
     main.querySelectorAll('.lead-card').forEach(function (card) {
+      var longPressTimer = null;
+      var longPressed = false;
+
+      card.addEventListener('touchstart', function () {
+        longPressed = false;
+        longPressTimer = setTimeout(function () {
+          longPressed = true;
+          var id = card.dataset.id;
+          var lead = state.leads.find(function (l) { return l.id === id; });
+          if (lead) showMoveMenu(lead);
+        }, 600);
+      }, { passive: true });
+
+      card.addEventListener('touchend', function () { clearTimeout(longPressTimer); });
+      card.addEventListener('touchmove', function () { clearTimeout(longPressTimer); });
+
       card.addEventListener('click', function () {
+        if (longPressed) { longPressed = false; return; }
         var id = card.dataset.id;
         var lead = state.leads.find(function (l) { return l.id === id; });
         if (lead) openModal(lead);
       });
+    });
+  }
+
+  // ── Mover stage ─────────────────────────────────────────
+  var STAGE_LABELS = {
+    CRM:         'Prospecto',
+    REUNION_1:   'Reunión 1',
+    REUNION_2:   'Reunión 2',
+    SEGUIMIENTO: 'Seguimiento'
+  };
+  var NEEDS_DATETIME = ['REUNION_1', 'REUNION_2', 'SEGUIMIENTO'];
+
+  var moveMenuOverlay = document.getElementById('moveMenuOverlay');
+  var moveMenuOptions = document.getElementById('moveMenuOptions');
+  document.getElementById('moveMenuClose').addEventListener('click', function () {
+    moveMenuOverlay.classList.add('hidden');
+  });
+  moveMenuOverlay.addEventListener('click', function (e) {
+    if (e.target === moveMenuOverlay) moveMenuOverlay.classList.add('hidden');
+  });
+
+  var pendingMove = null;
+  var datetimeOverlay = document.getElementById('datetimeOverlay');
+  var datetimeTitle   = document.getElementById('datetimeTitle');
+  document.getElementById('datetimeClose').addEventListener('click', function () {
+    datetimeOverlay.classList.add('hidden');
+    pendingMove = null;
+  });
+  datetimeOverlay.addEventListener('click', function (e) {
+    if (e.target === datetimeOverlay) { datetimeOverlay.classList.add('hidden'); pendingMove = null; }
+  });
+
+  document.getElementById('dtConfirm').addEventListener('click', function () {
+    if (!pendingMove) return;
+    var date = document.getElementById('dtDate').value;
+    var time = document.getElementById('dtTime').value;
+    var datetime = date + (time ? 'T' + time : 'T12:00');
+    var updates = { tab: pendingMove.targetTab };
+    if (pendingMove.targetTab === 'SEGUIMIENTO') {
+      updates.proximo_seguimiento_fecha = date;
+    } else {
+      updates.meeting_datetime = datetime;
+    }
+    executeMoveWithUpdates(pendingMove.lead, updates);
+    datetimeOverlay.classList.add('hidden');
+    pendingMove = null;
+  });
+
+  function showMoveMenu(lead) {
+    moveMenuOptions.innerHTML = Object.keys(STAGE_LABELS).map(function (tab) {
+      var isCurrent = tab === lead.tab;
+      return '<button class="move-option' + (isCurrent ? ' move-option-current' : '') + '" data-tab="' + tab + '">' +
+        STAGE_LABELS[tab] +
+        (isCurrent ? ' <span class="move-current-label">actual</span>' : '') +
+        '</button>';
+    }).join('');
+
+    moveMenuOptions.querySelectorAll('.move-option:not(.move-option-current)').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        moveMenuOverlay.classList.add('hidden');
+        var targetTab = btn.dataset.tab;
+        if (NEEDS_DATETIME.indexOf(targetTab) !== -1) {
+          pendingMove = { lead: lead, targetTab: targetTab };
+          datetimeTitle.textContent = STAGE_LABELS[targetTab] + ' — fecha y hora';
+          document.getElementById('dtDate').value = todayISO();
+          document.getElementById('dtTime').value = '';
+          document.getElementById('dtTimeGroup').style.display = targetTab === 'SEGUIMIENTO' ? 'none' : '';
+          datetimeOverlay.classList.remove('hidden');
+        } else {
+          executeMoveWithUpdates(lead, { tab: targetTab });
+        }
+      });
+    });
+
+    moveMenuOverlay.classList.remove('hidden');
+  }
+
+  function executeMoveWithUpdates(lead, updates) {
+    var btn = document.getElementById('dtConfirm');
+    if (btn) { btn.disabled = true; btn.textContent = 'Moviendo...'; }
+    window.updateLead(lead.id, updates).then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar y mover'; }
+      loadLeads();
+    }).catch(function (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar y mover'; }
+      alert('Error al mover: ' + (err.message || JSON.stringify(err)));
     });
   }
 

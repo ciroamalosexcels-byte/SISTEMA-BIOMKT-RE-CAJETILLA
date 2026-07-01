@@ -61,6 +61,19 @@
     return result.data || [];
   };
 
+  window.updateLead = async function (id, updates) {
+    if (updates.tab) {
+      var stages = await getStages();
+      var stage = stages.find(function (s) { return s.stage_key === updates.tab; });
+      if (!stage) throw new Error('Stage no encontrado: ' + updates.tab);
+      updates.stage_id = stage.id;
+      delete updates.tab;
+    }
+    var result = await client.from('leads').update(updates).eq('id', id);
+    if (result.error) throw result.error;
+    return result.data;
+  };
+
   window.insertLead = async function (lead) {
     var stages = await getStages();
     var stage = stages.find(function (s) { return s.stage_key === lead.tab; });

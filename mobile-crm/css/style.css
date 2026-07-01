@@ -403,6 +403,34 @@ html, body {
 .btn-submit:active { opacity: .85; }
 .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
 
+/* ── Move menu ──────────────────────────────────────────── */
+.move-menu { padding-bottom: 16px; }
+
+.move-option {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--slate-200);
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.move-option:active { background: var(--slate-100); }
+.move-option-current { color: var(--slate-400); cursor: default; }
+.move-current-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
 /* ── Voice overlay ──────────────────────────────────────── */
 .voice-overlay {
   position: fixed;
