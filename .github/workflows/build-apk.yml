@@ -8,6 +8,9 @@ on:
       - 'mobile-crm/android/**'
       - '.github/workflows/build-apk.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -48,6 +51,12 @@ jobs:
           KEYSTORE_PATH: app/keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: biomkt
+
+      - name: Subir APK como artifact descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: BIOMKT-CRM.apk
+          path: mobile-crm/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Obtener versión
         id: version
