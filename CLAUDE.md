@@ -156,6 +156,21 @@ Middleware (`src/middleware.ts`) protects all routes except `/auth/*`. Unauthent
 ### Team member color
 `TeamMember` has `color?: string`. Selectable from a 10-color palette in `DatosModal` (`src/components/equipo/datos-modal.tsx`). Saved via PATCH `/api/supabase/team/[id]` and returned in GET `/api/supabase/team`. Stored in `team_members.color` column in Supabase.
 
+### Carga Rápida — parser línea-por-línea (`/seguimiento`)
+`src/components/seguimiento/carga-rapida-modal.tsx` soporta tres formatos:
+1. **WhatsApp export** — detectado por `isWhatsAppFormat()`
+2. **Bloques con línea en blanco** — un bloque = un contacto (comportamiento original)
+3. **Una línea por contacto** (sin líneas en blanco) — nuevo, para texto dictado por voz:
+   - Primera palabra = nombre, palabras capitalizadas siguientes = empresa, resto = observaciones
+   - Líneas que empiezan en minúscula o con palabras de `CONTINUATION_FIRSTS` se unen al contacto anterior
+   - Timestamps opcionales al inicio de línea: `"30/06 14:30 Tamara..."` o `"14:30 Tamara..."` → `fechaContacto`
+
+### Copiar info del contacto (menú contextual)
+Click derecho en tarjeta kanban (`src/components/seguimiento/lead-card.tsx`) o en fila de tabla CRM (`src/components/crm/leads-table.tsx`) muestra opción "Copiar info". Copia todos los campos no vacíos en formato `Clave: Valor` listo para pegar en una IA. Feedback visual con ícono Check + "¡Copiado!" por 1.2 seg.
+
+### Creación de integrantes de equipo — persistencia en Supabase
+`addMember(nombre, patch?)` en `src/store/team.ts` ahora hace un único `POST /api/supabase/team` con todos los campos (antes solo guardaba en localStorage). La route `src/app/api/supabase/team/route.ts` tiene el handler `POST` que inserta en `team_members`. `handleCreate` en `equipo-view.tsx` llama `addMember(nombre, patch)` directamente sin `updateMember` posterior (evita race condition POST→PATCH).
+
 ## Key conventions (Next.js)
 
 - **Timezone**: Use `baParts()` from `src/lib/dates.ts` — never `new Date()` directly for display. Buenos Aires TZ = `America/Argentina/Buenos_Aires`.
