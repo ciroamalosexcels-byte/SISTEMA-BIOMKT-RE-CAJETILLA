@@ -24,10 +24,18 @@
 
   window.parseTranscript = function (text) {
     var result = { nombre: '', empresa: '', telefono: '', direccion: '', observaciones: '' };
+
+    // Si no hay ninguna keyword, todo va a observaciones (el usuario edita la modal)
+    KEY_PATTERN.lastIndex = 0;
+    var hasKeywords = KEY_PATTERN.test(text);
+    KEY_PATTERN.lastIndex = 0;
+
     var parts = text.split(KEY_PATTERN);
 
-    // Sin keywords: posicional (primer bloque → nombre, segundo → empresa, resto → observaciones)
-    var currentField = null;
+    // Sin keywords: fallback seguro a observaciones
+    // Con keywords: texto ANTES del primer keyword va posicional (nombre → empresa),
+    //               texto DESPUÉS de cada keyword va al campo correspondiente
+    var currentField = hasKeywords ? null : 'observaciones';
     var positionalStep = 0;
 
     for (var i = 0; i < parts.length; i++) {
@@ -40,10 +48,9 @@
       } else if (currentField !== null) {
         result[currentField] = (result[currentField] + ' ' + part).trim();
       } else {
-        // Modo posicional: nombre → empresa → observaciones
-        if (positionalStep === 0)      { result.nombre   = (result.nombre   + ' ' + part).trim(); positionalStep = 1; }
-        else if (positionalStep === 1) { result.empresa  = (result.empresa  + ' ' + part).trim(); positionalStep = 2; }
-        else                           { result.observaciones = (result.observaciones + ' ' + part).trim(); }
+        // Texto antes del primer keyword: nombre primero, luego empresa
+        if (positionalStep === 0) { result.nombre  = (result.nombre  + ' ' + part).trim(); positionalStep = 1; }
+        else                      { result.empresa = (result.empresa + ' ' + part).trim(); }
       }
     }
 
