@@ -7,7 +7,6 @@
   var client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   window.db = client;
 
-  // Cache de stages para no repetir el query
   var stageCache = null;
 
   async function getStages() {
@@ -25,7 +24,7 @@
 
     var result = await client
       .from('leads')
-      .select('id, nombre, empresa, telefono, fecha_contacto, medio, observaciones, direccion, responsable1, stage_id')
+      .select('id, nombre, empresa, telefono, fecha_contacto, medio, observaciones, direccion, responsable1, responsable2, email, instagram, rubro, servicio, stage_id')
       .eq('stage_id', stage.id)
       .is('deleted_at', null)
       .order('fecha_contacto', { ascending: false });
@@ -43,9 +42,23 @@
         observaciones: row.observaciones || '',
         direccion: row.direccion || '',
         responsable1: row.responsable1 || '',
+        responsable2: row.responsable2 || '',
+        email: row.email || '',
+        instagram: row.instagram || '',
+        rubro: row.rubro || '',
+        servicio: row.servicio || '',
         tab: tab
       };
     });
+  };
+
+  window.fetchTeam = async function () {
+    var result = await client
+      .from('team_members')
+      .select('id, nombre, color')
+      .order('nombre');
+    if (result.error) throw result.error;
+    return result.data || [];
   };
 
   window.insertLead = async function (lead) {
@@ -64,7 +77,13 @@
         medio: lead.medio || null,
         observaciones: lead.observaciones || null,
         direccion: lead.direccion || null,
-        empresa_bio: lead.empresaBio || 'BIOMARKETING',
+        responsable1: lead.responsable1 || null,
+        responsable2: lead.responsable2 || null,
+        email: lead.email || null,
+        instagram: lead.instagram || null,
+        rubro: lead.rubro || null,
+        servicio: lead.servicio || null,
+        empresa_bio: 'BIOMARKETING',
         stage_id: stage.id,
         activo: true
       }])

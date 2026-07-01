@@ -96,28 +96,62 @@
       </button>
     </div>
     <form id="leadForm" class="modal-form">
-      <div class="form-group">
-        <label for="fNombre">Nombre *</label>
-        <input type="text" id="fNombre" autocomplete="off" required>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fNombre">Nombre *</label>
+          <input type="text" id="fNombre" autocomplete="off" required>
+        </div>
+        <div class="form-group">
+          <label for="fEmpresa">Empresa *</label>
+          <input type="text" id="fEmpresa" autocomplete="off" required>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="fEmpresa">Empresa *</label>
-        <input type="text" id="fEmpresa" autocomplete="off" required>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fTelefono">Teléfono</label>
+          <input type="tel" id="fTelefono" inputmode="tel">
+        </div>
+        <div class="form-group">
+          <label for="fMedio">Medio</label>
+          <select id="fMedio">
+            <option value="">—</option>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="LLAMADA">Llamada</option>
+            <option value="PRESENCIAL">Presencial</option>
+            <option value="INSTAGRAM">Instagram</option>
+            <option value="MAIL">Mail</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="fTelefono">Teléfono</label>
-        <input type="tel" id="fTelefono" inputmode="tel">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fResponsable1">Responsable 1</label>
+          <select id="fResponsable1"><option value="">—</option></select>
+        </div>
+        <div class="form-group">
+          <label for="fResponsable2">Responsable 2</label>
+          <select id="fResponsable2"><option value="">—</option></select>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="fMedio">Medio</label>
-        <select id="fMedio">
-          <option value="">— seleccionar —</option>
-          <option value="WHATSAPP">WhatsApp</option>
-          <option value="LLAMADA">Llamada</option>
-          <option value="PRESENCIAL">Presencial</option>
-          <option value="INSTAGRAM">Instagram</option>
-          <option value="MAIL">Mail</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fEmail">Email</label>
+          <input type="email" id="fEmail" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="fInstagram">Instagram</label>
+          <input type="text" id="fInstagram" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fRubro">Rubro</label>
+          <input type="text" id="fRubro" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="fServicio">Servicio</label>
+          <input type="text" id="fServicio" autocomplete="off">
+        </div>
       </div>
       <div class="form-group">
         <label for="fDireccion">Dirección</label>
@@ -128,7 +162,7 @@
         <textarea id="fObservaciones" rows="3"></textarea>
       </div>
       <div class="form-group">
-        <label for="fTab">Sección destino</label>
+        <label for="fTab">Sección</label>
         <select id="fTab">
           <option value="CRM">Prospecto</option>
           <option value="REUNION_1">Reunión 1</option>
