@@ -171,6 +171,9 @@ Click derecho en tarjeta kanban (`src/components/seguimiento/lead-card.tsx`) o e
 ### Creación de integrantes de equipo — persistencia en Supabase
 `addMember(nombre, patch?)` en `src/store/team.ts` ahora hace un único `POST /api/supabase/team` con todos los campos (antes solo guardaba en localStorage). La route `src/app/api/supabase/team/route.ts` tiene el handler `POST` que inserta en `team_members`. `handleCreate` en `equipo-view.tsx` llama `addMember(nombre, patch)` directamente sin `updateMember` posterior (evita race condition POST→PATCH).
 
+### Progreso mensual en tarjetas de Clientes (`/clientes`)
+`getProgress`/`getContentCount` en `clientes-view.tsx` filtran los `ContentEvent` por `scheduledDate` del mes actual (`currentMonthBA()` en `src/lib/dates.ts`), excluyendo eventos sin fecha. `getProgress` retorna `null` cuando no hay contenidos del mes en curso; `ClientCard` muestra círculo gris (`progress-none` en `globals.css`) con "—" y texto "Sin contenidos este mes" en ese caso. Spec: `docs/superpowers/specs/2026-07-01-progreso-mensual-clientes-design.md`.
+
 ## Key conventions (Next.js)
 
 - **Timezone**: Use `baParts()` from `src/lib/dates.ts` — never `new Date()` directly for display. Buenos Aires TZ = `America/Argentina/Buenos_Aires`.
