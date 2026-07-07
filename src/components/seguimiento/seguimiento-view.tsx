@@ -67,6 +67,15 @@ export function SeguimientoView() {
 
   const totalActive = useMemo(() => filteredRows.filter((r) => r.activo !== false).length, [filteredRows]);
 
+  const sortByFollowUpDate = useCallback((a: Lead, b: Lead) => {
+    const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
+    const bDate = (b.proximoSeguimientoFecha ?? "").slice(0, 10);
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return aDate.localeCompare(bDate);
+  }, []);
+
   const isReunionStage = (id: string) => id === "REUNION_1" || id === "REUNION_2";
 
   const moveTo = useCallback((leadId: string, targetStage: string) => {
@@ -167,18 +176,18 @@ export function SeguimientoView() {
           <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
             <thead>
               <tr className="border-b border-slate-200 dark:border-white/[0.05]">
-                {[["Nombre","17%"],["Empresa","14%"],["Observaciones","15%"],["Teléfono","9%"],["Primer contacto","9%"],["Dirección","14%"],["Responsable","10%"],["Medio","12%"]].map(([h, w]) => (
+                {[["Nombre","17%"],["Empresa","14%"],["Observaciones","15%"],["Teléfono","9%"],["Seguimiento","9%"],["Dirección","14%"],["Responsable","10%"],["Medio","12%"]].map(([h, w]) => (
                   <th key={h} style={{ width: w, paddingLeft: 12 }} className="text-left py-2 pr-3 text-[13px] font-black uppercase tracking-[0.06em] text-slate-400 dark:text-slate-600 whitespace-nowrap overflow-hidden">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {[...filteredRows]
-                .sort((a, b) => (b.fechaContacto ?? "").localeCompare(a.fechaContacto ?? ""))
+                .sort(sortByFollowUpDate)
                 .map((lead) => {
-                  const fc = lead.fechaContacto
+                  const fc = lead.proximoSeguimientoFecha
                     ? (() => {
-                        const [y, m, d] = String(lead.fechaContacto).slice(0, 10).split("-");
+                        const [y, m, d] = String(lead.proximoSeguimientoFecha).slice(0, 10).split("-");
                         return `${d}/${m}/${y}`;
                       })()
                     : "—";

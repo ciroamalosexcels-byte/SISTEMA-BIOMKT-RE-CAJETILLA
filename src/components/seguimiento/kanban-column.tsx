@@ -16,7 +16,7 @@ function DateDivider({ dateStr }: { dateStr: string }) {
     return (
       <div className="flex items-center gap-2 py-1 px-1">
         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
-        <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 tracking-wide uppercase">Sin fecha</span>
+        <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 tracking-wide uppercase">Sin seguimiento</span>
         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
       </div>
     );
@@ -48,10 +48,17 @@ function DateDivider({ dateStr }: { dateStr: string }) {
 }
 
 function groupByDate(leads: Lead[]): { date: string; leads: Lead[] }[] {
-  const sorted = [...leads].sort((a, b) => (b.fechaContacto ?? "").localeCompare(a.fechaContacto ?? ""));
+  const sorted = [...leads].sort((a, b) => {
+    const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
+    const bDate = (b.proximoSeguimientoFecha ?? "").slice(0, 10);
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return aDate.localeCompare(bDate);
+  });
   const groups: { date: string; leads: Lead[] }[] = [];
   for (const lead of sorted) {
-    const date = (lead.fechaContacto ?? "").slice(0, 10);
+    const date = (lead.proximoSeguimientoFecha ?? "").slice(0, 10);
     const last = groups[groups.length - 1];
     if (last && last.date === date) last.leads.push(lead);
     else groups.push({ date, leads: [lead] });
