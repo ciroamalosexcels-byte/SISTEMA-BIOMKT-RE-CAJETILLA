@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { LayoutGrid, List, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
+import { LayoutGrid, List, Search, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
 import { KanbanColumn } from "./kanban-column";
@@ -20,24 +20,52 @@ export function SeguimientoView() {
   const [cargaRapida, setCargaRapida] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
+  const [query, setQuery] = useState("");
   const [meetingPrompt, setMeetingPrompt]     = useState<{ leadId: string; targetStage: string } | null>(null);
   const [meetingDate, setMeetingDate]         = useState("");
   const [followUpPrompt, setFollowUpPrompt]   = useState<{ leadId: string; targetStage: string } | null>(null);
   const [followUpDate, setFollowUpDate]       = useState("");
 
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredRows = useMemo(() => {
+    if (!normalizedQuery) return rows;
+    return rows.filter((lead) => {
+      const haystack = [
+        lead.nombre,
+        lead.nombre2,
+        lead.empresa,
+        lead.telefono,
+        lead.telefono2,
+        lead.observaciones,
+        lead.direccion,
+        lead.responsable1,
+        lead.responsable2,
+        lead.medio,
+        lead.rubro,
+        lead.servicio,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    });
+  }, [rows, normalizedQuery]);
+
   const sortedStages = useMemo(() => [...stages].filter(s => s.id !== "CLIENTES").sort((a, b) => a.order - b.order), [stages]);
 
   const leadsPerStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
-    for (const r of rows) {
+    for (const r of filteredRows) {
       if (r.activo === false) continue;
       if (!map[r.tab]) map[r.tab] = [];
       map[r.tab].push(r);
     }
     return map;
-  }, [rows]);
+  }, [filteredRows]);
 
-  const totalActive = useMemo(() => rows.filter((r) => r.activo !== false).length, [rows]);
+  const totalActive = useMemo(() => filteredRows.filter((r) => r.activo !== false).length, [filteredRows]);
 
   const isReunionStage = (id: string) => id === "REUNION_1" || id === "REUNION_2";
 
@@ -95,6 +123,15 @@ export function SeguimientoView() {
           <div className="bio-page-subtitle">{totalActive} ACTIVOS</div>
         </div>
         <div className="bio-page-actions">
+          <div className="search-wrap">
+            <Search size={18} />
+            <input
+              className="search-input"
+              placeholder="Buscar por nombre, empresa..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
           <button className={`btn btn-sm ${viewMode === "kanban" ? "btn-dark" : "btn-outline"}`} onClick={() => setViewMode("kanban")}>
             <LayoutGrid size={13} className="inline mr-1 align-middle" />Kanban
           </button>
@@ -136,43 +173,56 @@ export function SeguimientoView() {
               </tr>
             </thead>
             <tbody>
-              {[...rows].sort((a,b) => (b.fechaContacto ?? "").localeCompare(a.fechaContacto ?? "")).map((lead) => {
-                const fc = lead.fechaContacto ? (() => { const [y,m,d] = String(lead.fechaContacto).slice(0,10).split("-"); return `${d}/${m}/${y}`; })() : "—";
-                const respC: Record<string,string> = { CIRO:"#6366f1", LOREN:"#ec4899", FEDE:"#f97316", MATE:"#22c55e", TINCHO:"#ef4444", ARI:"#a855f7", LU:"#14b8a6" };
-                const medioC: Record<string,string> = { WHATSAPP:"#22c55e", LLAMADA:"#f97316", INSTAGRAM:"#ef4444", MAIL:"#3b82f6", PRESENCIAL:"#eab308" };
-                const rc = lead.responsable1 ? (respC[lead.responsable1.toUpperCase()] ?? "#94a3b8") : null;
-                const mc = lead.medio ? (medioC[lead.medio.trim().toUpperCase()] ?? "#94a3b8") : null;
-                return (
-                  <tr key={lead.id}
-                    onClick={() => openEditLead(lead)}
-                    onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setTableCtx({ x: e.clientX, y: e.clientY, lead }); }}
-                    className="cursor-pointer border-b border-slate-100 dark:border-white/[0.03] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-1 pr-3 text-[14px] font-bold text-slate-900 dark:text-slate-200 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.nombre}</td>
-                    <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.empresa}</td>
-                    <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}
-                      onClick={e => { e.stopPropagation(); setObsText(lead.observaciones || ""); setObsModal({ id: lead.id, nombre: lead.nombre || lead.empresa || "Lead", obs: lead.observaciones || "" }); }}>
-                      {lead.observaciones
-                        ? <span className={lead.observaciones.length > 15 ? "cursor-pointer hover:text-slate-700 dark:hover:text-slate-300" : ""}>
-                            {lead.observaciones.slice(0, 15)}{lead.observaciones.length > 15 ? "…" : ""}
-                          </span>
-                        : "—"}
-                    </td>
-                    <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.telefono || "—"}</td>
-                    <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap" style={{ paddingLeft: 12 }}>{fc}</td>
-                    <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.direccion || "—"}</td>
-                    <td className="py-1 pr-3" style={{ paddingLeft: 12 }}>
-                      {lead.responsable1 && rc && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[13px] font-black whitespace-nowrap" style={{ background: `${rc}20`, color: rc }}>{lead.responsable1}</span>
-                      )}
-                    </td>
-                    <td className="py-1 pr-3" style={{ paddingLeft: 12 }}>
-                      {lead.medio && mc && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[13px] font-bold whitespace-nowrap" style={{ background: `${mc}18`, color: mc }}>{lead.medio}</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {[...filteredRows]
+                .sort((a, b) => (b.fechaContacto ?? "").localeCompare(a.fechaContacto ?? ""))
+                .map((lead) => {
+                  const fc = lead.fechaContacto
+                    ? (() => {
+                        const [y, m, d] = String(lead.fechaContacto).slice(0, 10).split("-");
+                        return `${d}/${m}/${y}`;
+                      })()
+                    : "—";
+                  const respC: Record<string, string> = { CIRO: "#6366f1", LOREN: "#ec4899", FEDE: "#f97316", MATE: "#22c55e", TINCHO: "#ef4444", ARI: "#a855f7", LU: "#14b8a6" };
+                  const medioC: Record<string, string> = { WHATSAPP: "#22c55e", LLAMADA: "#f97316", INSTAGRAM: "#ef4444", MAIL: "#3b82f6", PRESENCIAL: "#eab308" };
+                  const rc = lead.responsable1 ? (respC[lead.responsable1.toUpperCase()] ?? "#94a3b8") : null;
+                  const mc = lead.medio ? (medioC[lead.medio.trim().toUpperCase()] ?? "#94a3b8") : null;
+
+                  return (
+                    <tr
+                      key={lead.id}
+                      onClick={() => openEditLead(lead)}
+                      onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setTableCtx({ x: e.clientX, y: e.clientY, lead }); }}
+                      className="cursor-pointer border-b border-slate-100 dark:border-white/[0.03] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="py-1 pr-3 text-[14px] font-bold text-slate-900 dark:text-slate-200 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.nombre}</td>
+                      <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.empresa}</td>
+                      <td
+                        className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden"
+                        style={{ paddingLeft: 12 }}
+                        onClick={(e) => { e.stopPropagation(); setObsText(lead.observaciones || ""); setObsModal({ id: lead.id, nombre: lead.nombre || lead.empresa || "Lead", obs: lead.observaciones || "" }); }}
+                      >
+                        {lead.observaciones
+                          ? <span className={lead.observaciones.length > 15 ? "cursor-pointer hover:text-slate-700 dark:hover:text-slate-300" : ""}>
+                              {lead.observaciones.slice(0, 15)}{lead.observaciones.length > 15 ? "…" : ""}
+                            </span>
+                          : "—"}
+                      </td>
+                      <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.telefono || "—"}</td>
+                      <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap" style={{ paddingLeft: 12 }}>{fc}</td>
+                      <td className="py-1 pr-3 text-[14px] text-slate-500 dark:text-slate-400 whitespace-nowrap overflow-hidden" style={{ paddingLeft: 12 }}>{lead.direccion || "—"}</td>
+                      <td className="py-1 pr-3" style={{ paddingLeft: 12 }}>
+                        {lead.responsable1 && rc && (
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[13px] font-black whitespace-nowrap" style={{ background: `${rc}20`, color: rc }}>{lead.responsable1}</span>
+                        )}
+                      </td>
+                      <td className="py-1 pr-3" style={{ paddingLeft: 12 }}>
+                        {lead.medio && mc && (
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[13px] font-bold whitespace-nowrap" style={{ background: `${mc}18`, color: mc }}>{lead.medio}</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
