@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { LayoutGrid, List, Search, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
+import { daysFromToday } from "@/lib/dates";
 import { KanbanColumn } from "./kanban-column";
 import { LeadModal } from "./lead-modal";
 import { CargaRapidaModal } from "./carga-rapida-modal";
@@ -21,6 +22,7 @@ export function SeguimientoView() {
   const [selectedLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
   const [query, setQuery] = useState("");
+  const [weekOnly, setWeekOnly] = useState(false);
   const [meetingPrompt, setMeetingPrompt]     = useState<{ leadId: string; targetStage: string } | null>(null);
   const [meetingDate, setMeetingDate]         = useState("");
   const [followUpPrompt, setFollowUpPrompt]   = useState<{ leadId: string; targetStage: string } | null>(null);
@@ -29,8 +31,14 @@ export function SeguimientoView() {
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredRows = useMemo(() => {
-    if (!normalizedQuery) return rows;
     return rows.filter((lead) => {
+      if (weekOnly) {
+        const days = daysFromToday((lead.proximoSeguimientoFecha ?? "").slice(0, 10));
+        if (Number.isNaN(days) || days < -3 || days > 3) return false;
+      }
+
+      if (!normalizedQuery) return true;
+
       const haystack = [
         lead.nombre,
         lead.nombre2,
@@ -51,7 +59,7 @@ export function SeguimientoView() {
 
       return haystack.includes(normalizedQuery);
     });
-  }, [rows, normalizedQuery]);
+  }, [rows, normalizedQuery, weekOnly]);
 
   const sortedStages = useMemo(() => [...stages].filter(s => s.id !== "CLIENTES").sort((a, b) => a.order - b.order), [stages]);
 
@@ -141,6 +149,19 @@ export function SeguimientoView() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
+          <button
+            type="button"
+            className={`btn btn-sm ${weekOnly ? "btn-dark" : "btn-outline"}`}
+            onClick={() => setWeekOnly((v) => !v)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <path d="M16 2v4" />
+              <path d="M8 2v4" />
+              <path d="M3 10h18" />
+            </svg>
+            <span>Esta semana</span>
+          </button>
           <button className={`btn btn-sm ${viewMode === "kanban" ? "btn-dark" : "btn-outline"}`} onClick={() => setViewMode("kanban")}>
             <LayoutGrid size={13} className="inline mr-1 align-middle" />Kanban
           </button>
