@@ -38,13 +38,8 @@ export function SeguimientoView() {
 
   const normalizedQuery = query.trim().toLowerCase();
 
-  const filteredRows = useMemo(() => {
+  const searchedRows = useMemo(() => {
     return rows.filter((lead) => {
-      if (weekOnly) {
-        const days = daysFromToday((lead.proximoSeguimientoFecha ?? "").slice(0, 10));
-        if (Number.isNaN(days) || days < -3 || days > 3) return false;
-      }
-
       if (!normalizedQuery) return true;
 
       const haystack = [
@@ -70,21 +65,25 @@ export function SeguimientoView() {
 
       return haystack.includes(normalizedQuery);
     });
-  }, [rows, normalizedQuery, weekOnly]);
+  }, [rows, normalizedQuery]);
 
   const sortedStages = useMemo(() => [...stages].filter(s => s.id !== "CLIENTES").sort((a, b) => a.order - b.order), [stages]);
 
   const leadsPerStage = useMemo(() => {
     const map: Record<string, Lead[]> = {};
-    for (const r of filteredRows) {
+    for (const r of searchedRows) {
       if (r.activo === false) continue;
+      if (r.tab === "SEGUIMIENTO" && weekOnly) {
+        const days = daysFromToday((r.proximoSeguimientoFecha ?? "").slice(0, 10));
+        if (Number.isNaN(days) || days < -3 || days > 3) continue;
+      }
       if (!map[r.tab]) map[r.tab] = [];
       map[r.tab].push(r);
     }
     return map;
-  }, [filteredRows]);
+  }, [searchedRows, weekOnly]);
 
-  const totalActive = useMemo(() => filteredRows.filter((r) => r.activo !== false).length, [filteredRows]);
+  const totalActive = useMemo(() => searchedRows.filter((r) => r.activo !== false).length, [searchedRows]);
 
   const sortByFollowUpDate = useCallback((a: Lead, b: Lead) => {
     const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
@@ -214,7 +213,7 @@ export function SeguimientoView() {
               </tr>
             </thead>
             <tbody>
-              {[...filteredRows]
+              {[...searchedRows]
                 .sort(sortByFollowUpDate)
                 .map((lead) => {
                   const fc = lead.proximoSeguimientoFecha
