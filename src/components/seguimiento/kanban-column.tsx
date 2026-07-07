@@ -48,9 +48,19 @@ function DateDivider({ dateStr }: { dateStr: string }) {
 }
 
 function groupByDate(leads: Lead[]): { date: string; leads: Lead[] }[] {
+  const today = todayBA();
+  const rank = (date: string) => {
+    if (!date) return 3;
+    if (date === today) return 0;
+    if (date < today) return 1;
+    return 2;
+  };
+
   const sorted = [...leads].sort((a, b) => {
     const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
     const bDate = (b.proximoSeguimientoFecha ?? "").slice(0, 10);
+    const diff = rank(aDate) - rank(bDate);
+    if (diff !== 0) return diff;
     if (!aDate && !bDate) return 0;
     if (!aDate) return 1;
     if (!bDate) return -1;
