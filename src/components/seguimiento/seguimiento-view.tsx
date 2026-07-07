@@ -22,7 +22,7 @@ export function SeguimientoView() {
   const [selectedLead, setSelectedLead] = useState<Lead | null | undefined>(undefined);
   const [defaultStageId, setDefaultStageId] = useState<string>("");
   const [query, setQuery] = useState("");
-  const [weekOnly, setWeekOnly] = useState(false);
+  const [weekOnly, setWeekOnly] = useState(true);
   const [meetingPrompt, setMeetingPrompt]     = useState<{ leadId: string; targetStage: string } | null>(null);
   const [meetingDate, setMeetingDate]         = useState("");
   const [followUpPrompt, setFollowUpPrompt]   = useState<{ leadId: string; targetStage: string } | null>(null);
