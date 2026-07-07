@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, memo } from "react";
 import { Calendar, RefreshCw, Trash2, ChevronLeft, ChevronRight, Phone, MessageCircle, Copy, Check } from "lucide-react";
-import { todayBA } from "@/lib/dates";
+import { todayBA, daysFromToday, formatDateDisplay } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
 import type { Lead } from "@/types";
 
@@ -88,8 +88,13 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
   const [copied, setCopied]     = useState(false);
 
   const today = todayBA();
-  const isFollowUpToday = lead.proximoSeguimientoFecha?.startsWith(today);
-  const isFollowUpLate  = lead.proximoSeguimientoFecha && lead.proximoSeguimientoFecha < today;
+  const followUpDate = lead.proximoSeguimientoFecha?.slice(0, 10) ?? "";
+  const followUpBadge = (() => {
+    if (!followUpDate) return null;
+    const days = daysFromToday(followUpDate);
+    const label = days === 0 ? "Hoy" : days === 1 ? "Mañana" : days < 0 ? "Atrasado" : formatDateDisplay(followUpDate);
+    return { label, late: days < 0, today: days === 0 };
+  })();
   const meetingBadge = (() => {
     if (!lead.meetingDatetime) return null;
     const dt = new Date(lead.meetingDatetime);
@@ -170,9 +175,9 @@ export const LeadCard = memo(function LeadCard({ lead, stageColor: _stageColor, 
                   <Calendar size={9} /> {meetingBadge}
                 </span>
               )}
-              {(isFollowUpToday || isFollowUpLate) && (
-                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400">
-                  <RefreshCw size={9} /> {isFollowUpToday ? "Hoy" : "Atrasado"}
+              {followUpBadge && (
+                <span className={`text-[13px] font-bold px-2 py-0.5 rounded-full flex items-center gap-[3px] whitespace-nowrap ${followUpBadge.today ? "bg-red-100 dark:bg-red-500/[0.1] text-red-600 dark:text-red-400" : followUpBadge.late ? "bg-orange-100 dark:bg-orange-500/[0.12] text-orange-700 dark:text-orange-300" : "bg-sky-100 dark:bg-sky-500/[0.1] text-sky-700 dark:text-sky-300"}`}>
+                  <RefreshCw size={9} /> {followUpBadge.label}
                 </span>
               )}
             </div>
