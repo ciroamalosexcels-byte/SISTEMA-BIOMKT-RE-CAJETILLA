@@ -12,6 +12,14 @@ import type { Lead } from "@/types";
 
 type ViewMode = "kanban" | "table";
 
+function dateForSearch(value?: string): string {
+  if (!value) return "";
+  const [datePart] = value.split("T");
+  const [y, m, d] = datePart.slice(0, 10).split("-");
+  if (!y || !m || !d) return value;
+  return `${Number(d)}/${Number(m)}/${y}`;
+}
+
 export function SeguimientoView() {
   const rows        = useLeadsStore((s) => s.rows);
   const moveLeadTo  = useLeadsStore((s) => s.moveLeadTo);
@@ -52,6 +60,9 @@ export function SeguimientoView() {
         lead.medio,
         lead.rubro,
         lead.servicio,
+        dateForSearch(lead.proximoSeguimientoFecha),
+        dateForSearch(lead.fechaContacto),
+        dateForSearch(lead.meetingDatetime),
       ]
         .filter(Boolean)
         .join(" ")
