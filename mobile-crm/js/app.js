@@ -13,7 +13,9 @@
     team: [],
     memberMap: {},
     loading: false,
-    recognition: null
+    recognition: null,
+    query: '',
+    weekOnly: true
   };
 
   function todayISO() {
@@ -43,10 +45,76 @@
     return date + time;
   }
 
+  function dateForSearch(value) {
+    if (!value) return '';
+    var datePart = String(value).split('T')[0];
+    var parts = datePart.slice(0, 10).split('-');
+    if (parts.length !== 3) return String(value);
+    return String(Number(parts[2])) + '/' + String(Number(parts[1])) + '/' + parts[0];
+  }
+
+  function daysFromToday(isoDate) {
+    if (!isoDate) return NaN;
+    var today = todayISO();
+    var a = new Date(today + 'T00:00:00');
+    var b = new Date(isoDate + 'T00:00:00');
+    return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
   function memberColor(nombre) {
     if (!nombre) return '#64748b';
     var m = state.memberMap[nombre.trim().toLowerCase()];
     return m ? m.color || '#64748b' : '#64748b';
+  }
+
+  function normalizeText(value) {
+    return String(value || '').toLowerCase();
+  }
+
+  function matchLeadQuery(lead, query) {
+    if (!query) return true;
+    var haystack = [
+      lead.nombre,
+      lead.empresa,
+      lead.telefono,
+      lead.observaciones,
+      lead.direccion,
+      lead.responsable1,
+      lead.responsable2,
+      lead.medio,
+      lead.rubro,
+      lead.servicio,
+      dateForSearch(lead.proximoSeguimientoFecha),
+      dateForSearch(lead.fechaContacto),
+      dateForSearch(lead.meetingDatetime)
+    ].map(normalizeText).join(' ');
+    return haystack.indexOf(query) !== -1;
+  }
+
+  function followUpRank(date) {
+    if (!date) return 3;
+    var today = todayISO();
+    if (date === today) return 0;
+    if (date < today) return 1;
+    return 2;
+  }
+
+  function sortByFollowUpPriority(a, b) {
+    var aDate = (a.proximoSeguimientoFecha || '').slice(0, 10);
+    var bDate = (b.proximoSeguimientoFecha || '').slice(0, 10);
+    var diff = followUpRank(aDate) - followUpRank(bDate);
+    if (diff !== 0) return diff;
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return aDate.localeCompare(bDate);
+  }
+
+  function formatDateLabel(iso) {
+    if (!iso) return '—';
+    var parts = String(iso).slice(0, 10).split('-');
+    if (parts.length !== 3) return iso;
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
   }
 
   // ── Dark mode ───────────────────────────────────────────
@@ -111,15 +179,33 @@
   // ── Render ──────────────────────────────────────────────
   function renderMain() {
     var main = document.getElementById('main');
+    var query = normalizeText(state.query.trim());
+    var leads = state.leads.filter(function (lead) {
+      return matchLeadQuery(lead, query);
+    });
+
+    if (state.currentTab === 'SEGUIMIENTO') {
+      if (state.weekOnly !== false) {
+        leads = leads.filter(function (lead) {
+          var days = daysFromToday((lead.proximoSeguimientoFecha || '').slice(0, 10));
+          return !isNaN(days) && days >= -3 && days <= 3;
+        });
+      }
+      leads = leads.slice().sort(sortByFollowUpPriority);
+    }
+
     if (state.loading) {
       main.innerHTML = '<div class="loading">Cargando...</div>';
       return;
     }
-    if (!state.leads.length) {
-      main.innerHTML = '<div class="empty">Sin registros en esta sección</div>';
+    var toolbar = '<div class="toolbar"><div class="toolbar-actions"><div class="search-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input class="search-input" id="searchInput" type="search" placeholder="Buscar por nombre, empresa, teléfono, observaciones, dirección, responsable, medio, rubro, servicio o fecha" value="' + escHtml(state.query) + '" autocomplete="off"></div>' + (state.currentTab === 'SEGUIMIENTO' ? '<button class="week-toggle' + (state.weekOnly !== false ? ' active' : '') + '" id="weekToggleBtn" type="button" aria-pressed="' + (state.weekOnly !== false ? 'true' : 'false') + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg><span>Esta semana</span></button>' : '') + '</div></div>';
+    if (!leads.length) {
+      main.innerHTML = toolbar + '<div class="empty">' + (state.leads.length ? 'Sin coincidencias' : 'Sin registros en esta sección') + '</div>';
+      bindSearchInput();
+      bindWeekToggle();
       return;
     }
-    main.innerHTML = state.leads.map(function (lead) {
+    main.innerHTML = toolbar + leads.map(function (lead) {
       var medioColor = MEDIO_COLORS[lead.medio] || '#94a3b8';
       var medioBadge = lead.medio
         ? '<span class="badge-medio" style="background:' + medioColor + '22;color:' + medioColor + '">' + escHtml(lead.medio) + '</span>'
@@ -150,9 +236,12 @@
         (lead.observaciones ? '<div class="lead-obs">' + escHtml(lead.observaciones.slice(0, 80)) + (lead.observaciones.length > 80 ? '…' : '') + '</div>' : '') +
         '<div class="lead-badges-row">' + badges + '</div>' +
         '<div class="lead-separator"></div>' +
-        '<div class="lead-date">' + formatDate(lead.fechaContacto) + '</div>' +
+        '<div class="lead-date">' + escHtml(state.currentTab === 'SEGUIMIENTO' ? formatDateLabel(lead.proximoSeguimientoFecha) : formatDate(lead.fechaContacto)) + '</div>' +
         '</div>';
     }).join('');
+
+    bindSearchInput();
+    bindWeekToggle();
 
     main.querySelectorAll('.lead-card').forEach(function (card) {
       var longPressTimer = null;
@@ -177,6 +266,24 @@
         var lead = state.leads.find(function (l) { return l.id === id; });
         if (lead) openModal(lead);
       });
+    });
+  }
+
+  function bindSearchInput() {
+    var searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    searchInput.addEventListener('input', function (e) {
+      state.query = e.target.value || '';
+      renderMain();
+    });
+  }
+
+  function bindWeekToggle() {
+    var btn = document.getElementById('weekToggleBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      state.weekOnly = !state.weekOnly;
+      renderMain();
     });
   }
 

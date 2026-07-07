@@ -101,6 +101,72 @@ html, body {
   font-size: 13px;
 }
 
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin-bottom: 10px;
+  padding-bottom: 2px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-wrap svg {
+  flex-shrink: 0;
+  color: var(--slate-400);
+}
+
+.search-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.search-input::placeholder {
+  color: var(--slate-400);
+}
+
+.week-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--slate-200);
+  background: var(--card);
+  color: var(--slate-500);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.week-toggle svg { flex-shrink: 0; }
+.week-toggle.active {
+  color: var(--dark);
+  border-color: rgba(246,191,38,.4);
+  background: rgba(246,191,38,.14);
+}
+
 /* ── Lead card ──────────────────────────────────────────── */
 .lead-card {
   background: var(--card);
