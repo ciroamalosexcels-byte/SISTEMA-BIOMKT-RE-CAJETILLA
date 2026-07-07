@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { LayoutGrid, List, Search, Phone, MessageCircle, Trash2, Zap } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
-import { todayBA } from "@/lib/dates";
 import { KanbanColumn } from "./kanban-column";
 import { LeadModal } from "./lead-modal";
 import { CargaRapidaModal } from "./carga-rapida-modal";
@@ -69,22 +68,12 @@ export function SeguimientoView() {
   const totalActive = useMemo(() => filteredRows.filter((r) => r.activo !== false).length, [filteredRows]);
 
   const sortByFollowUpDate = useCallback((a: Lead, b: Lead) => {
-    const today = todayBA();
-    const rank = (date: string) => {
-      if (!date) return 3;
-      if (date === today) return 0;
-      if (date < today) return 1;
-      return 2;
-    };
-
     const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
     const bDate = (b.proximoSeguimientoFecha ?? "").slice(0, 10);
-    const diff = rank(aDate) - rank(bDate);
-    if (diff !== 0) return diff;
     if (!aDate && !bDate) return 0;
     if (!aDate) return 1;
     if (!bDate) return -1;
-    return aDate.localeCompare(bDate);
+    return bDate.localeCompare(aDate);
   }, []);
 
   const isReunionStage = (id: string) => id === "REUNION_1" || id === "REUNION_2";
