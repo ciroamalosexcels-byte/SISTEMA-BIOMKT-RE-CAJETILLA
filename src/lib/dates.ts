@@ -151,6 +151,73 @@ export function chineseZodiac(fecha: string): string {
   return `${animals[ai]} de ${elements[ei]} ${emojis[ai]}`;
 }
 
+export interface MayaAstrology {
+  signo: string;
+  tono: string;
+  color: string;
+  direccion: string;
+  elemento: string;
+}
+
+const MAYA_SIGNS: MayaAstrology[] = [
+  { signo: "Imix",    tono: "", color: "Rojo",      direccion: "Este",   elemento: "Agua" },
+  { signo: "Ik",      tono: "", color: "Blanco",    direccion: "Norte",  elemento: "Viento" },
+  { signo: "Akbal",   tono: "", color: "Azul",      direccion: "Oeste",  elemento: "Noche" },
+  { signo: "Kan",     tono: "", color: "Amarillo",  direccion: "Sur",    elemento: "Semilla" },
+  { signo: "Chicchan",tono: "", color: "Rojo",      direccion: "Este",   elemento: "Serpiente" },
+  { signo: "Cimi",    tono: "", color: "Blanco",    direccion: "Norte",  elemento: "Muerte" },
+  { signo: "Manik",   tono: "", color: "Azul",      direccion: "Oeste",  elemento: "Venado" },
+  { signo: "Lamat",   tono: "", color: "Amarillo",  direccion: "Sur",    elemento: "Estrella" },
+  { signo: "Muluc",   tono: "", color: "Rojo",      direccion: "Este",   elemento: "Agua" },
+  { signo: "Ok",      tono: "", color: "Blanco",    direccion: "Norte",  elemento: "Perro" },
+  { signo: "Chuen",   tono: "", color: "Azul",      direccion: "Oeste",  elemento: "Mono" },
+  { signo: "Eb",      tono: "", color: "Amarillo",  direccion: "Sur",    elemento: "Lluvia" },
+  { signo: "Ben",     tono: "", color: "Rojo",      direccion: "Este",   elemento: "Caña" },
+  { signo: "Ix",      tono: "", color: "Blanco",    direccion: "Norte",  elemento: "Jaguar" },
+  { signo: "Men",     tono: "", color: "Azul",      direccion: "Oeste",  elemento: "Aguila" },
+  { signo: "Cib",     tono: "", color: "Amarillo",  direccion: "Sur",    elemento: "Sabiduria" },
+  { signo: "Caban",   tono: "", color: "Rojo",      direccion: "Este",   elemento: "Tierra" },
+  { signo: "Etznab",  tono: "", color: "Blanco",    direccion: "Norte",  elemento: "Pedernal" },
+  { signo: "Cauac",   tono: "", color: "Azul",      direccion: "Oeste",  elemento: "Tormenta" },
+  { signo: "Ahau",    tono: "", color: "Amarillo",  direccion: "Sur",    elemento: "Sol" },
+];
+
+function gregorianToJulianDay(year: number, month: number, day: number): number {
+  let y = year;
+  let m = month;
+  if (m <= 2) {
+    y -= 1;
+    m += 12;
+  }
+  const a = Math.floor(y / 100);
+  const b = 2 - a + Math.floor(a / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + b - 1524;
+}
+
+export function mayaAstrology(fecha: string): MayaAstrology {
+  if (!fecha) return { signo: "", tono: "", color: "", direccion: "", elemento: "" };
+
+  const [yearStr, monthStr, dayStr] = fecha.slice(0, 10).split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  if (!year || !month || !day) return { signo: "", tono: "", color: "", direccion: "", elemento: "" };
+
+  const jdn = gregorianToJulianDay(year, month, day);
+  const offset = jdn + 96;
+  const signIndex = ((offset % 20) + 20) % 20;
+  const tone = (((offset % 13) + 13) % 13) + 1;
+  const base = MAYA_SIGNS[signIndex];
+
+  return {
+    signo: base.signo,
+    tono: String(tone),
+    color: base.color,
+    direccion: base.direccion,
+    elemento: base.elemento,
+  };
+}
+
 /** Auto-calculates age from a YYYY-MM-DD birth date string */
 export function calcAge(fechaNacimiento: string): string {
   if (!fechaNacimiento) return "";

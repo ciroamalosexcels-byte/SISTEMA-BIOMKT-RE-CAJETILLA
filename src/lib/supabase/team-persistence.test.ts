@@ -18,6 +18,11 @@ const baseMemberRow = {
   notas: "nota",
   signo: "Piscis",
   signo_chino: "Rata",
+  signo_maya: "Muluc",
+  tono_maya: "13",
+  color_maya: "Rojo",
+  direccion_maya: "Este",
+  elemento_maya: "Agua",
   badges: ["wood", "bronze"],
   profile_id: null,
   deleted_at: null,
@@ -78,6 +83,15 @@ describe("adaptTeamMember — lectura de monthlyPoints desde Supabase", () => {
       fecha: "2025-06-01",
       estado: "green",
     });
+  });
+
+  it("mapea correctamente los campos mayas", () => {
+    const result = adaptTeamMember(baseMemberRow as any, [], []);
+    expect(result.signoMaya).toBe("Muluc");
+    expect(result.tonoMaya).toBe("13");
+    expect(result.colorMaya).toBe("Rojo");
+    expect(result.direccionMaya).toBe("Este");
+    expect(result.elementoMaya).toBe("Agua");
   });
 
   it("estado null en la DB se convierte en string vacío", () => {

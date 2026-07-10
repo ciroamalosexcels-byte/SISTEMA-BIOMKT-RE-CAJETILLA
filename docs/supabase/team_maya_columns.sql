@@ -1,0 +1,6 @@
+ALTER TABLE team_members
+  ADD COLUMN IF NOT EXISTS signo_maya TEXT,
+  ADD COLUMN IF NOT EXISTS tono_maya TEXT,
+  ADD COLUMN IF NOT EXISTS color_maya TEXT,
+  ADD COLUMN IF NOT EXISTS direccion_maya TEXT,
+  ADD COLUMN IF NOT EXISTS elemento_maya TEXT;

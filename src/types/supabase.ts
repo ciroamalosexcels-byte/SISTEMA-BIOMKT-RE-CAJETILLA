@@ -577,6 +577,11 @@ export type Database = {
           sheet_id: string | null
           signo: string | null
           signo_chino: string | null
+          signo_maya: string | null
+          tono_maya: string | null
+          color_maya: string | null
+          direccion_maya: string | null
+          elemento_maya: string | null
           sueno: string | null
           telefono: string | null
           updated_at: string
@@ -600,6 +605,11 @@ export type Database = {
           sheet_id?: string | null
           signo?: string | null
           signo_chino?: string | null
+          signo_maya?: string | null
+          tono_maya?: string | null
+          color_maya?: string | null
+          direccion_maya?: string | null
+          elemento_maya?: string | null
           sueno?: string | null
           telefono?: string | null
           updated_at?: string
@@ -623,6 +633,11 @@ export type Database = {
           sheet_id?: string | null
           signo?: string | null
           signo_chino?: string | null
+          signo_maya?: string | null
+          tono_maya?: string | null
+          color_maya?: string | null
+          direccion_maya?: string | null
+          elemento_maya?: string | null
           sueno?: string | null
           telefono?: string | null
           updated_at?: string

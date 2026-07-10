@@ -8,7 +8,7 @@ import { useAppSettings } from "@/store/app-settings";
 import { BADGES, STATUS91_ITEMS } from "@/lib/constants";
 import { DatosModal } from "./datos-modal";
 import { MemberMetricsCharts } from "./member-metrics";
-import { zodiacSign, chineseZodiac, formatDateDisplay, baParts } from "@/lib/dates";
+import { zodiacSign, chineseZodiac, mayaAstrology, formatDateDisplay, baParts } from "@/lib/dates";
 import type { TeamMember, StatusColor, BadgeKey, MonthlyPoint } from "@/types";
 
 /* ── Color dot picker ────────────────────────────────────────────── */
@@ -131,6 +131,7 @@ export function MemberProfile({ memberId }: Props) {
 
   const signoAuto = member.fechaNacimiento ? zodiacSign(member.fechaNacimiento) : member.signo ?? "";
   const signoChAuto = member.fechaNacimiento ? chineseZodiac(member.fechaNacimiento) : member.signoChino ?? "";
+  const maya = member.fechaNacimiento ? mayaAstrology(member.fechaNacimiento) : null;
 
   const infoRows = [
     { label: "Nombre",       value: member.nombre },
@@ -143,6 +144,11 @@ export function MemberProfile({ memberId }: Props) {
     { label: "Horarios",     value: member.horarios ?? "" },
     { label: "Signo",        value: signoAuto },
     { label: "Signo chino",  value: signoChAuto },
+    { label: "Signo maya",   value: maya?.signo ?? member.signoMaya ?? "" },
+    { label: "Tono maya",    value: maya?.tono ?? member.tonoMaya ?? "" },
+    { label: "Color maya",   value: maya?.color ?? member.colorMaya ?? "" },
+    { label: "Dirección maya", value: maya?.direccion ?? member.direccionMaya ?? "" },
+    { label: "Elemento maya", value: maya?.elemento ?? member.elementoMaya ?? "" },
   ];
 
   const earned = earnedGroups(member.badges);

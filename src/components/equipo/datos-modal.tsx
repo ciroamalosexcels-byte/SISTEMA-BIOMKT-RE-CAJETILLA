@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { zodiacSign, chineseZodiac } from "@/lib/dates";
-import { calcAge } from "@/lib/dates";
+import { zodiacSign, chineseZodiac, mayaAstrology, calcAge } from "@/lib/dates";
 import type { TeamMember } from "@/types";
 
 const XIcon = () => (
@@ -41,6 +40,7 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
   const edad = calcAge(fechaNacimiento);
   const signoAstro = fechaNacimiento ? zodiacSign(fechaNacimiento) : "";
   const signoChino = fechaNacimiento ? chineseZodiac(fechaNacimiento) : "";
+  const maya = fechaNacimiento ? mayaAstrology(fechaNacimiento) : null;
 
   function handleSave() {
     onSave({
@@ -58,6 +58,11 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
       notas,
       signo: signoAstro,
       signoChino,
+      signoMaya: maya?.signo ?? "",
+      tonoMaya: maya?.tono ?? "",
+      colorMaya: maya?.color ?? "",
+      direccionMaya: maya?.direccion ?? "",
+      elementoMaya: maya?.elemento ?? "",
       color: color || undefined,
     });
   }
@@ -151,6 +156,21 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
               </div>
               <div>
                 SIGNO CHINO: {signoChino || "—"}
+              </div>
+              <div>
+                SIGNO MAYA: {maya?.signo || "—"}
+              </div>
+              <div>
+                TONO MAYA: {maya?.tono || "—"}
+              </div>
+              <div>
+                COLOR MAYA: {maya?.color || "—"}
+              </div>
+              <div>
+                DIRECCIÓN MAYA: {maya?.direccion || "—"}
+              </div>
+              <div>
+                ELEMENTO MAYA: {maya?.elemento || "—"}
               </div>
             </div>
 

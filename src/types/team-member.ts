@@ -29,6 +29,11 @@ export interface TeamMember {
   notas?: string;
   signo?: string;
   signoChino?: string;
+  signoMaya?: string;
+  tonoMaya?: string;
+  colorMaya?: string;
+  direccionMaya?: string;
+  elementoMaya?: string;
   status91: Status91;
   badges: BadgeKey[];
   monthlyPoints?: MonthlyPoint[];
