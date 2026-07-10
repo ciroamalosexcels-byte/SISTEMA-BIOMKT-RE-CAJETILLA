@@ -149,31 +149,6 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
               style={{ gridColumn: "1 / -1" }}
             />
 
-            {/* Zodiac box — full width, 2 columns */}
-            <div className="team-zodiac-box">
-              <div>
-                SIGNO ASTROLÓGICO: {signoAstro || "—"}
-              </div>
-              <div>
-                SIGNO CHINO: {signoChino || "—"}
-              </div>
-              <div>
-                SIGNO MAYA: {maya?.signo || "—"}
-              </div>
-              <div>
-                TONO MAYA: {maya?.tono || "—"}
-              </div>
-              <div>
-                COLOR MAYA: {maya?.color || "—"}
-              </div>
-              <div>
-                DIRECCIÓN MAYA: {maya?.direccion || "—"}
-              </div>
-              <div>
-                ELEMENTO MAYA: {maya?.elemento || "—"}
-              </div>
-            </div>
-
             {/* Color del integrante */}
             <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: ".04em" }}>
@@ -207,6 +182,31 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
                     Quitar
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* Zodiac box — full width, after color */}
+            <div className="team-zodiac-box">
+              <div>
+                SIGNO ASTROLÓGICO: {signoAstro || "—"}
+              </div>
+              <div>
+                SIGNO CHINO: {signoChino || "—"}
+              </div>
+              <div>
+                SIGNO MAYA: {maya?.signo || "—"}
+              </div>
+              <div>
+                TONO MAYA: {maya?.tono || "—"}
+              </div>
+              <div>
+                COLOR MAYA: {maya?.color || "—"}
+              </div>
+              <div>
+                DIRECCIÓN MAYA: {maya?.direccion || "—"}
+              </div>
+              <div>
+                ELEMENTO MAYA: {maya?.elemento || "—"}
               </div>
             </div>
           </div>
