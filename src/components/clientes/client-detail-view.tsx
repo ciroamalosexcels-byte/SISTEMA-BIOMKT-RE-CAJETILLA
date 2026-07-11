@@ -30,6 +30,10 @@ function monthLabel(key: string) {
   const [y, m] = key.split("-").map(Number);
   return `${MONTH_NAMES[(m ?? 1) - 1]} ${y}`;
 }
+function normalizeScheduledDate(value?: string) {
+  if (!value) return "";
+  return value.includes("T") ? value.slice(0, 16) : `${value}T00:00`;
+}
 function buildGrid(key: string): GridCell[] {
   const [y, m] = key.split("-").map(Number);
   const firstDay = new Date(y, (m ?? 1) - 1, 1).getDay();
@@ -1351,6 +1355,7 @@ export function ClientDetailView({ clientId }: Props) {
   const [textModal, setTextModal]           = useState<{ eventId: string; field: "frase" | "notes"; label: string } | null>(null);
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
+  const [sortAsc, setSortAsc]       = useState(false);
 
   /* estado del cliente (carita) */
   const ESTADO_FACES = [
@@ -1441,8 +1446,15 @@ export function ClientDetailView({ clientId }: Props) {
         [e.title, e.type, e.status, e.assignee, e.frase, e.notes].some(f => (f ?? "").toLowerCase().includes(q))
       );
     }
-    return result;
-  }, [myContent, search, monthKey]);
+    return result.sort((a, b) => {
+      const aDate = normalizeScheduledDate(a.scheduledDate);
+      const bDate = normalizeScheduledDate(b.scheduledDate);
+      if (aDate && bDate) return sortAsc ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+      if (aDate) return -1;
+      if (bDate) return 1;
+      return 0;
+    });
+  }, [myContent, search, monthKey, sortAsc]);
 
   function navigate(delta: 1 | -1) {
     const next = clients[(curIdx + delta + clients.length) % clients.length];
@@ -1565,6 +1577,9 @@ export function ClientDetailView({ clientId }: Props) {
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
+                <button type="button" className="btn btn-sm btn-outline" onClick={() => setSortAsc(v => !v)} title="Ordenar por fecha de publicación">
+                  Fecha {sortAsc ? "↑" : "↓"}
+                </button>
                 <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowQuickLoad(true)}>
                   + Carga Rápida
                 </button>
