@@ -58,6 +58,10 @@ function planMonthLabel(key: string) {
   const [y, m] = key.split("-").map(Number);
   return `${MONTH_NAMES[(m ?? 1) - 1]} ${y}`;
 }
+function normalizeScheduledDate(value?: string) {
+  if (!value) return "";
+  return value.includes("T") ? value.slice(0, 16) : `${value}T00:00`;
+}
 function planBuildGrid(key: string): GridCell[] {
   const [y, m] = key.split("-").map(Number);
   const firstDay = new Date(y, (m ?? 1) - 1, 1).getDay();
@@ -415,6 +419,7 @@ export function PlanificacionView() {
   const [monthKey, setMonthKey] = useState(planTodayKey);
   const [clickedDate, setClickedDate] = useState<string | undefined>(undefined);
   const [textModal, setTextModal] = useState<{ eventId: string; field: "frase" | "notes"; label: string } | null>(null);
+  const [sortAsc, setSortAsc] = useState(false);
 
   const tableRef = useRef<HTMLTableElement>(null);
   const dragRef  = useRef<{
@@ -483,10 +488,20 @@ export function PlanificacionView() {
         return true;
       })
       .sort((a, b) => {
+        const aDate = normalizeScheduledDate(a.scheduledDate);
+        const bDate = normalizeScheduledDate(b.scheduledDate);
+
+        if (aDate || bDate) {
+          if (!aDate) return 1;
+          if (!bDate) return -1;
+          const dateCmp = sortAsc ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+          if (dateCmp !== 0) return dateCmp;
+        }
+
         if (a.clientId !== b.clientId) return a.clientId.localeCompare(b.clientId);
         return a.order - b.order;
       });
-  }, [contentEvents, query, filterStatus, filterType, clientMap]);
+  }, [contentEvents, query, filterStatus, filterType, clientMap, sortAsc]);
 
   const eventsByDay = useMemo(() => {
     const map: Record<string, ContentEvent[]> = {};
@@ -563,6 +578,14 @@ export function PlanificacionView() {
               <option value="">Todos los tipos</option>
               {CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
+            <button
+              className="btn btn-outline btn-sm"
+              type="button"
+              onClick={() => setSortAsc((v) => !v)}
+              title="Ordenar por fecha de publicación"
+            >
+              Fecha {sortAsc ? "↑" : "↓"}
+            </button>
             <button onClick={() => { setClickedDate(undefined); setShowAdd(true); }} className="btn btn-amber btn-sm" type="button">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14"/><path d="M5 12h14"/>
