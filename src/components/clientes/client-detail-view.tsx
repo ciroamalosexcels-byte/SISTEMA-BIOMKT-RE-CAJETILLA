@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
@@ -529,12 +529,13 @@ function TextParagraphModal({ label, value, onSave, onClose }: {
 
 /* ── Content table row ──────────────────────────────────────────────── */
 function ContentRow({
-  ev, tick, rowHeight, memberNames, onUpdate, onDelete, onOpenText,
+  ev, tick, rowHeight, memberNames, rowRef, onUpdate, onDelete, onOpenText,
 }: {
   ev: ContentEvent;
   tick: number;
   rowHeight: number;
   memberNames: string[];
+  rowRef?: (el: HTMLTableRowElement | null) => void;
   onUpdate: (p: Partial<ContentEvent>) => void;
   onDelete: () => void;
   onOpenText: (field: "frase" | "notes", label: string) => void;
@@ -556,7 +557,7 @@ function ContentRow({
   }
 
   return (
-    <tr style={{ height: rowHeight }} className={statusClass}>
+    <tr ref={rowRef} style={{ height: rowHeight }} className={statusClass}>
       <td>
         <div className="timer-cell">
           {running ? (
@@ -1356,6 +1357,9 @@ export function ClientDetailView({ clientId }: Props) {
   const [showData, setShowData]     = useState(false);
   const [tick, setTick]             = useState(0);
   const [sortAsc, setSortAsc]       = useState(false);
+  const [todayJumpSeq, setTodayJumpSeq] = useState(0);
+  const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
+  const handledTodayJump = useRef(0);
 
   /* estado del cliente (carita) */
   const ESTADO_FACES = [
@@ -1455,6 +1459,34 @@ export function ClientDetailView({ clientId }: Props) {
       return 0;
     });
   }, [myContent, search, monthKey, sortAsc]);
+
+  useEffect(() => {
+    if (!todayJumpSeq || handledTodayJump.current === todayJumpSeq) return;
+
+    const targetDate = todayDate();
+    const target = filtered.find((e) => normalizeScheduledDate(e.scheduledDate).slice(0, 10) === targetDate);
+    if (!target) return;
+
+    const el = rowRefs.current[target.id];
+    if (!el) return;
+
+    handledTodayJump.current = todayJumpSeq;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const anim = el.animate(
+      [
+        { backgroundColor: "rgba(251, 191, 36, 0.05)" },
+        { backgroundColor: "rgba(251, 191, 36, 0.42)" },
+        { backgroundColor: "rgba(251, 191, 36, 0.05)" },
+      ],
+      { duration: 180, iterations: 3, easing: "ease-in-out" }
+    );
+
+    const timer = window.setTimeout(() => anim.cancel(), 620);
+    return () => {
+      window.clearTimeout(timer);
+      anim.cancel();
+    };
+  }, [todayJumpSeq, filtered]);
 
   function navigate(delta: 1 | -1) {
     const next = clients[(curIdx + delta + clients.length) % clients.length];
@@ -1580,6 +1612,18 @@ export function ClientDetailView({ clientId }: Props) {
                 <button type="button" className="btn btn-sm btn-outline" onClick={() => setSortAsc(v => !v)} title="Ordenar por fecha de publicación">
                   Fecha {sortAsc ? "↑" : "↓"}
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline"
+                  onClick={() => {
+                    const targetMonth = todayDate().slice(0, 7);
+                    if (monthKey !== targetMonth) setMonthKey(targetMonth);
+                    setTodayJumpSeq(v => v + 1);
+                  }}
+                  title="Ir al contenido de hoy"
+                >
+                  Hoy
+                </button>
                 <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowQuickLoad(true)}>
                   + Carga Rápida
                 </button>
@@ -1617,6 +1661,7 @@ export function ClientDetailView({ clientId }: Props) {
                         tick={tick}
                         rowHeight={planRowHeight}
                         memberNames={memberNames}
+                        rowRef={(el) => { rowRefs.current[ev.id] = el; }}
                         onUpdate={p => updateContentEvent(ev.id, p)}
                         onDelete={() => deleteContentEvent(ev.id)}
                         onOpenText={(field, label) => setTextModal({ eventId: ev.id, field, label })}
