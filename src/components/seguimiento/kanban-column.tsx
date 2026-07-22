@@ -3,20 +3,19 @@
 import { useState, memo } from "react";
 import { Pencil, Check, X, Plus } from "lucide-react";
 import { usePipelineStore } from "@/store/pipeline";
-import { todayBA } from "@/lib/dates";
+import { daysFromToday } from "@/lib/dates";
 import { LeadCard } from "./lead-card";
+import { groupLeadsByStageDate } from "./kanban-date-groups";
 import type { PipelineStage } from "@/types";
 import type { Lead } from "@/types";
 
 /* ── Divisor de fecha ────────────────────────────────────────────── */
-function DateDivider({ dateStr }: { dateStr: string }) {
-  const today = todayBA();
-
+function DateDivider({ dateStr, emptyLabel }: { dateStr: string; emptyLabel: string }) {
   if (!dateStr || dateStr.length < 10) {
     return (
       <div className="flex items-center gap-2 py-1 px-1">
         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
-        <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 tracking-wide uppercase">Sin seguimiento</span>
+        <span className="text-[12px] font-black text-slate-500 dark:text-slate-400 tracking-wide uppercase">{emptyLabel}</span>
         <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
       </div>
     );
@@ -25,18 +24,11 @@ function DateDivider({ dateStr }: { dateStr: string }) {
   const [y, m, d] = dateStr.split("-");
   const shortDate = `${d}/${m}`;
 
-  function daysAgo(n: number) {
-    try {
-      const dt = new Date(`${today}T12:00:00`);
-      dt.setDate(dt.getDate() - n);
-      return dt.toISOString().slice(0, 10);
-    } catch { return ""; }
-  }
-
   let label = `${d}/${m}/${y}`;
-  if (dateStr === today)           label = `Hoy · ${shortDate}`;
-  else if (dateStr === daysAgo(1)) label = `Ayer · ${shortDate}`;
-  else if (dateStr === daysAgo(2)) label = `Anteayer · ${shortDate}`;
+  const days = daysFromToday(dateStr);
+  if (days === 0)       label = `Hoy · ${shortDate}`;
+  else if (days === -1) label = `Ayer · ${shortDate}`;
+  else if (days === -2) label = `Anteayer · ${shortDate}`;
 
   return (
     <div className="flex items-center gap-2 py-1 px-1">
@@ -45,25 +37,6 @@ function DateDivider({ dateStr }: { dateStr: string }) {
       <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.06]" />
     </div>
   );
-}
-
-function groupByDate(leads: Lead[]): { date: string; leads: Lead[] }[] {
-  const sorted = [...leads].sort((a, b) => {
-    const aDate = (a.proximoSeguimientoFecha ?? "").slice(0, 10);
-    const bDate = (b.proximoSeguimientoFecha ?? "").slice(0, 10);
-    if (!aDate && !bDate) return 0;
-    if (!aDate) return 1;
-    if (!bDate) return -1;
-    return bDate.localeCompare(aDate);
-  });
-  const groups: { date: string; leads: Lead[] }[] = [];
-  for (const lead of sorted) {
-    const date = (lead.proximoSeguimientoFecha ?? "").slice(0, 10);
-    const last = groups[groups.length - 1];
-    if (last && last.date === date) last.leads.push(lead);
-    else groups.push({ date, leads: [lead] });
-  }
-  return groups;
 }
 
 interface KanbanColumnProps {
@@ -129,9 +102,9 @@ export const KanbanColumn = memo(function KanbanColumn({ stage, leads, onCardCli
 
       {/* ── Cards ─────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-[#1e293b]">
-        {groupByDate(leads).map(({ date, leads: group }) => (
+        {groupLeadsByStageDate(leads, stage.id).map(({ date, leads: group }) => (
           <div key={date} className="flex flex-col gap-3">
-            <DateDivider dateStr={date} />
+            <DateDivider dateStr={date} emptyLabel={stage.id === "CRM" ? "Sin fecha" : "Sin seguimiento"} />
             {group.map(lead => (
               <LeadCard
                 key={lead.id}
