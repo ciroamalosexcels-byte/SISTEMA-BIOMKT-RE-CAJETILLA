@@ -53,10 +53,14 @@ export const useClientMonthlyContentStore = create<ClientMonthlyContentStore>((s
       const saved = await request<ClientMonthlyContent>("/api/supabase/client-monthly-content", "POST", {
         clientId, month, ...patch,
       });
-      set((s) => ({
-        records: s.records.map((r) => (r.clientId === clientId && r.month === month ? saved : r)),
-      }));
-      storage.setClientMonthlyContent(get().records);
+      if (!existing) {
+        set((s) => ({
+          records: s.records.map((r) =>
+            (r.clientId === clientId && r.month === month) ? { ...r, id: saved.id, createdAt: saved.createdAt } : r
+          ),
+        }));
+        storage.setClientMonthlyContent(get().records);
+      }
     } catch (error) {
       console.error("[client-monthly-content] No se pudo guardar:", error);
       set({ records: previous });
