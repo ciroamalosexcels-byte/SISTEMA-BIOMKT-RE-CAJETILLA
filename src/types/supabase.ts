@@ -136,6 +136,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_monthly_content: {
+        Row: {
+          client_id: string
+          created_at: string
+          historias_contratadas: number
+          historias_hechas: number
+          id: string
+          month: string
+          publicaciones_contratadas: number
+          publicaciones_hechas: number
+          reels_contratados: number
+          reels_hechos: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          historias_contratadas?: number
+          historias_hechas?: number
+          id?: string
+          month: string
+          publicaciones_contratadas?: number
+          publicaciones_hechas?: number
+          reels_contratados?: number
+          reels_hechos?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          historias_contratadas?: number
+          historias_hechas?: number
+          id?: string
+          month?: string
+          publicaciones_contratadas?: number
+          publicaciones_hechas?: number
+          reels_contratados?: number
+          reels_hechos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_monthly_content_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           activo: boolean
@@ -152,8 +202,6 @@ export type Database = {
           empresa: string
           empresa_bio: string
           fecha_contacto: string
-          historias_contratadas: number | null
-          historias_hechas: number | null
           id: string
           instagram: string | null
           latitud: number | null
@@ -169,10 +217,6 @@ export type Database = {
           plan_id: string | null
           proximo_seguimiento_dias: number | null
           proximo_seguimiento_fecha: string | null
-          publicaciones_contratadas: number | null
-          publicaciones_hechas: number | null
-          reels_contratados: number | null
-          reels_hechos: number | null
           responsable1: string
           responsable2: string | null
           row_order: number | null
@@ -202,8 +246,6 @@ export type Database = {
           empresa?: string
           empresa_bio?: string
           fecha_contacto?: string
-          historias_contratadas?: number | null
-          historias_hechas?: number | null
           id?: string
           instagram?: string | null
           latitud?: number | null
@@ -219,10 +261,6 @@ export type Database = {
           plan_id?: string | null
           proximo_seguimiento_dias?: number | null
           proximo_seguimiento_fecha?: string | null
-          publicaciones_contratadas?: number | null
-          publicaciones_hechas?: number | null
-          reels_contratados?: number | null
-          reels_hechos?: number | null
           responsable1?: string
           responsable2?: string | null
           row_order?: number | null
@@ -252,8 +290,6 @@ export type Database = {
           empresa?: string
           empresa_bio?: string
           fecha_contacto?: string
-          historias_contratadas?: number | null
-          historias_hechas?: number | null
           id?: string
           instagram?: string | null
           latitud?: number | null
@@ -269,10 +305,6 @@ export type Database = {
           plan_id?: string | null
           proximo_seguimiento_dias?: number | null
           proximo_seguimiento_fecha?: string | null
-          publicaciones_contratadas?: number | null
-          publicaciones_hechas?: number | null
-          reels_contratados?: number | null
-          reels_hechos?: number | null
           responsable1?: string
           responsable2?: string | null
           row_order?: number | null
@@ -1027,6 +1059,8 @@ export type ManagementEventRow = Tables<"management_events">
 export type BulkEventSeriesRow = Tables<"bulk_event_series">
 export type BulkEventSeriesInsert = TablesInsert<"bulk_event_series">
 export type BulkEventSeriesUpdate = TablesUpdate<"bulk_event_series">
+export type ClientMonthlyContentRow = Tables<"client_monthly_content">
+export type ClientMonthlyContentInsert = TablesInsert<"client_monthly_content">
 
 export type PlanRow = Tables<"plans">
 export type PlanEventRow = Tables<"plan_events">
