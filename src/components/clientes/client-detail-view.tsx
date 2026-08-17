@@ -6,11 +6,13 @@ import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
 import { usePlansStore } from "@/store/plans";
+import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
 import { baParts, currentMonthBA } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
-import type { Lead, ContentEvent, ManagementEvent } from "@/types";
+import { findMonthlyRecord, getMostRecentContratado } from "@/lib/client-monthly-content";
+import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
 const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
@@ -687,11 +689,23 @@ function ConfirmDeleteModal({ clientName, onConfirm, onClose }: {
 }
 
 /* ── Client data modal ──────────────────────────────────────────────── */
-function ClientDataModal({ lead, members, plans, onUpdate, onDelete, onToggleActivo, onClose }: {
+function ClientDataModal({
+  lead, members, plans, monthKey, onShiftMonth, monthlyRecord, prefillContratado,
+  onUpdate, onUpdateMonthly, onDelete, onToggleActivo, onClose,
+}: {
   lead: Lead;
   members: string[];
   plans: { id: string; nombre: string }[];
+  monthKey: string;
+  onShiftMonth: (delta: 1 | -1) => void;
+  monthlyRecord: ClientMonthlyContent | undefined;
+  prefillContratado: { historiasContratadas: number; reelsContratados: number; publicacionesContratadas: number };
   onUpdate: (p: Partial<Lead>) => void;
+  onUpdateMonthly: (patch: {
+    historiasHechas: number; historiasContratadas: number;
+    reelsHechos: number; reelsContratados: number;
+    publicacionesHechas: number; publicacionesContratadas: number;
+  }) => void;
   onDelete: () => void;
   onToggleActivo: () => void;
   onClose: () => void;
@@ -700,6 +714,18 @@ function ClientDataModal({ lead, members, plans, onUpdate, onDelete, onToggleAct
   const [showClaveEmail, setShowClaveEmail]     = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showContacto2, setShowContacto2] = useState(() => !!(lead.nombre2 || lead.telefono2 || lead.cumpleanos2));
+
+  const currentValues = {
+    historiasHechas: monthlyRecord?.historiasHechas ?? 0,
+    historiasContratadas: monthlyRecord?.historiasContratadas ?? prefillContratado.historiasContratadas,
+    reelsHechos: monthlyRecord?.reelsHechos ?? 0,
+    reelsContratados: monthlyRecord?.reelsContratados ?? prefillContratado.reelsContratados,
+    publicacionesHechas: monthlyRecord?.publicacionesHechas ?? 0,
+    publicacionesContratadas: monthlyRecord?.publicacionesContratadas ?? prefillContratado.publicacionesContratadas,
+  };
+  function updateContenidoField(key: keyof typeof currentValues, value: number) {
+    onUpdateMonthly({ ...currentValues, [key]: value });
+  }
 
   return (
     <>
@@ -867,9 +893,17 @@ function ClientDataModal({ lead, members, plans, onUpdate, onDelete, onToggleAct
           {/* ── Contenidos ────────────────────────────── */}
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
             <label className="field-label">Contenidos</label>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => onShiftMonth(-1)}>‹</button>
+              <span style={{ fontSize: 12, fontWeight: 800, color: "#475569", minWidth: 110, textAlign: "center" }}>
+                {monthLabel(monthKey)}
+              </span>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => onShiftMonth(1)}>›</button>
+            </div>
             <div className="contenidos-box">
               {CONTENIDOS_CATEGORIAS.map(({ label, hechoKey, contratadoKey }) => {
-                const contratado = lead[contratadoKey] ?? 0;
+                const hecho = currentValues[hechoKey];
+                const contratado = currentValues[contratadoKey];
                 return (
                   <div key={label} className="contenidos-row">
                     <span className="contenidos-row-label">-{contratado} {label}</span>
@@ -878,16 +912,16 @@ function ClientDataModal({ lead, members, plans, onUpdate, onDelete, onToggleAct
                         type="number"
                         min={0}
                         className="contenidos-input"
-                        value={lead[hechoKey] ?? ""}
-                        onChange={e => onUpdate({ [hechoKey]: e.target.value ? Number(e.target.value) : undefined } as Partial<Lead>)}
+                        value={hecho || ""}
+                        onChange={e => updateContenidoField(hechoKey, e.target.value ? Number(e.target.value) : 0)}
                       />
                       <span className="contenidos-slash">/</span>
                       <input
                         type="number"
                         min={0}
                         className="contenidos-input"
-                        value={lead[contratadoKey] ?? ""}
-                        onChange={e => onUpdate({ [contratadoKey]: e.target.value ? Number(e.target.value) : undefined } as Partial<Lead>)}
+                        value={contratado || ""}
+                        onChange={e => updateContenidoField(contratadoKey, e.target.value ? Number(e.target.value) : 0)}
                       />
                     </div>
                   </div>
@@ -1357,6 +1391,8 @@ export function ClientDetailView({ clientId }: Props) {
     addManagementEvent, deleteManagementEvent, toggleManagementDone,
   } = useContentEventsStore();
   const { plans, planEvents } = usePlansStore();
+  const monthlyContentRecords = useClientMonthlyContentStore((s) => s.records);
+  const upsertMonthlyContent = useClientMonthlyContentStore((s) => s.upsert);
 
   const allWidths     = useColumnWidthsStore(s => s.widths);
   const getWidth      = useColumnWidthsStore(s => s.getWidth);
@@ -1540,8 +1576,11 @@ export function ClientDetailView({ clientId }: Props) {
     );
   }
   const title = lead.empresa || lead.nombre || "Sin nombre";
+  const monthlyRecord = findMonthlyRecord(monthlyContentRecords, clientId, monthKey);
+  const currentMonthRecord = findMonthlyRecord(monthlyContentRecords, clientId, currentMonthBA());
+  const prefillContratado = getMostRecentContratado(monthlyContentRecords, clientId, monthKey);
   const clientProgress = progressMode === "contratado"
-    ? getContratadoProgress(lead)
+    ? getContratadoProgress(currentMonthRecord)
     : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
 
   return (
@@ -1750,7 +1789,12 @@ export function ClientDetailView({ clientId }: Props) {
           lead={lead}
           members={memberNames}
           plans={plans}
+          monthKey={monthKey}
+          onShiftMonth={d => setMonthKey(k => shiftMonth(k, d))}
+          monthlyRecord={monthlyRecord}
+          prefillContratado={prefillContratado}
           onUpdate={patch}
+          onUpdateMonthly={patch => upsertMonthlyContent(clientId, monthKey, patch)}
           onDelete={deleteClient}
           onToggleActivo={() => patch({ activo: !(lead.activo ?? true) })}
           onClose={() => setShowData(false)}
