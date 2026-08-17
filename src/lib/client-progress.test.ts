@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { getContratadoProgress, getEstadoProgress } from "./client-progress";
-import type { ContentEvent, Lead } from "@/types";
+import type { ClientMonthlyContent, ContentEvent } from "@/types";
 
-function makeLead(patch: Partial<Lead> = {}): Lead {
+function makeRecord(patch: Partial<ClientMonthlyContent> = {}): ClientMonthlyContent {
   return {
-    id: "lead-1",
-    tab: "CLIENTES",
-    nombre: "Cliente",
+    id: "cmc-1",
+    clientId: "lead-1",
+    month: "2026-08",
+    historiasHechas: 0,
+    historiasContratadas: 0,
+    reelsHechos: 0,
+    reelsContratados: 0,
+    publicacionesHechas: 0,
+    publicacionesContratadas: 0,
+    createdAt: "2026-08-01T00:00:00Z",
+    updatedAt: "2026-08-01T00:00:00Z",
     ...patch,
-  } as Lead;
+  };
 }
 
 function makeEvent(patch: Partial<ContentEvent> = {}): ContentEvent {
@@ -28,28 +36,32 @@ function makeEvent(patch: Partial<ContentEvent> = {}): ContentEvent {
 }
 
 describe("getContratadoProgress", () => {
-  it("returns null when the client has no contracted content", () => {
-    expect(getContratadoProgress(makeLead())).toBeNull();
+  it("returns null when there is no record for the month", () => {
+    expect(getContratadoProgress(undefined)).toBeNull();
+  });
+
+  it("returns null when the record has no contracted content", () => {
+    expect(getContratadoProgress(makeRecord())).toBeNull();
   });
 
   it("sums hecho/contratado across categories with contratado > 0", () => {
-    const lead = makeLead({
+    const record = makeRecord({
       historiasHechas: 7, historiasContratadas: 7,
       reelsHechos: 0, reelsContratados: 8,
       publicacionesHechas: 0, publicacionesContratadas: 4,
     });
     // (7 + 0 + 0) / (7 + 8 + 4) = 7/19
-    expect(getContratadoProgress(lead)).toBeCloseTo(7 / 19);
+    expect(getContratadoProgress(record)).toBeCloseTo(7 / 19);
   });
 
-  it("ignores categories with contratado = 0 or undefined", () => {
-    const lead = makeLead({ historiasHechas: 2, historiasContratadas: 4 });
-    expect(getContratadoProgress(lead)).toBe(0.5);
+  it("ignores categories with contratado = 0", () => {
+    const record = makeRecord({ historiasHechas: 2, historiasContratadas: 4 });
+    expect(getContratadoProgress(record)).toBe(0.5);
   });
 
   it("returns 1 when everything contracted is done", () => {
-    const lead = makeLead({ reelsHechos: 3, reelsContratados: 3 });
-    expect(getContratadoProgress(lead)).toBe(1);
+    const record = makeRecord({ reelsHechos: 3, reelsContratados: 3 });
+    expect(getContratadoProgress(record)).toBe(1);
   });
 });
 

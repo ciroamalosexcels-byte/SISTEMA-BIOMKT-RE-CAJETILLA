@@ -1,5 +1,5 @@
 import { CONTENIDOS_CATEGORIAS } from "./constants";
-import type { ContentEvent, Lead } from "@/types";
+import type { ClientMonthlyContent, ContentEvent } from "@/types";
 
 const STATUS_SCORE: Record<string, number> = {
   "SIN EDITAR": 0,
@@ -8,14 +8,15 @@ const STATUS_SCORE: Record<string, number> = {
   "CALENDARIZADO": 1.0,
 };
 
-/** % de contenidos contratados ya hechos (Historias + Reels + Publicaciones). null si no hay nada contratado. */
-export function getContratadoProgress(lead: Lead): number | null {
+/** % de contenidos contratados ya hechos (Historias + Reels + Publicaciones) para el registro mensual dado. null si no hay registro o no hay nada contratado. */
+export function getContratadoProgress(record: ClientMonthlyContent | undefined): number | null {
+  if (!record) return null;
   let hecho = 0;
   let contratado = 0;
   for (const { hechoKey, contratadoKey } of CONTENIDOS_CATEGORIAS) {
-    const c = lead[contratadoKey] ?? 0;
+    const c = record[contratadoKey] ?? 0;
     if (c <= 0) continue;
-    hecho += lead[hechoKey] ?? 0;
+    hecho += record[hechoKey] ?? 0;
     contratado += c;
   }
   return contratado > 0 ? hecho / contratado : null;
