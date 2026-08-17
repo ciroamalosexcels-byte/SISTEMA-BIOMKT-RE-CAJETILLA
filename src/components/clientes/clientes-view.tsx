@@ -209,7 +209,7 @@ export function ClientesView() {
       .filter((v): v is number => v !== null);
     return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activos, progressMode, contentEvents]);
+  }, [activos, progressMode, contentEvents, currentMonthContent]);
 
   function handleDragStart(e: React.DragEvent, id: string) {
     setDragId(id);
