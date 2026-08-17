@@ -15,7 +15,18 @@
 
 <!-- Header -->
 <header class="header">
-  <span class="header-title">Prospección de Biomarketing</span>
+  <div class="header-brand" id="headerBrand">
+    <button class="header-toggle" id="sectionToggle" type="button" aria-label="Cambiar vista">
+      <span class="header-title" id="headerTitle">Prospección de Biomarketing</span>
+      <svg class="header-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    </button>
+    <div class="header-menu hidden" id="sectionMenu" role="menu" aria-label="Secciones">
+      <button class="section-menu-item" type="button" data-section="prospecting" role="menuitem">Prospección</button>
+      <button class="section-menu-item" type="button" data-section="clients" role="menuitem">Clientes</button>
+    </div>
+  </div>
   <button class="btn-dark-mode" id="btnDarkMode" aria-label="Cambiar modo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
