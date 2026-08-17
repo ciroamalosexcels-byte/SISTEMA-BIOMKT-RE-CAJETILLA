@@ -105,9 +105,6 @@ describe("adaptLead", () => {
       "objetivos", "planAudiovisual", "cumpleanos", "cumpleanos2",
       "proximoSeguimientoDias", "proximoSeguimientoFecha",
       "meetingDatetime", "planId", "clientOrder",
-      "historiasHechas", "historiasContratadas",
-      "reelsHechos", "reelsContratados",
-      "publicacionesHechas", "publicacionesContratadas",
     ];
 
     // Campos intencionalmente excluidos del adapter (gestionados por fuera de la DB normal)
