@@ -9,6 +9,7 @@ import { useContentEventsStore } from "@/store/content-events";
 import { useColumnWidthsStore } from "@/store/column-widths";
 import { usePlansStore } from "@/store/plans";
 import { usePipelineStore } from "@/store/pipeline";
+import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 // import { fetchFromSheets, saveToSheets } from "@/lib/sheets"; // Sheets comentado
 import { loadLeadsFromSupabase, loadTeamFromSupabase } from "@/lib/supabase/loaders";
 import { storage } from "@/lib/storage";
@@ -35,6 +36,7 @@ export function AppShell({ children }: AppShellProps) {
   const loadColumnWidths = useColumnWidthsStore((s) => s.load);
   const loadPlans   = usePlansStore((s) => s.load);
   const loadPipeline = usePipelineStore((s) => s.load);
+  const loadClientMonthlyContent = useClientMonthlyContentStore((s) => s.load);
 
   useEffect(() => {
     loadSettings();
@@ -44,6 +46,7 @@ export function AppShell({ children }: AppShellProps) {
     loadColumnWidths();
     loadPlans();
     loadPipeline();
+    loadClientMonthlyContent();
 
     // Las series se cargan primero porque su GET materializa el horizonte mensual.
     const loadRemoteData = async () => {
@@ -54,7 +57,7 @@ export function AppShell({ children }: AppShellProps) {
       const bulkPayload = await fetch("/api/supabase/bulk-event-series")
         .then(r => r.ok ? r.json() : null)
         .catch(() => null);
-      const [supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts, pipeline, progressModePayload] = await Promise.all([
+      const [supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts, pipeline, progressModePayload, clientMonthlyContent] = await Promise.all([
         leadsPromise,
         teamPromise,
         fetch("/api/supabase/content-events").then(r => r.ok ? r.json() : null).catch(() => null),
@@ -63,6 +66,7 @@ export function AppShell({ children }: AppShellProps) {
         fetch("/api/supabase/plan-events").then(r => r.ok ? r.json() : []).catch(() => []),
         fetch("/api/supabase/pipeline").then(r => r.ok ? r.json() : []).catch(() => []),
         fetch("/api/supabase/progress-mode").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/supabase/client-monthly-content").then(r => r.ok ? r.json() : []).catch(() => []),
       ]);
 
       if (
@@ -110,6 +114,10 @@ export function AppShell({ children }: AppShellProps) {
       if (progressModePayload?.mode) {
         useContentEventsStore.setState({ progressMode: progressModePayload.mode });
         storage.setProgressMode(progressModePayload.mode);
+      }
+      if (Array.isArray(clientMonthlyContent) && clientMonthlyContent.length > 0) {
+        useClientMonthlyContentStore.setState({ records: clientMonthlyContent });
+        storage.setClientMonthlyContent(clientMonthlyContent);
       }
     };
     loadRemoteData().catch(() => {});
