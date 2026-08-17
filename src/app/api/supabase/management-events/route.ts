@@ -9,10 +9,11 @@ export const runtime = "nodejs";
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json([]);
+  if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data } = await admin.from("management_events").select("*").order("created_at");
+  const { data, error } = await admin.from("management_events").select("*").order("created_at");
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(
     (data ?? []).map((r) => ({
       id: r.id, clientId: r.client_id, title: r.title,

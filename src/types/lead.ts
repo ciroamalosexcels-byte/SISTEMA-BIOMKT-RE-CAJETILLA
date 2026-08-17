@@ -29,6 +29,13 @@ export interface Lead {
   mesEntrada?: string; // YYYY-MM
   objetivos?: string;
   planAudiovisual?: string;
+  // Contenidos contratados/hechos (manual, fijo hasta que se edite)
+  historiasHechas?: number;
+  historiasContratadas?: number;
+  reelsHechos?: number;
+  reelsContratados?: number;
+  publicacionesHechas?: number;
+  publicacionesContratadas?: number;
   cumpleanos?: string;  // ISO date string — contacto principal
   cumpleanos2?: string; // ISO date string — segundo contacto
   // Credenciales

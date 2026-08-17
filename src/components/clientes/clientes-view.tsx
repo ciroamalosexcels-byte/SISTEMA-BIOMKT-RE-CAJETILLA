@@ -6,6 +6,8 @@ import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
 import { useTeamStore } from "@/store/team";
 import { currentMonthBA } from "@/lib/dates";
+import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
+import { BulkEventsModal } from "./bulk-events-modal";
 import type { Lead } from "@/types";
 
 function progressClass(pct: number) {
@@ -17,14 +19,13 @@ function progressClass(pct: number) {
 const DEFAULT_MEMBER_COLOR = "#94a3b8";
 
 function ClientCard({
-  lead, progress, contentCount, onClick,
+  lead, progress, onClick,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
   memberColorMap,
 }: {
   lead: Lead;
   progress: number | null;
-  contentCount: number;
   onClick: () => void;
   isDragging: boolean;
   isDragOver: boolean;
@@ -41,6 +42,14 @@ function ClientCard({
   const activo  = lead.activo ?? true;
 
   const responsables = [lead.responsable1, lead.responsable2].filter(Boolean) as string[];
+
+  const contenidoRows = CONTENIDOS_CATEGORIAS
+    .map(({ cardLabel, hechoKey, contratadoKey }) => ({
+      cardLabel,
+      hecho: lead[hechoKey] ?? 0,
+      contratado: lead[contratadoKey] ?? 0,
+    }))
+    .filter((r) => r.contratado > 0);
 
   return (
     <div
@@ -75,51 +84,52 @@ function ClientCard({
         ⠿
       </div>
 
-      <div className="client-card-main-v11">
-        <div className="client-card-text-v11">
-          <h3 style={{ margin: 0, paddingRight: 18 }}>{title}</h3>
-          <div className="client-card-v11-service">{service}</div>
-          {responsables.length > 0 && (
-            <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
-              {responsables.map(nombre => {
-                const color = memberColorMap.get(nombre) ?? DEFAULT_MEMBER_COLOR;
-                return (
-                  <span
-                    key={nombre}
-                    style={{
-                      fontSize: 10, fontWeight: 700,
-                      color,
-                      background: color + "22",
-                      border: `1px solid ${color}66`,
-                      borderRadius: 20,
-                      padding: "2px 8px",
-                      whiteSpace: "nowrap",
-                      maxWidth: 120,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {nombre}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-          <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginTop: 3 }}>
-            {hasContent
-              ? `${contentCount} contenido${contentCount !== 1 ? "s" : ""}`
-              : "Sin contenidos este mes"}
+      <div className="client-card-text-v11">
+        <h3 style={{ margin: 0, paddingRight: 18 }}>{title}</h3>
+        <div className="client-card-v11-service">{service}</div>
+        {responsables.length > 0 && (
+          <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
+            {responsables.map(nombre => {
+              const color = memberColorMap.get(nombre) ?? DEFAULT_MEMBER_COLOR;
+              return (
+                <span
+                  key={nombre}
+                  style={{
+                    fontSize: 10, fontWeight: 700,
+                    color,
+                    background: color + "22",
+                    border: `1px solid ${color}66`,
+                    borderRadius: 20,
+                    padding: "2px 8px",
+                    whiteSpace: "nowrap",
+                    maxWidth: 120,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {nombre}
+                </span>
+              );
+            })}
           </div>
-        </div>
-        <div
-          className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
-          style={{ "--pct": pct } as React.CSSProperties}
-        >
-          <span>{hasContent ? `${pct}%` : "—"}</span>
-        </div>
+        )}
+        {contenidoRows.length > 0 ? (
+          <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
+            {contenidoRows.map((r) => (
+              <div key={r.cardLabel} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                <span>-{r.contratado} {r.cardLabel}</span>
+                <span style={{ color: "#94a3b8" }}>{r.hecho}/{r.contratado}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginTop: 3 }}>
+            Sin contenidos definidos
+          </div>
+        )}
       </div>
 
-      <div style={{ marginTop: "auto", paddingTop: 10 }}>
+      <div style={{ marginTop: "auto", paddingTop: 10, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
         {activo ? (
           <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 20, padding: "2px 10px" }}>
             Activo
@@ -129,6 +139,12 @@ function ClientCard({
             Inactivo
           </span>
         )}
+        <div
+          className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
+          style={{ "--pct": pct } as React.CSSProperties}
+        >
+          <span>{hasContent ? `${pct}%` : "—"}</span>
+        </div>
       </div>
     </div>
   );
@@ -138,6 +154,10 @@ export function ClientesView() {
   const rows          = useLeadsStore((s) => s.rows);
   const updateLead    = useLeadsStore((s) => s.updateLead);
   const contentEvents = useContentEventsStore((s) => s.contentEvents);
+  const bulkEventSeries = useContentEventsStore((s) => s.bulkEventSeries);
+  const createBulkEventSeries = useContentEventsStore((s) => s.createBulkEventSeries);
+  const updateBulkEventSeries = useContentEventsStore((s) => s.updateBulkEventSeries);
+  const deleteBulkEventSeries = useContentEventsStore((s) => s.deleteBulkEventSeries);
   const members       = useTeamStore((s) => s.members);
   const router = useRouter();
 
@@ -151,6 +171,7 @@ export function ClientesView() {
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [bulkEventsOpen, setBulkEventsOpen] = useState(false);
 
   const STATUS_SCORE: Record<string, number> = {
     "SIN EDITAR":    0,
@@ -185,10 +206,6 @@ export function ClientesView() {
     if (events.length === 0) return null;
     const total = events.reduce((sum, e) => sum + (STATUS_SCORE[e.status ?? ""] ?? 0), 0);
     return total / events.length;
-  }
-
-  function getContentCount(clientId: string) {
-    return getMonthEvents(clientId).length;
   }
 
   function handleDragStart(e: React.DragEvent, id: string) {
@@ -262,13 +279,23 @@ export function ClientesView() {
           </div>
         </div>
         {clients.length > 0 && (
-          <button
-            onClick={exportCSV}
-            className="btn btn-outline btn-sm"
-            style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
-          >
-            ↓ Exportar CSV
-          </button>
+          <div className="client-panel-actions">
+            <button
+              onClick={() => setBulkEventsOpen(true)}
+              className="btn btn-amber btn-sm"
+              style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
+            >
+              + Añadir eventos masivamente
+              {bulkEventSeries.length > 0 && <span className="bulk-button-count">{bulkEventSeries.length}</span>}
+            </button>
+            <button
+              onClick={exportCSV}
+              className="btn btn-outline btn-sm"
+              style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
+            >
+              ↓ Exportar CSV
+            </button>
+          </div>
         )}
       </div>
 
@@ -284,7 +311,6 @@ export function ClientesView() {
                 key={lead.id}
                 lead={lead}
                 progress={getProgress(lead.id)}
-                contentCount={getContentCount(lead.id)}
                 onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
                 isDragging={dragId === lead.id}
                 isDragOver={overId === lead.id}
@@ -312,7 +338,6 @@ export function ClientesView() {
                     key={lead.id}
                     lead={lead}
                     progress={getProgress(lead.id)}
-                    contentCount={getContentCount(lead.id)}
                     onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
                     isDragging={dragId === lead.id}
                     isDragOver={overId === lead.id}
@@ -327,6 +352,16 @@ export function ClientesView() {
             </>
           )}
         </div>
+      )}
+      {bulkEventsOpen && (
+        <BulkEventsModal
+          clients={clients}
+          series={bulkEventSeries}
+          onCreate={createBulkEventSeries}
+          onUpdate={updateBulkEventSeries}
+          onDelete={deleteBulkEventSeries}
+          onClose={() => setBulkEventsOpen(false)}
+        />
       )}
     </div>
   );

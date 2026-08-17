@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   awards: "ventas_biomarketing_awards_v2",
   contentEvents: "ventas_biomarketing_client_content_events_v1",
   managementEvents: "ventas_biomarketing_client_management_events_v1",
+  bulkEventSeries: "ventas_biomarketing_bulk_event_series_v1",
   plans: "ventas_biomarketing_plans_v1",
   planEvents: "ventas_biomarketing_plan_events_v1",
 } as const;
@@ -16,6 +17,18 @@ export const STORAGE_KEYS = {
 export const BA_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
 export const DEFAULT_TEAM = ["TINCHO", "MATE", "LOREN", "CIRO"];
+
+/** Categorías de contenidos contratados/hechos — modal "Datos del cliente" y tarjeta de Clientes */
+export const CONTENIDOS_CATEGORIAS: readonly {
+  label: string;
+  cardLabel: string;
+  hechoKey: "historiasHechas" | "reelsHechos" | "publicacionesHechas";
+  contratadoKey: "historiasContratadas" | "reelsContratados" | "publicacionesContratadas";
+}[] = [
+  { label: "Historias Diarias", cardLabel: "Historias",     hechoKey: "historiasHechas",     contratadoKey: "historiasContratadas" },
+  { label: "Reels",             cardLabel: "Reels",         hechoKey: "reelsHechos",          contratadoKey: "reelsContratados" },
+  { label: "Publicaciones",     cardLabel: "Publicaciones", hechoKey: "publicacionesHechas",  contratadoKey: "publicacionesContratadas" },
+];
 
 export const EMPRESA_BIO_OPTS: EmpresaBio[] = ["BIOMARKETING", "BIOESTRATEGIA"];
 

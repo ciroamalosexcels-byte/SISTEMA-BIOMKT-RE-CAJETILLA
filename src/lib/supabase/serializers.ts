@@ -41,6 +41,12 @@ export function serializeLead(lead: Lead, stageMap: Map<string, string>) {
     mes_entrada:               lead.mesEntrada ?? null,
     objetivos:                 lead.objetivos ?? null,
     plan_audiovisual:          lead.planAudiovisual ?? null,
+    historias_hechas:          lead.historiasHechas ?? null,
+    historias_contratadas:     lead.historiasContratadas ?? null,
+    reels_hechos:              lead.reelsHechos ?? null,
+    reels_contratados:         lead.reelsContratados ?? null,
+    publicaciones_hechas:      lead.publicacionesHechas ?? null,
+    publicaciones_contratadas: lead.publicacionesContratadas ?? null,
   };
 }
 

@@ -91,6 +91,51 @@ export type Database = {
           },
         ]
       }
+      bulk_event_series: {
+        Row: {
+          client_ids: string[]
+          created_at: string
+          day_of_month: number
+          event_time: string
+          event_type: string
+          id: string
+          kind: string
+          recurrence: string
+          repeat_count: number
+          start_month: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_ids: string[]
+          created_at?: string
+          day_of_month: number
+          event_time?: string
+          event_type: string
+          id?: string
+          kind: string
+          recurrence: string
+          repeat_count?: number
+          start_month: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_ids?: string[]
+          created_at?: string
+          day_of_month?: number
+          event_time?: string
+          event_type?: string
+          id?: string
+          kind?: string
+          recurrence?: string
+          repeat_count?: number
+          start_month?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           activo: boolean
@@ -107,6 +152,8 @@ export type Database = {
           empresa: string
           empresa_bio: string
           fecha_contacto: string
+          historias_contratadas: number | null
+          historias_hechas: number | null
           id: string
           instagram: string | null
           latitud: number | null
@@ -122,6 +169,10 @@ export type Database = {
           plan_id: string | null
           proximo_seguimiento_dias: number | null
           proximo_seguimiento_fecha: string | null
+          publicaciones_contratadas: number | null
+          publicaciones_hechas: number | null
+          reels_contratados: number | null
+          reels_hechos: number | null
           responsable1: string
           responsable2: string | null
           row_order: number | null
@@ -151,6 +202,8 @@ export type Database = {
           empresa?: string
           empresa_bio?: string
           fecha_contacto?: string
+          historias_contratadas?: number | null
+          historias_hechas?: number | null
           id?: string
           instagram?: string | null
           latitud?: number | null
@@ -166,6 +219,10 @@ export type Database = {
           plan_id?: string | null
           proximo_seguimiento_dias?: number | null
           proximo_seguimiento_fecha?: string | null
+          publicaciones_contratadas?: number | null
+          publicaciones_hechas?: number | null
+          reels_contratados?: number | null
+          reels_hechos?: number | null
           responsable1?: string
           responsable2?: string | null
           row_order?: number | null
@@ -195,6 +252,8 @@ export type Database = {
           empresa?: string
           empresa_bio?: string
           fecha_contacto?: string
+          historias_contratadas?: number | null
+          historias_hechas?: number | null
           id?: string
           instagram?: string | null
           latitud?: number | null
@@ -210,6 +269,10 @@ export type Database = {
           plan_id?: string | null
           proximo_seguimiento_dias?: number | null
           proximo_seguimiento_fecha?: string | null
+          publicaciones_contratadas?: number | null
+          publicaciones_hechas?: number | null
+          reels_contratados?: number | null
+          reels_hechos?: number | null
           responsable1?: string
           responsable2?: string | null
           row_order?: number | null
@@ -724,10 +787,76 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_bulk_event_series: {
+        Args: {
+          p_content_rows: Json
+          p_management_rows: Json
+          p_series: Json
+        }
+        Returns: {
+          client_ids: string[]
+          created_at: string
+          day_of_month: number
+          event_time: string
+          event_type: string
+          id: string
+          kind: string
+          recurrence: string
+          repeat_count: number
+          start_month: string
+          title: string
+          updated_at: string
+        }
+      }
       current_user_role: { Args: never; Returns: string }
+      delete_bulk_event_series: {
+        Args: {
+          p_expected_updated_at: string
+          p_id: string
+          p_old_content_ids: string[]
+          p_old_management_ids: string[]
+          p_today: string
+        }
+        Returns: boolean
+      }
       get_lead_credentials: { Args: { p_lead_id: string }; Returns: string }
+      materialize_bulk_event_series: {
+        Args: {
+          p_content_rows: Json
+          p_expected_updated_at: string
+          p_id: string
+          p_management_rows: Json
+        }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      update_bulk_event_series: {
+        Args: {
+          p_content_rows: Json
+          p_expected_updated_at: string
+          p_id: string
+          p_management_rows: Json
+          p_old_content_ids: string[]
+          p_old_management_ids: string[]
+          p_series: Json
+          p_today: string
+        }
+        Returns: {
+          client_ids: string[]
+          created_at: string
+          day_of_month: number
+          event_time: string
+          event_type: string
+          id: string
+          kind: string
+          recurrence: string
+          repeat_count: number
+          start_month: string
+          title: string
+          updated_at: string
+        }
+      }
       upsert_lead_from_sheet: {
         Args: { p_data: Json; p_sheet_id: string; p_stage_key: string }
         Returns: string
@@ -877,6 +1006,9 @@ export type PipelineStageRow = Tables<"pipeline_stages">
 
 export type ContentEventRow = Tables<"content_events">
 export type ManagementEventRow = Tables<"management_events">
+export type BulkEventSeriesRow = Tables<"bulk_event_series">
+export type BulkEventSeriesInsert = TablesInsert<"bulk_event_series">
+export type BulkEventSeriesUpdate = TablesUpdate<"bulk_event_series">
 
 export type PlanRow = Tables<"plans">
 export type PlanEventRow = Tables<"plan_events">

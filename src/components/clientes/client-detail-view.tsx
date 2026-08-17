@@ -6,7 +6,7 @@ import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
 import { usePlansStore } from "@/store/plans";
-import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES } from "@/lib/constants";
+import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
 import { baParts } from "@/lib/dates";
 import type { Lead, ContentEvent, ManagementEvent } from "@/types";
@@ -863,10 +863,36 @@ function ClientDataModal({ lead, members, plans, onUpdate, onDelete, onToggleAct
             </div>
           </div>
 
-          {/* ── Notas ─────────────────────────────────── */}
+          {/* ── Contenidos ────────────────────────────── */}
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
-            <label className="field-label">Objetivos</label>
-            <textarea className="textarea" value={lead.objetivos ?? ""} onChange={e => onUpdate({ objetivos: e.target.value })} placeholder="Objetivos…" />
+            <label className="field-label">Contenidos</label>
+            <div className="contenidos-box">
+              {CONTENIDOS_CATEGORIAS.map(({ label, hechoKey, contratadoKey }) => {
+                const contratado = lead[contratadoKey] ?? 0;
+                return (
+                  <div key={label} className="contenidos-row">
+                    <span className="contenidos-row-label">-{contratado} {label}</span>
+                    <div className="contenidos-row-inputs">
+                      <input
+                        type="number"
+                        min={0}
+                        className="contenidos-input"
+                        value={lead[hechoKey] ?? ""}
+                        onChange={e => onUpdate({ [hechoKey]: e.target.value ? Number(e.target.value) : undefined } as Partial<Lead>)}
+                      />
+                      <span className="contenidos-slash">/</span>
+                      <input
+                        type="number"
+                        min={0}
+                        className="contenidos-input"
+                        value={lead[contratadoKey] ?? ""}
+                        onChange={e => onUpdate({ [contratadoKey]: e.target.value ? Number(e.target.value) : undefined } as Partial<Lead>)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
             <label className="field-label">Observaciones</label>
