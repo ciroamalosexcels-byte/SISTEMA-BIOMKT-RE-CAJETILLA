@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   plans: "ventas_biomarketing_plans_v1",
   planEvents: "ventas_biomarketing_plan_events_v1",
   progressMode: "ventas_biomarketing_progress_mode_v1",
+  clientMonthlyContent: "ventas_biomarketing_client_monthly_content_v1",
 } as const;
 
 export const BA_TIME_ZONE = "America/Argentina/Buenos_Aires";
