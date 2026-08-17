@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
 import { useTeamStore } from "@/store/team";
-import { currentMonthBA } from "@/lib/dates";
+import { currentMonthBA, todayBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { BulkEventsModal } from "./bulk-events-modal";
@@ -13,6 +13,18 @@ import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import type { ClientMonthlyContent, Lead } from "@/types";
 
 const DEFAULT_MEMBER_COLOR = "#94a3b8";
+
+const RAINBOW_COLORS = ["#ef4444", "#22c55e", "#f6bf26", "#3b82f6"];
+
+function rainbowText(text: string) {
+  return [...text].map((char, i) => (
+    <span key={i} style={{ color: RAINBOW_COLORS[i % RAINBOW_COLORS.length] }}>{char}</span>
+  ));
+}
+
+function isBirthdayToday(lead: Lead, todayMD: string) {
+  return lead.cumpleanos?.slice(5, 10) === todayMD || lead.cumpleanos2?.slice(5, 10) === todayMD;
+}
 
 function ClientCard({
   lead, progress, onClick,
@@ -38,6 +50,7 @@ function ClientCard({
   const hasContent = progress !== null;
   const pct     = hasContent ? Math.round(progress * 100) : 0;
   const activo  = lead.activo ?? true;
+  const isBirthday = isBirthdayToday(lead, todayBA().slice(5, 10));
 
   const responsables = [lead.responsable1, lead.responsable2].filter(Boolean) as string[];
 
@@ -83,7 +96,10 @@ function ClientCard({
       </div>
 
       <div className="client-card-text-v11">
-        <h3 style={{ margin: 0, paddingRight: 18 }}>{title}</h3>
+        <h3 style={{ margin: 0, paddingRight: 18 }}>
+          {isBirthday ? rainbowText(title) : title}
+          {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 6 }}>🎂</span>}
+        </h3>
         <div className="client-card-v11-service">{service}</div>
         {responsables.length > 0 && (
           <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
