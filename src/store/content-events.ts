@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { storage } from "@/lib/storage";
-import type { BulkEventSeries, BulkEventSeriesInput, ContentEvent, ManagementEvent } from "@/types";
+import type { BulkEventSeries, BulkEventSeriesInput, ContentEvent, ManagementEvent, ProgressMode } from "@/types";
 
 interface ContentEventsStore {
   contentEvents: ContentEvent[];
@@ -8,6 +8,7 @@ interface ContentEventsStore {
   bulkEventSeries: BulkEventSeries[];
   bulkEventSeriesVersion: number;
   eventDataVersion: number;
+  progressMode: ProgressMode;
   dirty: boolean;
   load: () => void;
   addContentEvent: (event: Omit<ContentEvent, "id" | "order">) => void;
@@ -22,6 +23,7 @@ interface ContentEventsStore {
   createBulkEventSeries: (input: BulkEventSeriesInput) => Promise<void>;
   updateBulkEventSeries: (id: string, input: BulkEventSeriesInput) => Promise<void>;
   deleteBulkEventSeries: (id: string) => Promise<void>;
+  setProgressMode: (mode: ProgressMode) => Promise<void>;
 }
 
 function uid() { return crypto.randomUUID(); }
@@ -93,6 +95,7 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
   bulkEventSeries: [],
   bulkEventSeriesVersion: 0,
   eventDataVersion: 0,
+  progressMode: "estado",
   dirty: false,
 
   load() {
@@ -100,6 +103,7 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
       contentEvents: storage.getContentEvents(),
       managementEvents: storage.getManagementEvents(),
       bulkEventSeries: storage.getBulkEventSeries(),
+      progressMode: storage.getProgressMode(),
       dirty: false,
     });
   },
@@ -203,5 +207,18 @@ export const useContentEventsStore = create<ContentEventsStore>((set, get) => ({
     }));
     storage.setBulkEventSeries(get().bulkEventSeries);
     await refreshEventsAfterBulkChange();
+  },
+
+  async setProgressMode(mode) {
+    const previous = get().progressMode;
+    set({ progressMode: mode });
+    storage.setProgressMode(mode);
+    try {
+      await request<{ mode: ProgressMode }>("/api/supabase/progress-mode", "PATCH", { mode });
+    } catch (error) {
+      console.error("[progress-mode] No se pudo guardar:", error);
+      set({ progressMode: previous });
+      storage.setProgressMode(previous);
+    }
   },
 }));

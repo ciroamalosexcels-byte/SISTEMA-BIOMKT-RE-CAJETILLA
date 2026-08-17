@@ -512,6 +512,24 @@ export type Database = {
         }
         Relationships: []
       }
+      progress_mode: {
+        Row: {
+          id: number
+          mode: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          mode?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sheet_sources: {
         Row: {
           apps_script_url: string | null

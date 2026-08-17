@@ -12,6 +12,9 @@ export type ManagementType =
 export type BulkEventKind = "content" | "management";
 export type BulkRecurrence = "once" | "count" | "monthly";
 
+/** Qué mide el círculo de progreso de Clientes — global, persistido en Supabase. */
+export type ProgressMode = "estado" | "contratado";
+
 export interface BulkEventSeries {
   id: string;
   kind: BulkEventKind;

@@ -7,14 +7,9 @@ import { useContentEventsStore } from "@/store/content-events";
 import { useTeamStore } from "@/store/team";
 import { currentMonthBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
+import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { BulkEventsModal } from "./bulk-events-modal";
 import type { Lead } from "@/types";
-
-function progressClass(pct: number) {
-  if (pct >= 0.8) return "progress-green";
-  if (pct >= 0.4) return "progress-amber";
-  return "progress-red";
-}
 
 const DEFAULT_MEMBER_COLOR = "#94a3b8";
 
@@ -159,6 +154,8 @@ export function ClientesView() {
   const updateBulkEventSeries = useContentEventsStore((s) => s.updateBulkEventSeries);
   const deleteBulkEventSeries = useContentEventsStore((s) => s.deleteBulkEventSeries);
   const members       = useTeamStore((s) => s.members);
+  const progressMode  = useContentEventsStore((s) => s.progressMode);
+  const setProgressMode = useContentEventsStore((s) => s.setProgressMode);
   const router = useRouter();
 
   const memberColorMap = useMemo(() => {
@@ -172,13 +169,6 @@ export function ClientesView() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [bulkEventsOpen, setBulkEventsOpen] = useState(false);
-
-  const STATUS_SCORE: Record<string, number> = {
-    "SIN EDITAR":    0,
-    "EDITANDO":      0.5,
-    "COMPLETO":      0.7,
-    "CALENDARIZADO": 1.0,
-  };
 
   const { activos, inactivos } = useMemo(() => {
     const list = rows.filter((r) => r.tab === "CLIENTES");
@@ -194,19 +184,19 @@ export function ClientesView() {
   }, [rows]);
   const clients = useMemo(() => [...activos, ...inactivos], [activos, inactivos]);
 
-  function getMonthEvents(clientId: string) {
-    const month = currentMonthBA();
-    return contentEvents.filter(
-      (e) => e.clientId === clientId && e.scheduledDate?.slice(0, 7) === month
-    );
+  function getProgress(lead: Lead): number | null {
+    return progressMode === "contratado"
+      ? getContratadoProgress(lead)
+      : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
   }
 
-  function getProgress(clientId: string): number | null {
-    const events = getMonthEvents(clientId);
-    if (events.length === 0) return null;
-    const total = events.reduce((sum, e) => sum + (STATUS_SCORE[e.status ?? ""] ?? 0), 0);
-    return total / events.length;
-  }
+  const globalProgress = useMemo(() => {
+    const values = activos
+      .map((lead) => getProgress(lead))
+      .filter((v): v is number => v !== null);
+    return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activos, progressMode, contentEvents]);
 
   function handleDragStart(e: React.DragEvent, id: string) {
     setDragId(id);
@@ -277,6 +267,19 @@ export function ClientesView() {
           <div className="panel-subtitle">
             {activos.length} ACTIVO{activos.length !== 1 ? "S" : ""}
           </div>
+          <button
+            type="button"
+            onClick={() => setProgressMode(progressMode === "estado" ? "contratado" : "estado")}
+            className={`client-progress-circle client-progress-circle-header ${globalProgress !== null ? progressClass(globalProgress) : "progress-none"}`}
+            style={{ "--pct": globalProgress !== null ? Math.round(globalProgress * 100) : 0 } as React.CSSProperties}
+            title={
+              progressMode === "estado"
+                ? "Progreso por estado mensual de contenidos · click para ver contratado vs. hecho"
+                : "Progreso contratado vs. hecho · click para ver estado mensual de contenidos"
+            }
+          >
+            <span>{globalProgress !== null ? `${Math.round(globalProgress * 100)}%` : "—"}</span>
+          </button>
         </div>
         {clients.length > 0 && (
           <div className="client-panel-actions">
@@ -310,7 +313,7 @@ export function ClientesView() {
               <ClientCard
                 key={lead.id}
                 lead={lead}
-                progress={getProgress(lead.id)}
+                progress={getProgress(lead)}
                 onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
                 isDragging={dragId === lead.id}
                 isDragOver={overId === lead.id}
@@ -337,7 +340,7 @@ export function ClientesView() {
                   <ClientCard
                     key={lead.id}
                     lead={lead}
-                    progress={getProgress(lead.id)}
+                    progress={getProgress(lead)}
                     onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
                     isDragging={dragId === lead.id}
                     isDragOver={overId === lead.id}

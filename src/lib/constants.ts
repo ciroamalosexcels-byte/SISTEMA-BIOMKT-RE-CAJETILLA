@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   bulkEventSeries: "ventas_biomarketing_bulk_event_series_v1",
   plans: "ventas_biomarketing_plans_v1",
   planEvents: "ventas_biomarketing_plan_events_v1",
+  progressMode: "ventas_biomarketing_progress_mode_v1",
 } as const;
 
 export const BA_TIME_ZONE = "America/Argentina/Buenos_Aires";

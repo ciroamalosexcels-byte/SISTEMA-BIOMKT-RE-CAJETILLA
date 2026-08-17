@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from "./constants";
-import type { Lead, TeamMember, ContentEvent, ManagementEvent, BulkEventSeries, Plan, PlanEvent } from "@/types";
+import type { Lead, TeamMember, ContentEvent, ManagementEvent, BulkEventSeries, Plan, PlanEvent, ProgressMode } from "@/types";
 
 function safeGet<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -44,4 +44,7 @@ export const storage = {
 
   getPlanEvents: () => safeGet<PlanEvent[]>(STORAGE_KEYS.planEvents, []),
   setPlanEvents: (events: PlanEvent[]) => safeSet(STORAGE_KEYS.planEvents, events),
+
+  getProgressMode: () => safeGet<ProgressMode>(STORAGE_KEYS.progressMode, "estado"),
+  setProgressMode: (mode: ProgressMode) => safeSet(STORAGE_KEYS.progressMode, mode),
 };

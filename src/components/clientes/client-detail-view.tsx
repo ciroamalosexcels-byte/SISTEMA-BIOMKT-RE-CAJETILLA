@@ -8,7 +8,8 @@ import { useContentEventsStore } from "@/store/content-events";
 import { usePlansStore } from "@/store/plans";
 import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
-import { baParts } from "@/lib/dates";
+import { baParts, currentMonthBA } from "@/lib/dates";
+import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import type { Lead, ContentEvent, ManagementEvent } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
@@ -1351,6 +1352,7 @@ export function ClientDetailView({ clientId }: Props) {
   const {
     contentEvents,
     managementEvents,
+    progressMode,
     addContentEvent, updateContentEvent, deleteContentEvent,
     addManagementEvent, deleteManagementEvent, toggleManagementDone,
   } = useContentEventsStore();
@@ -1538,6 +1540,9 @@ export function ClientDetailView({ clientId }: Props) {
     );
   }
   const title = lead.empresa || lead.nombre || "Sin nombre";
+  const clientProgress = progressMode === "contratado"
+    ? getContratadoProgress(lead)
+    : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
 
   return (
     <section className="client-detail-page">
@@ -1571,6 +1576,13 @@ export function ClientDetailView({ clientId }: Props) {
                 <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>Inactivo</span>
               )}
             </div>
+          </div>
+          <div
+            className={`client-progress-circle ${clientProgress !== null ? progressClass(clientProgress) : "progress-none"}`}
+            style={{ "--pct": clientProgress !== null ? Math.round(clientProgress * 100) : 0, width: 40, height: 40, minWidth: 40 } as React.CSSProperties}
+            title={progressMode === "contratado" ? "Contratado vs. hecho" : "Progreso mensual por estado"}
+          >
+            <span>{clientProgress !== null ? `${Math.round(clientProgress * 100)}%` : "—"}</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

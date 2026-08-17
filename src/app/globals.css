@@ -537,6 +537,14 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
 .client-progress-circle.progress-green { --progress-color: #22c55e; }
 .client-progress-circle.progress-none { background: #e2e8f0; }
 .client-progress-circle.progress-none span { color: #94a3b8; }
+.client-progress-circle-header {
+  width: 34px; height: 34px; min-width: 34px;
+  border: 0; padding: 0; cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.client-progress-circle-header:hover { transform: scale(1.08); }
+.client-progress-circle-header::after { inset: 4px; }
+.client-progress-circle-header span { font-size: 9px; }
 
 /* ── Team styles ────────────────────────────────────────────────── */
 .team-card { background: #fff; border: var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); overflow: hidden; }

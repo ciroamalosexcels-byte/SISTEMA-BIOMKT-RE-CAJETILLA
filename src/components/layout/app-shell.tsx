@@ -54,7 +54,7 @@ export function AppShell({ children }: AppShellProps) {
       const bulkPayload = await fetch("/api/supabase/bulk-event-series")
         .then(r => r.ok ? r.json() : null)
         .catch(() => null);
-      const [supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts, pipeline] = await Promise.all([
+      const [supaLeads, supaTeam, contentEvts, mgmtEvts, plans, planEvts, pipeline, progressModePayload] = await Promise.all([
         leadsPromise,
         teamPromise,
         fetch("/api/supabase/content-events").then(r => r.ok ? r.json() : null).catch(() => null),
@@ -62,6 +62,7 @@ export function AppShell({ children }: AppShellProps) {
         fetch("/api/supabase/plans").then(r => r.ok ? r.json() : []).catch(() => []),
         fetch("/api/supabase/plan-events").then(r => r.ok ? r.json() : []).catch(() => []),
         fetch("/api/supabase/pipeline").then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch("/api/supabase/progress-mode").then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
 
       if (
@@ -105,6 +106,10 @@ export function AppShell({ children }: AppShellProps) {
       if (pipeline.length > 0) {
         usePipelineStore.setState({ stages: pipeline });
         try { localStorage.setItem("ventas_biomarketing_pipeline_stages_v2", JSON.stringify(pipeline)); } catch {}
+      }
+      if (progressModePayload?.mode) {
+        useContentEventsStore.setState({ progressMode: progressModePayload.mode });
+        storage.setProgressMode(progressModePayload.mode);
       }
     };
     loadRemoteData().catch(() => {});
