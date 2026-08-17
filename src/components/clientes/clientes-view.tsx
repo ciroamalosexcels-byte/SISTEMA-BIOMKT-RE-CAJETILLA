@@ -9,7 +9,8 @@ import { currentMonthBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { BulkEventsModal } from "./bulk-events-modal";
-import type { Lead } from "@/types";
+import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
+import type { ClientMonthlyContent, Lead } from "@/types";
 
 const DEFAULT_MEMBER_COLOR = "#94a3b8";
 
@@ -18,6 +19,7 @@ function ClientCard({
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
   memberColorMap,
+  monthlyRecord,
 }: {
   lead: Lead;
   progress: number | null;
@@ -29,6 +31,7 @@ function ClientCard({
   onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
   memberColorMap: Map<string, string>;
+  monthlyRecord: ClientMonthlyContent | undefined;
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
   const service = lead.servicio || "—";
@@ -41,8 +44,8 @@ function ClientCard({
   const contenidoRows = CONTENIDOS_CATEGORIAS
     .map(({ cardLabel, hechoKey, contratadoKey }) => ({
       cardLabel,
-      hecho: lead[hechoKey] ?? 0,
-      contratado: lead[contratadoKey] ?? 0,
+      hecho: monthlyRecord?.[hechoKey] ?? 0,
+      contratado: monthlyRecord?.[contratadoKey] ?? 0,
     }))
     .filter((r) => r.contratado > 0);
 
@@ -156,6 +159,7 @@ export function ClientesView() {
   const members       = useTeamStore((s) => s.members);
   const progressMode  = useContentEventsStore((s) => s.progressMode);
   const setProgressMode = useContentEventsStore((s) => s.setProgressMode);
+  const monthlyContentRecords = useClientMonthlyContentStore((s) => s.records);
   const router = useRouter();
 
   const memberColorMap = useMemo(() => {
@@ -165,6 +169,15 @@ export function ClientesView() {
     }
     return map;
   }, [members]);
+
+  const currentMonthContent = useMemo(() => {
+    const map = new Map<string, ClientMonthlyContent>();
+    const month = currentMonthBA();
+    for (const r of monthlyContentRecords) {
+      if (r.month === month) map.set(r.clientId, r);
+    }
+    return map;
+  }, [monthlyContentRecords]);
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -186,7 +199,7 @@ export function ClientesView() {
 
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
-      ? getContratadoProgress(lead)
+      ? getContratadoProgress(currentMonthContent.get(lead.id))
       : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
   }
 
@@ -322,6 +335,7 @@ export function ClientesView() {
                 onDrop={(e) => handleDrop(e, lead.id)}
                 onDragEnd={handleDragEnd}
                 memberColorMap={memberColorMap}
+                monthlyRecord={currentMonthContent.get(lead.id)}
               />
             ))}
           </div>
@@ -349,6 +363,7 @@ export function ClientesView() {
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
                     memberColorMap={memberColorMap}
+                    monthlyRecord={currentMonthContent.get(lead.id)}
                   />
                 ))}
               </div>
