@@ -4,16 +4,16 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
-import { useTeamStore } from "@/store/team";
 import { currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
+import { getMostRecentContratado } from "@/lib/client-monthly-content";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
-import type { ClientMonthlyContent, Lead } from "@/types";
+import type { ClientMonthlyContent, ClientMonthlyContentInput, Lead } from "@/types";
 
-const DEFAULT_MEMBER_COLOR = "#94a3b8";
+type ContentPatch = Omit<ClientMonthlyContentInput, "clientId" | "month">;
 
 const RAINBOW_COLORS = ["#ef4444", "#22c55e", "#f6bf26", "#3b82f6"];
 
@@ -31,8 +31,8 @@ function ClientCard({
   lead, progress, onClick,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
-  memberColorMap,
   monthlyRecord,
+  onAdjustContent,
 }: {
   lead: Lead;
   progress: number | null;
@@ -43,8 +43,8 @@ function ClientCard({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
-  memberColorMap: Map<string, string>;
   monthlyRecord: ClientMonthlyContent | undefined;
+  onAdjustContent: (hechoKey: keyof ContentPatch, delta: number) => void;
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
   const service = lead.servicio || "—";
@@ -53,11 +53,11 @@ function ClientCard({
   const activo  = lead.activo ?? true;
   const isBirthday = isBirthdayToday(lead, todayBA().slice(5, 10));
 
-  const responsables = [lead.responsable1, lead.responsable2].filter(Boolean) as string[];
-
   const contenidoRows = CONTENIDOS_CATEGORIAS
     .map(({ cardLabel, hechoKey, contratadoKey }) => ({
       cardLabel,
+      hechoKey,
+      contratadoKey,
       hecho: monthlyRecord?.[hechoKey] ?? 0,
       contratado: monthlyRecord?.[contratadoKey] ?? 0,
     }))
@@ -76,11 +76,13 @@ function ClientCard({
         opacity: isDragging ? 0.35 : activo ? 1 : 0.55,
         display: "flex",
         flexDirection: "column",
+        justifyContent: "flex-start",
         cursor: "grab",
         outline: isDragOver ? "2px solid var(--amber, #f6bf26)" : "none",
         outlineOffset: isDragOver ? "-2px" : "0",
         transition: "opacity 0.15s, outline 0.1s",
         position: "relative",
+        minHeight: 0,
       }}
     >
       {/* Drag handle */}
@@ -102,63 +104,41 @@ function ClientCard({
           {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 6 }}>🎂</span>}
         </h3>
         <div className="client-card-v11-service">{service}</div>
-        {responsables.length > 0 && (
-          <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
-            {responsables.map(nombre => {
-              const color = memberColorMap.get(nombre) ?? DEFAULT_MEMBER_COLOR;
-              return (
-                <span
-                  key={nombre}
-                  style={{
-                    fontSize: 10, fontWeight: 700,
-                    color,
-                    background: color + "22",
-                    border: `1px solid ${color}66`,
-                    borderRadius: 20,
-                    padding: "2px 8px",
-                    whiteSpace: "nowrap",
-                    maxWidth: 120,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {nombre}
-                </span>
-              );
-            })}
-          </div>
-        )}
-        {contenidoRows.length > 0 ? (
-          <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
-            {contenidoRows.map((r) => (
-              <div key={r.cardLabel} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, fontWeight: 600, color: "#334155" }}>
-                <span>-{r.contratado} {r.cardLabel}</span>
-                <span style={{ color: "#94a3b8" }}>{r.hecho}/{r.contratado}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginTop: 3 }}>
-            Sin contenidos definidos
-          </div>
-        )}
-      </div>
 
-      <div style={{ marginTop: "auto", paddingTop: 10, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
-        {activo ? (
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 20, padding: "2px 10px" }}>
-            Activo
-          </span>
-        ) : (
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 20, padding: "2px 10px" }}>
-            Inactivo
-          </span>
-        )}
-        <div
-          className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
-          style={{ "--pct": pct } as React.CSSProperties}
-        >
-          <span>{hasContent ? `${pct}%` : "—"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {contenidoRows.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {contenidoRows.map((r) => (
+                  <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontSize: 13, fontWeight: 700, color: "#334155" }}>
+                    <span>-{r.contratado} {r.cardLabel}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onAdjustContent(r.hechoKey, 1); }}
+                        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onAdjustContent(r.hechoKey, -1); }}
+                        title="Click: +1 hecho · Click derecho: -1 hecho"
+                        style={{ background: "none", border: "none", padding: 0, color: "#22c55e", fontSize: 15, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}
+                      >
+                        +
+                      </button>
+                      <span style={{ color: "#94a3b8", minWidth: 34, textAlign: "right" }}>{r.hecho}/{r.contratado}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>
+                Sin contenidos definidos
+              </div>
+            )}
+          </div>
+          <div
+            className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
+            style={{ "--pct": pct } as React.CSSProperties}
+          >
+            <span>{hasContent ? `${pct}%` : "—"}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -173,19 +153,11 @@ export function ClientesView() {
   const createBulkEventSeries = useContentEventsStore((s) => s.createBulkEventSeries);
   const updateBulkEventSeries = useContentEventsStore((s) => s.updateBulkEventSeries);
   const deleteBulkEventSeries = useContentEventsStore((s) => s.deleteBulkEventSeries);
-  const members       = useTeamStore((s) => s.members);
   const progressMode  = useContentEventsStore((s) => s.progressMode);
   const setProgressMode = useContentEventsStore((s) => s.setProgressMode);
   const monthlyContentRecords = useClientMonthlyContentStore((s) => s.records);
+  const upsertMonthlyContent = useClientMonthlyContentStore((s) => s.upsert);
   const router = useRouter();
-
-  const memberColorMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const m of members) {
-      if (m.color) map.set(m.nombre, m.color);
-    }
-    return map;
-  }, [members]);
 
   const [monthKey, setMonthKey] = useState(currentMonthBA);
 
@@ -219,6 +191,21 @@ export function ClientesView() {
     return progressMode === "contratado"
       ? getContratadoProgress(selectedMonthContent.get(lead.id))
       : getEstadoProgress(lead.id, contentEvents, monthKey);
+  }
+
+  function adjustContent(leadId: string, hechoKey: keyof ContentPatch, delta: number) {
+    const record = selectedMonthContent.get(leadId);
+    const prefill = getMostRecentContratado(monthlyContentRecords, leadId, monthKey);
+    const current: ContentPatch = {
+      historiasHechas: record?.historiasHechas ?? 0,
+      historiasContratadas: record?.historiasContratadas ?? prefill.historiasContratadas,
+      reelsHechos: record?.reelsHechos ?? 0,
+      reelsContratados: record?.reelsContratados ?? prefill.reelsContratados,
+      publicacionesHechas: record?.publicacionesHechas ?? 0,
+      publicacionesContratadas: record?.publicacionesContratadas ?? prefill.publicacionesContratadas,
+    };
+    const nextHecho = Math.max(0, current[hechoKey] + delta);
+    upsertMonthlyContent(leadId, monthKey, { ...current, [hechoKey]: nextHecho });
   }
 
   const globalProgress = useMemo(() => {
@@ -365,8 +352,8 @@ export function ClientesView() {
                 onDragOver={(e) => handleDragOver(e, lead.id)}
                 onDrop={(e) => handleDrop(e, lead.id)}
                 onDragEnd={handleDragEnd}
-                memberColorMap={memberColorMap}
                 monthlyRecord={selectedMonthContent.get(lead.id)}
+                onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
               />
             ))}
           </div>
@@ -393,8 +380,8 @@ export function ClientesView() {
                     onDragOver={(e) => handleDragOver(e, lead.id)}
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
-                    memberColorMap={memberColorMap}
                     monthlyRecord={selectedMonthContent.get(lead.id)}
+                    onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
                   />
                 ))}
               </div>

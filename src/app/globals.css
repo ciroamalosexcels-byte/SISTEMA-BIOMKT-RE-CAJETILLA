@@ -482,7 +482,7 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
 .client-grid-v11 { padding: 16px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .client-card-v11 {
   height: auto;
-  min-height: 158px;
+  min-height: 116px;
   background: #fff;
   border: 1px solid var(--slate-200);
   border-radius: 18px;
@@ -491,7 +491,7 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
   transition: 0.18s ease;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-width: 0;
 }
 .client-card-v11:hover { transform: translateY(-1px); border-color: var(--amber); box-shadow: 0 0 0 3px rgba(246,191,38,.25); }
