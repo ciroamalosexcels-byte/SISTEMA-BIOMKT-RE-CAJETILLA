@@ -52,6 +52,31 @@ export function currentMonthBA(): string {
   return `${year}-${month}`;
 }
 
+const MONTH_NAMES_ES = [
+  "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+  "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE",
+];
+
+/** Shifts a "YYYY-MM" key by `delta` months, rolling over year boundaries. */
+export function shiftMonth(key: string, delta: number): string {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(y, (m ?? 1) - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** "AGOSTO 2026" — uppercase Spanish month name + year. */
+export function monthLabel(key: string): string {
+  const [y, m] = key.split("-").map(Number);
+  return `${MONTH_NAMES_ES[(m ?? 1) - 1]} ${y}`;
+}
+
+/** Fixed 25-month window (-12..+12) anchored to `anchor` (defaults to the real current month). */
+export function monthPickerRange(anchor: string = currentMonthBA()): string[] {
+  const months: string[] = [];
+  for (let i = -12; i <= 12; i++) months.push(shiftMonth(anchor, i));
+  return months;
+}
+
 /**
  * Convierte cualquier formato de fecha a YYYY-MM-DD[THH:MM:SS].
  * Maneja: YYYY-MM-DD, DD/MM/YYYY, "Thu Oct 16 2025 00:00:00 GMT-0300...", ISO completo.
