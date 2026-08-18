@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
 import { useTeamStore } from "@/store/team";
-import { currentMonthBA, todayBA } from "@/lib/dates";
+import { currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import type { ClientMonthlyContent, Lead } from "@/types";
 
 const DEFAULT_MEMBER_COLOR = "#94a3b8";
@@ -186,14 +187,15 @@ export function ClientesView() {
     return map;
   }, [members]);
 
-  const currentMonthContent = useMemo(() => {
+  const [monthKey, setMonthKey] = useState(currentMonthBA);
+
+  const selectedMonthContent = useMemo(() => {
     const map = new Map<string, ClientMonthlyContent>();
-    const month = currentMonthBA();
     for (const r of monthlyContentRecords) {
-      if (r.month === month) map.set(r.clientId, r);
+      if (r.month === monthKey) map.set(r.clientId, r);
     }
     return map;
-  }, [monthlyContentRecords]);
+  }, [monthlyContentRecords, monthKey]);
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -215,8 +217,8 @@ export function ClientesView() {
 
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
-      ? getContratadoProgress(currentMonthContent.get(lead.id))
-      : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
+      ? getContratadoProgress(selectedMonthContent.get(lead.id))
+      : getEstadoProgress(lead.id, contentEvents, monthKey);
   }
 
   const globalProgress = useMemo(() => {
@@ -225,7 +227,7 @@ export function ClientesView() {
       .filter((v): v is number => v !== null);
     return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activos, progressMode, contentEvents, currentMonthContent]);
+  }, [activos, progressMode, contentEvents, selectedMonthContent]);
 
   function handleDragStart(e: React.DragEvent, id: string) {
     setDragId(id);
@@ -312,6 +314,19 @@ export function ClientesView() {
         </div>
         {clients.length > 0 && (
           <div className="client-panel-actions">
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => setMonthKey(k => shiftMonth(k, -1))}>‹</button>
+              <MonthPickerMenu
+                monthKey={monthKey}
+                onSelect={setMonthKey}
+                monthLabel={monthLabel}
+                className="btn btn-sm btn-outline"
+                style={{ minWidth: 110, textAlign: "center" }}
+              >
+                {monthLabel(monthKey)}
+              </MonthPickerMenu>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => setMonthKey(k => shiftMonth(k, 1))}>›</button>
+            </div>
             <button
               onClick={() => setBulkEventsOpen(true)}
               className="btn btn-amber btn-sm"
@@ -351,7 +366,7 @@ export function ClientesView() {
                 onDrop={(e) => handleDrop(e, lead.id)}
                 onDragEnd={handleDragEnd}
                 memberColorMap={memberColorMap}
-                monthlyRecord={currentMonthContent.get(lead.id)}
+                monthlyRecord={selectedMonthContent.get(lead.id)}
               />
             ))}
           </div>
@@ -379,7 +394,7 @@ export function ClientesView() {
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
                     memberColorMap={memberColorMap}
-                    monthlyRecord={currentMonthContent.get(lead.id)}
+                    monthlyRecord={selectedMonthContent.get(lead.id)}
                   />
                 ))}
               </div>
