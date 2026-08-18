@@ -1464,7 +1464,7 @@ export function ClientDetailView({ clientId }: Props) {
   }, [rows]);
   const curIdx  = clients.findIndex(r => r.id === clientId);
 
-  const memberNames = members.map(m => m.nombre);
+  const memberNames = members.filter(m => m.activo !== false).map(m => m.nombre);
 
   const myContent = useMemo(
     () => contentEvents
