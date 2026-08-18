@@ -112,7 +112,7 @@ function ClientCard({
                 {contenidoRows.map((r) => (
                   <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontSize: 13, fontWeight: 700, color: "#334155" }}>
                     <span>-{r.contratado} {r.cardLabel}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onAdjustContent(r.hechoKey, 1); }}
