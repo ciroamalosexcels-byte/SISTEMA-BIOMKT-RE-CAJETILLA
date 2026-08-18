@@ -622,18 +622,7 @@ body.dark-mode .area-legend-item { color: #e5e7eb; }
 }
 .marker-toolbar-btn:hover { background: var(--amber-2); color: var(--amber-3); border-color: var(--amber); }
 
-.marker-preview {
-  margin-top: 6px;
-  padding: 8px 10px;
-  border: 1px dashed var(--slate-200);
-  border-radius: 8px;
-  background: var(--slate-50);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--slate-700);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+[contenteditable]:empty:before { content: attr(data-placeholder); color: var(--slate-400); pointer-events: none; }
 
 .contenidos-box { width: 100%; border: 1px solid var(--slate-200); border-radius: 14px; padding: 14px 16px; background: #fff; display: flex; flex-direction: column; gap: 12px; }
 .contenidos-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
