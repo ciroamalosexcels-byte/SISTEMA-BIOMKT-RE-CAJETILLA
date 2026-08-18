@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
-import { baParts } from "@/lib/dates";
+import { baParts, shiftMonth } from "@/lib/dates";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import type { ManagementEvent } from "@/types";
 
 const MONTH_NAMES = [
@@ -15,11 +16,6 @@ const DAY_NAMES = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 function todayKey() {
   const { year, month } = baParts();
   return `${year}-${month}`;
-}
-function shiftMonth(key: string, delta: number) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, (m ?? 1) - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 function monthLabel(key: string) {
   const [y, m] = key.split("-").map(Number);
@@ -83,7 +79,9 @@ export function SubtabCalendarioGestion() {
         </div>
         <div className="month-controls-actions">
           <button className="calendar-mini-btn" type="button" onClick={() => setMonthKey((k) => shiftMonth(k, -1))}>‹</button>
-          <div className="calendar-month-label-v11">{monthLabel(monthKey)}</div>
+          <MonthPickerMenu monthKey={monthKey} onSelect={setMonthKey} monthLabel={monthLabel} className="calendar-month-label-v11">
+            {monthLabel(monthKey)}
+          </MonthPickerMenu>
           <button className="calendar-mini-btn" type="button" onClick={() => setMonthKey((k) => shiftMonth(k, 1))}>›</button>
           <button className="month-current-btn" type="button" onClick={() => setMonthKey(todayKey())}>MES ACTUAL</button>
         </div>

@@ -5,7 +5,8 @@ import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
 import { usePipelineStore } from "@/store/pipeline";
-import { todayBA, currentMonthBA } from "@/lib/dates";
+import { todayBA, currentMonthBA, shiftMonth } from "@/lib/dates";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { ReactApexChart } from "@/components/ui/apex-chart";
 import { WelcomeAreaChart } from "@/components/ui/welcome-area-chart";
 import {
@@ -25,11 +26,6 @@ const MONTH_NAMES = [
 function monthLabel(m: string) {
   const [y, mo] = m.split("-").map(Number);
   return `${MONTH_NAMES[mo - 1]} DE ${y}`;
-}
-function shiftMonth(m: string, delta: number) {
-  const [y, mo] = m.split("-").map(Number);
-  const d = new Date(y, mo - 1 + delta, 1);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 function countByMember(rows: Lead[], member: string) {
   return rows.filter((r) => r.responsable1 === member || r.responsable2 === member).length;
@@ -666,14 +662,19 @@ export function DashboardView() {
             className="calendar-mini-btn"
             onClick={() => handleMonth(shiftMonth(selectedMonth, -1))}
           >‹</button>
-          <div style={{
-            color: "var(--dark)", background: "#f8fafc",
-            border: "1px solid var(--slate-200)", borderRadius: 12,
-            padding: "4px 16px", minWidth: 170, textAlign: "center",
-            fontSize: 13, fontWeight: 900,
-          }}>
+          <MonthPickerMenu
+            monthKey={selectedMonth}
+            onSelect={handleMonth}
+            monthLabel={(m) => monthLabel(m).toUpperCase()}
+            style={{
+              color: "var(--dark)", background: "#f8fafc",
+              border: "1px solid var(--slate-200)", borderRadius: 12,
+              padding: "4px 16px", minWidth: 170, textAlign: "center",
+              fontSize: 13, fontWeight: 900,
+            }}
+          >
             {monthLabel(selectedMonth).toUpperCase()}
-          </div>
+          </MonthPickerMenu>
           <button
             className="calendar-mini-btn"
             onClick={() => handleMonth(shiftMonth(selectedMonth, 1))}

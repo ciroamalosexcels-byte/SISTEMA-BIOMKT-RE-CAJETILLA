@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { baParts } from "@/lib/dates";
+import { baParts, shiftMonth } from "@/lib/dates";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import type { Lead } from "@/types";
 
 type Tab = "CRM" | "REUNION_1" | "REUNION_2" | "SEGUIMIENTO" | "CLIENTES" | "BASE";
@@ -18,11 +19,6 @@ function monthLabel(key: string) {
 function monthShort(key: string) {
   const [, m] = key.split("-").map(Number);
   return MONTH_NAMES[(m ?? 1) - 1] ?? "";
-}
-function shiftMonth(key: string, delta: number) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, (m ?? 1) - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 function todayMonthKey() {
   const { year, month } = baParts();
@@ -111,7 +107,9 @@ export function MemberMetricsCharts({ nombre, rows }: Props) {
         <h3>MÉTRICAS DE {nombre} · {label}</h3>
         <div className="month-controls-actions">
           <button className="calendar-mini-btn" type="button" onClick={() => setMonthKey((k) => shiftMonth(k, -1))}>‹</button>
-          <div className="calendar-month-label-v11">{label}</div>
+          <MonthPickerMenu monthKey={monthKey} onSelect={setMonthKey} monthLabel={monthLabel} className="calendar-month-label-v11">
+            {label}
+          </MonthPickerMenu>
           <button className="calendar-mini-btn" type="button" onClick={() => setMonthKey((k) => shiftMonth(k, 1))}>›</button>
           <button className="month-current-btn" type="button" onClick={() => setMonthKey(todayMonthKey())}>MES ACTUAL</button>
         </div>

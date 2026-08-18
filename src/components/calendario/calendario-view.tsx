@@ -6,6 +6,7 @@ import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
 import { useAppSettings } from "@/store/app-settings";
 import { currentMonthBA, todayBA } from "@/lib/dates";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import type { Lead, ManagementEvent } from "@/types";
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
@@ -325,7 +326,10 @@ export function CalendarioView() {
         </div>
         <div className="month-controls-actions">
           <button className="calendar-mini-btn" onClick={() => handleMonthChange(prevMonth(selectedMonth))}>‹</button>
-          <div
+          <MonthPickerMenu
+            monthKey={selectedMonth}
+            onSelect={handleMonthChange}
+            monthLabel={(m) => monthLabel(m).toUpperCase()}
             style={{
               color: "var(--dark)", background: "#f8fafc",
               border: "1px solid var(--slate-200)", borderRadius: 12,
@@ -334,7 +338,7 @@ export function CalendarioView() {
             }}
           >
             {monthLabel(selectedMonth).toUpperCase()}
-          </div>
+          </MonthPickerMenu>
           <button className="calendar-mini-btn" onClick={() => handleMonthChange(nextMonth(selectedMonth))}>›</button>
           <button className="month-current-btn" onClick={() => handleMonthChange(currentMonthBA())}>HOY</button>
         </div>

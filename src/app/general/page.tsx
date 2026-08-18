@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
-import { currentMonthBA } from "@/lib/dates";
+import { currentMonthBA, shiftMonth } from "@/lib/dates";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { WelcomeAreaChart } from "@/components/ui/welcome-area-chart";
 import { STATUS91_ITEMS } from "@/lib/constants";
 
@@ -334,12 +335,6 @@ function EquipoBloque() {
 }
 
 /* ── Gráfico crecimiento mensual ─────────────────────────────────── */
-function shiftMonth(m: string, delta: number) {
-  const [y, mo] = m.split("-").map(Number);
-  const d = new Date(y, (mo ?? 1) - 1 + delta, 1);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-}
-
 function GraficoCrecimiento() {
   const rows   = useLeadsStore((s) => s.rows);
   const { settings } = useAppSettings();
@@ -368,9 +363,17 @@ function GraficoCrecimiento() {
   const selector = (
     <div className="flex items-center gap-2">
       <button className="calendar-mini-btn" onClick={() => setSelectedMonth(m => shiftMonth(m, -1))}>‹</button>
-      <div style={{ color: "#fff", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "3px 12px", minWidth: 140, textAlign: "center", fontSize: 12, fontWeight: 900 }}>
+      <MonthPickerMenu
+        monthKey={selectedMonth}
+        onSelect={setSelectedMonth}
+        monthLabel={(m) => {
+          const [my, mm] = m.split("-").map(Number);
+          return `${MONTH_NAMES[(mm ?? 1) - 1].toUpperCase()} ${my}`;
+        }}
+        style={{ color: "#fff", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "3px 12px", minWidth: 140, textAlign: "center", fontSize: 12, fontWeight: 900 }}
+      >
         {mesLabel.toUpperCase()} {y}
-      </div>
+      </MonthPickerMenu>
       <button className="calendar-mini-btn" onClick={() => setSelectedMonth(m => shiftMonth(m, 1))}>›</button>
       <button className="month-current-btn" onClick={() => setSelectedMonth(currentMonthBA())}>HOY</button>
     </div>
