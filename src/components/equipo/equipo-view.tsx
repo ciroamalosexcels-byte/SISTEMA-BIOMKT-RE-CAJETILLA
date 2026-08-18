@@ -12,6 +12,18 @@ import type { TeamMember } from "@/types";
 
 type Tab = "equipo" | "objetivos";
 
+const RAINBOW_COLORS = ["#ef4444", "#22c55e", "#f6bf26", "#3b82f6"];
+
+function rainbowText(text: string) {
+  return [...text].map((char, i) => (
+    <span key={i} style={{ color: RAINBOW_COLORS[i % RAINBOW_COLORS.length] }}>{char}</span>
+  ));
+}
+
+function isBirthdayToday(member: TeamMember, todayMD: string) {
+  return member.fechaNacimiento?.slice(5, 10) === todayMD;
+}
+
 /* ── Semáforo ─────────────────────────────────────────────────────── */
 function Semaforo({ pct }: { pct: number }) {
   const color = pct >= 100 ? "#22c55e" : pct >= 70 ? "#f59e0b" : "#ef4444";
@@ -154,6 +166,7 @@ function MemberCard({
 }) {
   const { settings } = useAppSettings();
   const isActivo = member.activo !== false;
+  const isBirthday = isBirthdayToday(member, todayBA().slice(5, 10));
 
   const sueldoNum = member.sueldo ? parseInt(member.sueldo.replace(/\D/g, ""), 10) : null;
   const sueldoLabel = sueldoNum ? `$${sueldoNum.toLocaleString("es-AR")}` : null;
@@ -163,7 +176,8 @@ function MemberCard({
       <div className="team-member-head">
         <div>
           <div className="team-member-name flex items-center gap-2">
-            {member.nombre}
+            {isBirthday ? rainbowText(member.nombre) : member.nombre}
+            {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 2 }}>🎂</span>}
             {sueldoLabel && (
               <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
                 {sueldoLabel}
