@@ -1629,7 +1629,7 @@ export function ClientDetailView({ clientId }: Props) {
               onSelect={setMonthKey}
               monthLabel={monthLabel}
               className="btn btn-sm btn-outline"
-              style={{ minWidth: 110, textAlign: "center" }}
+              style={{ padding: "8px 11px", color: "var(--slate-700)", minWidth: 110, textAlign: "center" }}
             >
               {monthLabel(monthKey)}
             </MonthPickerMenu>

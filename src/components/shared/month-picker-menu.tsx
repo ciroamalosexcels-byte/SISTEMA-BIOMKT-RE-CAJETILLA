@@ -17,6 +17,7 @@ export function MonthPickerMenu({ monthKey, onSelect, monthLabel, className, sty
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left?: number; right?: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   function openMenu() {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -35,12 +36,14 @@ export function MonthPickerMenu({ monthKey, onSelect, monthLabel, className, sty
     if (!open) return;
     function handlePointerDown(e: MouseEvent) {
       if (triggerRef.current?.contains(e.target as Node)) return;
+      if (menuRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
-    function handleScroll() {
+    function handleScroll(e: Event) {
+      if (menuRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     }
     document.addEventListener("mousedown", handlePointerDown);
@@ -69,7 +72,7 @@ export function MonthPickerMenu({ monthKey, onSelect, monthLabel, className, sty
         {children}
       </button>
       {open && pos && createPortal(
-        <div className="month-picker-menu" style={{ top: pos.top, left: pos.left, right: pos.right }}>
+        <div ref={menuRef} className="month-picker-menu" style={{ top: pos.top, left: pos.left, right: pos.right }}>
           {months.map((m) => (
             <button
               key={m}
