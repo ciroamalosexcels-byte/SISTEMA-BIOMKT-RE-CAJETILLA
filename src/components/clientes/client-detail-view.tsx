@@ -13,6 +13,7 @@ import { baParts, currentMonthBA, monthLabel, shiftMonth } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { findMonthlyRecord, getMostRecentContratado } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
+import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
@@ -928,7 +929,12 @@ function ClientDataModal({
           </div>
           <div className="field-group" style={{ gridColumn: "1/-1" }}>
             <label className="field-label">Observaciones</label>
-            <textarea className="textarea" value={lead.observaciones ?? ""} onChange={e => onUpdate({ observaciones: e.target.value })} placeholder="Observaciones…" />
+            <MarkerTextarea
+              className="textarea"
+              value={lead.observaciones ?? ""}
+              onChange={(v) => onUpdate({ observaciones: v })}
+              placeholder="Observaciones…"
+            />
           </div>
         </div>
         <div className="modal-footer" style={{ justifyContent: "space-between" }}>

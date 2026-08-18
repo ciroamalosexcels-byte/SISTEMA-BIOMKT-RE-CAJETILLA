@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
+import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import { EMPRESA_BIO_OPTS, MEDIO_OPTS } from "@/lib/constants";
 import type { Lead, TabKey } from "@/types";
 
@@ -75,11 +76,12 @@ export function NewLeadModal({ tab, open, onClose }: Props) {
             <option value="">Medio —</option>
             {MEDIO_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
-          <textarea
+          <MarkerTextarea
             className="textarea"
             placeholder="Observaciones"
             value={form.observaciones}
-            onChange={(e) => setField("observaciones", e.target.value)}
+            onChange={(v) => setField("observaciones", v)}
+            wrapperStyle={{ gridColumn: "1/-1" }}
           />
         </form>
 

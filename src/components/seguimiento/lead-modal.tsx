@@ -6,6 +6,7 @@ import { nowDatetimeBA } from "@/lib/dates";
 import { useLeadsStore } from "@/store/leads";
 import { usePipelineStore } from "@/store/pipeline";
 import { MEDIO_OPTS, EMPRESA_BIO_OPTS } from "@/lib/constants";
+import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import type { Lead, LeadFormData } from "@/types";
 
 interface LeadModalProps {
@@ -169,7 +170,7 @@ export function LeadModal({ lead, defaultStageId, onClose }: LeadModalProps) {
           {/* Observaciones */}
           <div className="flex flex-col gap-0.5">
             <label className={lbl}>Observaciones</label>
-            <textarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={e => set("observaciones", e.target.value)} />
+            <MarkerTextarea className={`${inputCls} resize-none min-h-[60px]`} value={form.observaciones} onChange={(v) => set("observaciones", v)} />
           </div>
 
           {/* Dirección + Teléfono */}

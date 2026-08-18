@@ -8,6 +8,7 @@ import { daysFromToday } from "@/lib/dates";
 import { KanbanColumn } from "./kanban-column";
 import { LeadModal } from "./lead-modal";
 import { CargaRapidaModal } from "./carga-rapida-modal";
+import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import type { Lead } from "@/types";
 
 type ViewMode = "kanban" | "table";
@@ -318,10 +319,10 @@ export function SeguimientoView() {
             </div>
             {/* Body */}
             <div className="px-[22px] py-4">
-              <textarea
+              <MarkerTextarea
                 autoFocus
                 value={obsText}
-                onChange={e => setObsText(e.target.value)}
+                onChange={setObsText}
                 rows={8}
                 className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-md py-[7px] px-2.5 text-xs text-slate-900 dark:text-slate-200 outline-none focus:border-amber dark:focus:border-amber/[0.3] resize-none leading-relaxed"
               />
