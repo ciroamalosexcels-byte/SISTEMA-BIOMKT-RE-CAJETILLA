@@ -9,13 +9,13 @@ import { usePlansStore } from "@/store/plans";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
-import { baParts, currentMonthBA } from "@/lib/dates";
+import { baParts, currentMonthBA, monthLabel, shiftMonth } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { findMonthlyRecord, getMostRecentContratado } from "@/lib/client-monthly-content";
+import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
-const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
 const WEEKDAYS_SHORT = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 
 interface GridCell { date: string; inMonth: boolean; }
@@ -23,15 +23,6 @@ interface GridCell { date: string; inMonth: boolean; }
 function todayKey() {
   const { year, month } = baParts();
   return `${year}-${month}`;
-}
-function shiftMonth(key: string, delta: number) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, (m ?? 1) - 1 + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-function monthLabel(key: string) {
-  const [y, m] = key.split("-").map(Number);
-  return `${MONTH_NAMES[(m ?? 1) - 1]} ${y}`;
 }
 function normalizeScheduledDate(value?: string) {
   if (!value) return "";
@@ -690,7 +681,7 @@ function ConfirmDeleteModal({ clientName, onConfirm, onClose }: {
 
 /* ── Client data modal ──────────────────────────────────────────────── */
 function ClientDataModal({
-  lead, members, plans, monthKey, onShiftMonth, monthlyRecord, prefillContratado,
+  lead, members, plans, monthKey, onShiftMonth, onSelectMonth, monthlyRecord, prefillContratado,
   onUpdate, onUpdateMonthly, onDelete, onToggleActivo, onClose,
 }: {
   lead: Lead;
@@ -698,6 +689,7 @@ function ClientDataModal({
   plans: { id: string; nombre: string }[];
   monthKey: string;
   onShiftMonth: (delta: 1 | -1) => void;
+  onSelectMonth: (monthKey: string) => void;
   monthlyRecord: ClientMonthlyContent | undefined;
   prefillContratado: { historiasContratadas: number; reelsContratados: number; publicacionesContratadas: number };
   onUpdate: (p: Partial<Lead>) => void;
@@ -895,9 +887,14 @@ function ClientDataModal({
             <label className="field-label">Contenidos</label>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
               <button type="button" className="btn btn-sm btn-outline" onClick={() => onShiftMonth(-1)}>‹</button>
-              <span style={{ fontSize: 12, fontWeight: 800, color: "#475569", minWidth: 110, textAlign: "center" }}>
+              <MonthPickerMenu
+                monthKey={monthKey}
+                onSelect={onSelectMonth}
+                monthLabel={monthLabel}
+                style={{ fontSize: 12, fontWeight: 800, color: "#475569", minWidth: 110, textAlign: "center" }}
+              >
                 {monthLabel(monthKey)}
-              </span>
+              </MonthPickerMenu>
               <button type="button" className="btn btn-sm btn-outline" onClick={() => onShiftMonth(1)}>›</button>
             </div>
             <div className="contenidos-box">
@@ -1627,9 +1624,15 @@ export function ClientDetailView({ clientId }: Props) {
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <button className="btn btn-sm btn-outline" type="button" onClick={() => setMonthKey(k => shiftMonth(k, -1))}>‹</button>
-            <span className="btn btn-sm btn-outline" style={{ pointerEvents: "none", minWidth: 110, textAlign: "center" }}>
+            <MonthPickerMenu
+              monthKey={monthKey}
+              onSelect={setMonthKey}
+              monthLabel={monthLabel}
+              className="btn btn-sm btn-outline"
+              style={{ minWidth: 110, textAlign: "center" }}
+            >
               {monthLabel(monthKey)}
-            </span>
+            </MonthPickerMenu>
             <button className="btn btn-sm btn-outline" type="button" onClick={() => setMonthKey(k => shiftMonth(k, 1))}>›</button>
           </div>
           <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowData(true)}>
@@ -1791,6 +1794,7 @@ export function ClientDetailView({ clientId }: Props) {
           plans={plans}
           monthKey={monthKey}
           onShiftMonth={d => setMonthKey(k => shiftMonth(k, d))}
+          onSelectMonth={setMonthKey}
           monthlyRecord={monthlyRecord}
           prefillContratado={prefillContratado}
           onUpdate={patch}
