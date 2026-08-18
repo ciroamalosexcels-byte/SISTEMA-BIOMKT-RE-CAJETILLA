@@ -896,6 +896,40 @@ body.dark-mode .cdp-popover { background: #0b1730; border-color: #263a5f; }
 body.dark-mode .cdp-dot.cdp-selected { box-shadow: 0 0 0 3px #f6bf26; }
 body.dark-mode .cdp-none.cdp-selected { box-shadow: 0 0 0 3px #94a3b8; }
 
+.month-picker-menu {
+  position: fixed;
+  z-index: 10000;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  width: 240px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15,23,42,.18);
+}
+.month-picker-menu-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-align: left;
+  color: #334155;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.month-picker-menu-item:hover { background: #f1f5f9; }
+.month-picker-menu-item.active { background: var(--amber, #f6bf26); color: #1e293b; }
+body.dark-mode .month-picker-menu { background: #0b1730; border-color: #263a5f; }
+body.dark-mode .month-picker-menu-item { color: #cbd5e1; }
+body.dark-mode .month-picker-menu-item:hover { background: #16233f; }
+body.dark-mode .month-picker-menu-item.active { color: #1e293b; }
+
 /* ── Dark mode V27 ──────────────────────────────────────────────── */
 body.dark-mode .team-clone-layout-v27 .team-info-clone-v23 { background: #0b1220; border-color: #243044; }
 body.dark-mode .team-clone-layout-v27 .team-info-grid-v23 { background: #0b1220; }
