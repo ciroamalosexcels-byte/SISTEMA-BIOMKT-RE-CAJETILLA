@@ -295,7 +295,7 @@ export function Sidebar(_props: SidebarProps) {
     <>
       {/* ── Barra única ──────────────────────────────────────────── */}
       <aside
-        className="bg-[#07152f] h-full min-h-0 flex flex-col z-50 border-r border-white/[0.05] flex-shrink-0 overflow-hidden"
+        className="bg-[#0d0d0d] h-full min-h-0 flex flex-col z-50 border-r border-white/[0.05] flex-shrink-0 overflow-hidden"
         style={{ width: sidebarW, transition: "width 0.2s cubic-bezier(0.4,0,0.2,1)", fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
       >
         {/* Logo / toggle */}
@@ -304,11 +304,13 @@ export function Sidebar(_props: SidebarProps) {
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expandir" : "Colapsar"}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" width={31} height={31} className="flex-shrink-0 object-contain" />
-          <span className={`text-[11px] font-black text-white tracking-[0.06em] uppercase flex-1 text-left ${lbl}`}>
-            BIOMKT
-          </span>
+          {collapsed ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/logo.png" alt="BIOMKT" width={31} height={31} className="flex-shrink-0 object-contain" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/icono-sistema.png" alt="BIOMKT" className="h-8 w-auto max-w-[150px] object-contain flex-1" />
+          )}
           <ChevronLeft
             size={16}
             className="text-white/40 flex-shrink-0 transition-transform duration-200"
