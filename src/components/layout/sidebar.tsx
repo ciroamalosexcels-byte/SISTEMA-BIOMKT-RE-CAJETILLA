@@ -300,7 +300,7 @@ export function Sidebar(_props: SidebarProps) {
       >
         {/* Logo / toggle */}
         <button
-          className="flex items-center gap-2.5 h-12 px-3 border-b border-white/[0.05] w-full bg-transparent cursor-pointer hover:bg-white/[0.04] transition-colors flex-shrink-0"
+          className="flex items-center gap-2.5 h-[58px] px-3 border-b border-white/[0.05] w-full bg-transparent cursor-pointer hover:bg-white/[0.04] transition-colors flex-shrink-0"
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expandir" : "Colapsar"}
         >
