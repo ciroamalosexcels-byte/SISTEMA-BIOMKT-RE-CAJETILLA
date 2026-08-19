@@ -8,6 +8,7 @@ import { useAppSettings } from "@/store/app-settings";
 import { BADGES, STATUS91_ITEMS } from "@/lib/constants";
 import { todayBA, currentMonthBA } from "@/lib/dates";
 import { DatosModal } from "./datos-modal";
+import { BirthdayCelebration } from "./birthday-celebration";
 import type { TeamMember } from "@/types";
 
 type Tab = "equipo" | "objetivos";
@@ -234,6 +235,8 @@ export function EquipoView() {
 
   const activos   = members.filter((m) => m.activo !== false);
   const inactivos = members.filter((m) => m.activo === false);
+  const todayMD = todayBA().slice(5, 10);
+  const hasBirthdayToday = members.some((m) => isBirthdayToday(m, todayMD));
 
   function leadsFor(nombre: string) {
     return rows.filter(
@@ -271,6 +274,7 @@ export function EquipoView() {
 
   return (
     <section className="team-card">
+      {hasBirthdayToday && <BirthdayCelebration />}
       <div className="team-top table-top">
         <div className="table-title-row">
           <h2 className="table-section-title">EQUIPO</h2>
