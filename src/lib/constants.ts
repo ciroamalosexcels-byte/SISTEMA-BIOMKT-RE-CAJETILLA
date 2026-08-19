@@ -128,9 +128,9 @@ export interface WorkspaceNavItem {
 
 export const WORKSPACE_NAV: Record<WorkspaceMode, WorkspaceNavItem[]> = {
   equipo: [
+    { key: "EQUIPO",             label: "Equipo",            href: "/equipo" },
     { key: "DASHBOARD_EQUIPO",   label: "Panel de Control",  href: "/equipo/dashboard" },
     { key: "OBJETIVOS_EQUIPO",   label: "Objetivos",         href: "/equipo/objetivos" },
-    { key: "EQUIPO",             label: "Equipo",            href: "/equipo" },
     { key: "COLABORADORES",      label: "Colaboradores",     href: "/colaboradores" },
     { key: "PROCEDIMIENTOS",     label: "Procedimientos",    href: "/procedimientos" },
     { key: "REUNIONES_EQUIPO",   label: "Reunión de Equipo", href: "/reuniones-equipo" },
@@ -142,8 +142,8 @@ export const WORKSPACE_NAV: Record<WorkspaceMode, WorkspaceNavItem[]> = {
     { key: "CALENDARIO",   label: "Calendario",   href: "/calendario" },
   ],
   clientes: [
-    { key: "DASHBOARD_CLIENTES", label: "Panel de Control", href: "/clientes/dashboard" },
     { key: "CLIENTES",           label: "Clientes",      href: "/clientes" },
+    { key: "DASHBOARD_CLIENTES", label: "Panel de Control", href: "/clientes/dashboard" },
     { key: "PLANIFICACION",      label: "Planificación", href: "/planificacion" },
     { key: "PLANES",             label: "Planes",        href: "/planes" },
     { key: "MAPA_CLIENTES",      label: "Mapa",          href: "/mapa" },

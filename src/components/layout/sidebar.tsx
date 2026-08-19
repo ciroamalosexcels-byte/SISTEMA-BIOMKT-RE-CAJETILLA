@@ -174,7 +174,7 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW,
           <span className="flex items-center gap-2 text-[12px] font-semibold text-white">
             <Settings size={17} /> Escalar sistema
           </span>
-          <span className="text-[11px] font-black text-amber tabular-nums">
+          <span className="text-[11px] font-black text-bviolet tabular-nums">
             {((settings.systemScale ?? 1) * 100).toFixed(0)}%
           </span>
         </div>
@@ -185,8 +185,8 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW,
           onChange={(e) => update({ systemScale: parseFloat(e.target.value) })}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #f6bf26 0%, #f6bf26 ${((( settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) ${(((settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) 100%)`,
-            accentColor: "#f6bf26",
+            background: `linear-gradient(to right, #8a51eb 0%, #8a51eb ${((( settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) ${(((settings.systemScale ?? 1) - 0.5) / 1) * 100}%, rgba(255,255,255,0.12) 100%)`,
+            accentColor: "#8a51eb",
           }}
         />
         <div className="flex justify-between text-[9px] text-white/30 font-bold mt-0.5">
@@ -288,7 +288,7 @@ export function Sidebar(_props: SidebarProps) {
   /* Clase base para ítems de nav */
   const navItem = (active: boolean) =>
     `flex items-center gap-2.5 px-3 py-2 w-full text-[12px] font-semibold no-underline border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
-      active ? "text-amber bg-amber/[0.08] font-bold" : "text-white hover:bg-white/[0.07]"
+      active ? "text-bviolet bg-bviolet/[0.08] font-bold" : "text-white hover:bg-white/[0.07]"
     }`;
 
   return (
@@ -323,7 +323,7 @@ export function Sidebar(_props: SidebarProps) {
           <Link
             href="/general"
             className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden no-underline ${
-              isActive("/general") ? "text-amber" : "text-white hover:bg-white/[0.07]"
+              isActive("/general") ? "text-bviolet" : "text-white hover:bg-white/[0.07]"
             }`}
             style={{ fontSize: 13, fontWeight: 700, textDecoration: "none" }}
           >
@@ -342,7 +342,7 @@ export function Sidebar(_props: SidebarProps) {
               <div key={key}>
                 <button
                   className={`flex items-center gap-2.5 px-3 py-2 text-[13px] font-bold w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
-                    isActiveWS ? "text-amber" : "text-white hover:bg-white/[0.07]"
+                    isActiveWS ? "text-bviolet" : "text-white hover:bg-white/[0.07]"
                   }`}
                   onClick={() => switchWorkspace(key)}
                 >
@@ -366,7 +366,7 @@ export function Sidebar(_props: SidebarProps) {
                           href={link.href}
                           className={`flex items-center gap-2.5 py-[6px] pr-3 text-[12px] font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden ${
                             isActive(link.href)
-                              ? "text-amber bg-amber/[0.08] font-bold"
+                              ? "text-bviolet bg-bviolet/[0.08] font-bold"
                               : "text-white hover:bg-white/[0.06]"
                           }`}
                           style={{ paddingLeft: 36 }}
@@ -390,7 +390,7 @@ export function Sidebar(_props: SidebarProps) {
 
           {/* Notificaciones */}
           <button
-            className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold transition-colors whitespace-nowrap ${hasUnread ? "text-amber hover:bg-amber/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
+            className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-bold transition-colors whitespace-nowrap ${hasUnread ? "text-bviolet hover:bg-bviolet/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
             onClick={() => setNotifOpen(true)}
             title="Notificaciones"
           >
@@ -403,7 +403,7 @@ export function Sidebar(_props: SidebarProps) {
           {/* Configuración */}
           <button
             ref={settingsRef}
-            className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-semibold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
+            className="flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-bold text-white hover:bg-white/[0.06] transition-colors whitespace-nowrap"
             onClick={() => setSettingsOpen((v) => !v)}
             title="Configuración"
           >
@@ -424,7 +424,7 @@ export function Sidebar(_props: SidebarProps) {
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="w-[20px] h-[20px] rounded-full object-cover" />
                   ) : (
-                    <div className="w-[20px] h-[20px] rounded-full bg-amber/30 flex items-center justify-center text-[9px] font-black text-amber">
+                    <div className="w-[20px] h-[20px] rounded-full bg-bviolet/30 flex items-center justify-center text-[9px] font-black text-bviolet">
                       {user.name[0].toUpperCase()}
                     </div>
                   )}

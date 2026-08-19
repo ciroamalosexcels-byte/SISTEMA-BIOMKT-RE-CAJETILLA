@@ -9,6 +9,7 @@ export default {
         amber:        "#f6bf26",
         "amber-2":    "#ffe8a8",
         "amber-3":    "#9a6700",
+        bviolet:      "#8a51eb",
         "bio-dark":   "#07152f",
         "bio-dark-2": "#020817",
         "bio-rail":   "#020817",
