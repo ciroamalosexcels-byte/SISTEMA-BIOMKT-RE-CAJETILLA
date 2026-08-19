@@ -296,7 +296,7 @@ export function Sidebar(_props: SidebarProps) {
       {/* ── Barra única ──────────────────────────────────────────── */}
       <aside
         className="bg-[#07152f] h-full min-h-0 flex flex-col z-50 border-r border-white/[0.05] flex-shrink-0 overflow-hidden"
-        style={{ width: sidebarW, transition: "width 0.2s cubic-bezier(0.4,0,0.2,1)" }}
+        style={{ width: sidebarW, transition: "width 0.2s cubic-bezier(0.4,0,0.2,1)", fontFamily: "var(--font-poppins), Poppins, sans-serif" }}
       >
         {/* Logo / toggle */}
         <button
@@ -347,7 +347,7 @@ export function Sidebar(_props: SidebarProps) {
                   onClick={() => switchWorkspace(key)}
                 >
                   <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><Icon size={18} /></span>
-                  <span className={`flex-1 text-left ${lbl}`}>{wsLabel}</span>
+                  <span className={`flex-1 text-left ${lbl}`} style={{ fontWeight: 700 }}>{wsLabel}</span>
                   <ChevronDown
                     size={13}
                     className="flex-shrink-0 transition-transform duration-200"
@@ -364,15 +364,15 @@ export function Sidebar(_props: SidebarProps) {
                         <Link
                           key={link.key}
                           href={link.href}
-                          className={`flex items-center gap-2.5 py-[6px] pr-3 text-[12px] font-semibold no-underline transition-colors whitespace-nowrap overflow-hidden ${
+                          className={`flex items-center gap-2.5 py-[6px] pr-3 text-[12px] no-underline transition-colors whitespace-nowrap overflow-hidden ${
                             isActive(link.href)
-                              ? "text-bviolet bg-bviolet/[0.08] font-bold"
+                              ? "text-bviolet bg-bviolet/[0.08]"
                               : "text-white hover:bg-white/[0.06]"
                           }`}
-                          style={{ paddingLeft: 36 }}
+                          style={{ paddingLeft: 36, fontWeight: 700 }}
                         >
                           <span className="flex-shrink-0 min-w-[16px] flex items-center justify-center"><NavIcon size={16} /></span>
-                          <span className={lbl}>{link.label}</span>
+                          <span className={lbl} style={{ fontWeight: 700 }}>{link.label}</span>
                         </Link>
                       );
                     })}
@@ -397,7 +397,7 @@ export function Sidebar(_props: SidebarProps) {
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
               <Bell size={17} />
             </span>
-            <span className={lbl}>Notificaciones</span>
+            <span className={lbl} style={{ fontWeight: 700 }}>Notificaciones</span>
           </button>
 
           {/* Configuración */}
@@ -410,7 +410,7 @@ export function Sidebar(_props: SidebarProps) {
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
               <Settings size={17} />
             </span>
-            <span className={lbl}>Configuración</span>
+            <span className={lbl} style={{ fontWeight: 700 }}>Configuración</span>
           </button>
 
           {/* ── Usuario / Auth ───────────────────────────────────── */}
