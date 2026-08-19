@@ -310,7 +310,7 @@ export function Sidebar(_props: SidebarProps) {
           ) : (
             <div className="flex-1 flex items-center justify-start overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icono-sistema.png" alt="BIOMKT" className="h-[38px] w-auto object-contain" />
+              <img src="/icono-sistema.png" alt="BIOMKT" className="h-[38px] w-auto object-contain" style={{ transform: "translateY(10px)" }} />
             </div>
           )}
           <ChevronLeft
