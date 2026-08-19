@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findMonthlyRecord, getMostRecentContratado } from "./client-monthly-content";
+import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent } from "./client-monthly-content";
 import type { ClientMonthlyContent } from "@/types";
 
 function makeRecord(patch: Partial<ClientMonthlyContent> = {}): ClientMonthlyContent {
@@ -59,5 +59,39 @@ describe("getMostRecentContratado", () => {
   it("ignores records from the same month or later", () => {
     const records = [makeRecord({ month: "2026-08", historiasContratadas: 7 })];
     expect(getMostRecentContratado(records, "lead-1", "2026-08").historiasContratadas).toBe(0);
+  });
+});
+
+describe("resolveMonthlyContent", () => {
+  it("returns the explicit record for the month when one exists", () => {
+    const records = [makeRecord({ month: "2026-08", historiasHechas: 3, historiasContratadas: 7 })];
+    expect(resolveMonthlyContent(records, "lead-1", "2026-08")).toEqual(records[0]);
+  });
+
+  it("carries the last contracted amounts forward with hecho at 0 when the month has no record", () => {
+    const records = [
+      makeRecord({ month: "2026-06", historiasHechas: 7, historiasContratadas: 7, reelsHechos: 2, reelsContratados: 3 }),
+    ];
+    // "2026-08" never had its own record — repeats June's contratado, but hecho resets.
+    expect(resolveMonthlyContent(records, "lead-1", "2026-08")).toEqual({
+      historiasHechas: 0, historiasContratadas: 7,
+      reelsHechos: 0, reelsContratados: 3,
+      publicacionesHechas: 0, publicacionesContratadas: 0,
+    });
+  });
+
+  it("does not let a later explicit change leak backward into earlier months", () => {
+    const records = [
+      makeRecord({ month: "2026-08", historiasHechas: 7, historiasContratadas: 7 }),
+      makeRecord({ month: "2026-12", historiasHechas: 0, historiasContratadas: 10 }), // changed in December
+    ];
+    // September (before December) still carries August's 7, unaffected by December's 10.
+    expect(resolveMonthlyContent(records, "lead-1", "2026-09")?.historiasContratadas).toBe(7);
+    // January repeats December's new value forward.
+    expect(resolveMonthlyContent(records, "lead-1", "2027-01")?.historiasContratadas).toBe(10);
+  });
+
+  it("returns undefined when the client never had anything contracted", () => {
+    expect(resolveMonthlyContent([], "lead-1", "2026-08")).toBeUndefined();
   });
 });

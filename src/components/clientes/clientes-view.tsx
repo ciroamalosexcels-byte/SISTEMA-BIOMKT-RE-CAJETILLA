@@ -7,11 +7,11 @@ import { useContentEventsStore } from "@/store/content-events";
 import { currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
-import { getMostRecentContratado } from "@/lib/client-monthly-content";
+import { resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
-import type { ClientMonthlyContent, ClientMonthlyContentInput, Lead } from "@/types";
+import type { ClientMonthlyContentInput, ContentCounts, Lead } from "@/types";
 
 type ContentPatch = Omit<ClientMonthlyContentInput, "clientId" | "month">;
 
@@ -43,7 +43,7 @@ function ClientCard({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragEnd: () => void;
-  monthlyRecord: ClientMonthlyContent | undefined;
+  monthlyRecord: ContentCounts | undefined;
   onAdjustContent: (hechoKey: keyof ContentPatch, delta: number) => void;
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
@@ -161,14 +161,6 @@ export function ClientesView() {
 
   const [monthKey, setMonthKey] = useState(currentMonthBA);
 
-  const selectedMonthContent = useMemo(() => {
-    const map = new Map<string, ClientMonthlyContent>();
-    for (const r of monthlyContentRecords) {
-      if (r.month === monthKey) map.set(r.clientId, r);
-    }
-    return map;
-  }, [monthlyContentRecords, monthKey]);
-
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [bulkEventsOpen, setBulkEventsOpen] = useState(false);
@@ -189,20 +181,15 @@ export function ClientesView() {
 
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
-      ? getContratadoProgress(selectedMonthContent.get(lead.id))
+      ? getContratadoProgress(resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey))
       : getEstadoProgress(lead.id, contentEvents, monthKey);
   }
 
   function adjustContent(leadId: string, hechoKey: keyof ContentPatch, delta: number) {
-    const record = selectedMonthContent.get(leadId);
-    const prefill = getMostRecentContratado(monthlyContentRecords, leadId, monthKey);
-    const current: ContentPatch = {
-      historiasHechas: record?.historiasHechas ?? 0,
-      historiasContratadas: record?.historiasContratadas ?? prefill.historiasContratadas,
-      reelsHechos: record?.reelsHechos ?? 0,
-      reelsContratados: record?.reelsContratados ?? prefill.reelsContratados,
-      publicacionesHechas: record?.publicacionesHechas ?? 0,
-      publicacionesContratadas: record?.publicacionesContratadas ?? prefill.publicacionesContratadas,
+    const current: ContentPatch = resolveMonthlyContent(monthlyContentRecords, leadId, monthKey) ?? {
+      historiasHechas: 0, historiasContratadas: 0,
+      reelsHechos: 0, reelsContratados: 0,
+      publicacionesHechas: 0, publicacionesContratadas: 0,
     };
     const nextHecho = Math.max(0, current[hechoKey] + delta);
     upsertMonthlyContent(leadId, monthKey, { ...current, [hechoKey]: nextHecho });
@@ -214,7 +201,7 @@ export function ClientesView() {
       .filter((v): v is number => v !== null);
     return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activos, progressMode, contentEvents, selectedMonthContent]);
+  }, [activos, progressMode, contentEvents, monthlyContentRecords, monthKey]);
 
   function handleDragStart(e: React.DragEvent, id: string) {
     setDragId(id);
@@ -352,7 +339,7 @@ export function ClientesView() {
                 onDragOver={(e) => handleDragOver(e, lead.id)}
                 onDrop={(e) => handleDrop(e, lead.id)}
                 onDragEnd={handleDragEnd}
-                monthlyRecord={selectedMonthContent.get(lead.id)}
+                monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                 onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
               />
             ))}
@@ -380,7 +367,7 @@ export function ClientesView() {
                     onDragOver={(e) => handleDragOver(e, lead.id)}
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
-                    monthlyRecord={selectedMonthContent.get(lead.id)}
+                    monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                     onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
                   />
                 ))}

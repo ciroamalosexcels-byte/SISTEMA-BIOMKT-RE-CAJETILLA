@@ -1,5 +1,5 @@
 import { CONTENIDOS_CATEGORIAS } from "./constants";
-import type { ClientMonthlyContent, ContentEvent } from "@/types";
+import type { ContentCounts, ContentEvent } from "@/types";
 
 const STATUS_SCORE: Record<string, number> = {
   "SIN EDITAR": 0,
@@ -9,7 +9,7 @@ const STATUS_SCORE: Record<string, number> = {
 };
 
 /** % de contenidos contratados ya hechos (Historias + Reels + Publicaciones) para el registro mensual dado. null si no hay registro o no hay nada contratado. */
-export function getContratadoProgress(record: ClientMonthlyContent | undefined): number | null {
+export function getContratadoProgress(record: ContentCounts | undefined): number | null {
   if (!record) return null;
   let hecho = 0;
   let contratado = 0;

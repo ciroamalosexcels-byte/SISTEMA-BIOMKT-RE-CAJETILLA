@@ -11,7 +11,7 @@ import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS 
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
 import { baParts, currentMonthBA, monthLabel, shiftMonth } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
-import { findMonthlyRecord, getMostRecentContratado } from "@/lib/client-monthly-content";
+import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent } from "@/types";
@@ -1580,10 +1580,9 @@ export function ClientDetailView({ clientId }: Props) {
   }
   const title = lead.empresa || lead.nombre || "Sin nombre";
   const monthlyRecord = findMonthlyRecord(monthlyContentRecords, clientId, monthKey);
-  const currentMonthRecord = findMonthlyRecord(monthlyContentRecords, clientId, currentMonthBA());
   const prefillContratado = getMostRecentContratado(monthlyContentRecords, clientId, monthKey);
   const clientProgress = progressMode === "contratado"
-    ? getContratadoProgress(currentMonthRecord)
+    ? getContratadoProgress(resolveMonthlyContent(monthlyContentRecords, clientId, currentMonthBA()))
     : getEstadoProgress(lead.id, contentEvents, currentMonthBA());
 
   return (

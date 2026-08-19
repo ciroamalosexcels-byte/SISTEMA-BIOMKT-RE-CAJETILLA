@@ -15,3 +15,12 @@ export interface ClientMonthlyContent {
 export type ClientMonthlyContentInput = Omit<
   ClientMonthlyContent, "id" | "createdAt" | "updatedAt"
 >;
+
+/** Just the hecho/contratado counts, without the record's own identity —
+ *  what a carried-forward (not-yet-persisted) month resolves to. */
+export type ContentCounts = Pick<
+  ClientMonthlyContent,
+  | "historiasHechas" | "historiasContratadas"
+  | "reelsHechos" | "reelsContratados"
+  | "publicacionesHechas" | "publicacionesContratadas"
+>;
