@@ -304,13 +304,8 @@ export function Sidebar(_props: SidebarProps) {
           onClick={() => setCollapsed((v) => !v)}
           title={collapsed ? "Expandir" : "Colapsar"}
         >
-          {/* SVG logo */}
-          <svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="31" height="31" className="flex-shrink-0">
-            <rect x="1" y="1" width="9" height="38" rx="4" fill="#f6bf26"/>
-            <path fillRule="evenodd" clipRule="evenodd"
-              d="M26 2C17.163 2 10 9.163 10 18C10 26.837 17.163 34 26 34C34.837 34 42 26.837 42 18C42 9.163 34.837 2 26 2ZM26 10C30.418 10 34 13.582 34 18C34 22.418 30.418 26 26 26C21.582 26 18 22.418 18 18C18 13.582 21.582 10 26 10Z"
-              fill="#f6bf26"/>
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" width={31} height={31} className="flex-shrink-0 object-contain" />
           <span className={`text-[11px] font-black text-white tracking-[0.06em] uppercase flex-1 text-left ${lbl}`}>
             BIOMKT
           </span>
