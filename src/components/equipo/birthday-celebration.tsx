@@ -33,7 +33,13 @@ interface PlayOptions {
 
 function playTrack(src: string, { seekTo = 0, fadeStart, stopAt }: PlayOptions = {}): HTMLAudioElement {
   const audio = new Audio(src);
+  audio.preload = "auto";
   audio.volume = 1;
+
+  audio.addEventListener("error", () => {
+    // eslint-disable-next-line no-console
+    console.error("[birthday] no se pudo cargar", src, audio.error);
+  });
 
   function onTimeUpdate() {
     if (stopAt !== undefined && audio.currentTime >= stopAt) {
@@ -47,6 +53,11 @@ function playTrack(src: string, { seekTo = 0, fadeStart, stopAt }: PlayOptions =
     }
   }
 
+  function reportPlayError(err: unknown) {
+    // eslint-disable-next-line no-console
+    console.error("[birthday] play() rechazado", src, err);
+  }
+
   const needsTimeTracking = fadeStart !== undefined || stopAt !== undefined;
 
   if (seekTo > 0) {
@@ -55,12 +66,12 @@ function playTrack(src: string, { seekTo = 0, fadeStart, stopAt }: PlayOptions =
     audio.addEventListener("loadedmetadata", () => {
       audio.currentTime = seekTo;
       if (needsTimeTracking) audio.addEventListener("timeupdate", onTimeUpdate);
-      audio.play().catch(() => {});
+      audio.play().catch(reportPlayError);
     }, { once: true });
     audio.load();
   } else {
     if (needsTimeTracking) audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.play().catch(() => {});
+    audio.play().catch(reportPlayError);
   }
 
   return audio;
