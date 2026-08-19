@@ -308,9 +308,9 @@ export function Sidebar(_props: SidebarProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src="/logo.png" alt="BIOMKT" width={31} height={31} className="flex-shrink-0 object-contain" />
           ) : (
-            <div className="flex-1 flex items-center justify-start overflow-hidden">
+            <div className="flex-1 flex items-center justify-start">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icono-sistema.png" alt="BIOMKT" className="h-[38px] w-auto object-contain" style={{ transform: "translateY(10px)" }} />
+              <img src="/icono-sistema.png" alt="BIOMKT" className="h-[38px] w-auto object-contain" style={{ marginTop: 10 }} />
             </div>
           )}
           <ChevronLeft
