@@ -341,13 +341,14 @@ export function Sidebar(_props: SidebarProps) {
             return (
               <div key={key}>
                 <button
-                  className={`flex items-center gap-2.5 px-3 py-2 text-[13px] font-bold w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
+                  className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer transition-colors whitespace-nowrap overflow-hidden ${
                     isActiveWS ? "text-bviolet" : "text-white hover:bg-white/[0.07]"
                   }`}
+                  style={{ fontSize: 13, fontWeight: 700 }}
                   onClick={() => switchWorkspace(key)}
                 >
                   <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center"><Icon size={18} /></span>
-                  <span className={`flex-1 text-left ${lbl}`} style={{ fontWeight: 700 }}>{wsLabel}</span>
+                  <span className={`flex-1 text-left ${lbl}`} style={{ fontSize: 13, fontWeight: 700 }}>{wsLabel}</span>
                   <ChevronDown
                     size={13}
                     className="flex-shrink-0 transition-transform duration-200"
