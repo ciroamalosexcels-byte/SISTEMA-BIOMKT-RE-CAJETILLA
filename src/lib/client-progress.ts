@@ -16,7 +16,10 @@ export function getContratadoProgress(record: ClientMonthlyContent | undefined):
   for (const { hechoKey, contratadoKey } of CONTENIDOS_CATEGORIAS) {
     const c = record[contratadoKey] ?? 0;
     if (c <= 0) continue;
-    hecho += record[hechoKey] ?? 0;
+    // Cap each category's contribution at its own contratado: a category
+    // that overshoots (más hecho que contratado) can't mask another
+    // category that's still short — 100% only when every category is met.
+    hecho += Math.min(record[hechoKey] ?? 0, c);
     contratado += c;
   }
   return contratado > 0 ? hecho / contratado : null;

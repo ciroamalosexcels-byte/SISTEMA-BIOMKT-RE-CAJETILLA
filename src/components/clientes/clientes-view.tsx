@@ -110,7 +110,7 @@ function ClientCard({
             {contenidoRows.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {contenidoRows.map((r) => (
-                  <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                  <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3, fontSize: 13, fontWeight: 700, color: "#334155" }}>
                     <span style={{ whiteSpace: "nowrap" }}>-{r.contratado} {r.cardLabel}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
                       <button

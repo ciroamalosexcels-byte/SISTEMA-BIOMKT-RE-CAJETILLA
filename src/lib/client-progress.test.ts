@@ -63,6 +63,16 @@ describe("getContratadoProgress", () => {
     const record = makeRecord({ reelsHechos: 3, reelsContratados: 3 });
     expect(getContratadoProgress(record)).toBe(1);
   });
+
+  it("caps an overshot category instead of letting it offset a category that's still short", () => {
+    const record = makeRecord({
+      historiasHechas: 7, historiasContratadas: 7,
+      reelsHechos: 4, reelsContratados: 3, // overshoots by 1
+      publicacionesHechas: 2, publicacionesContratadas: 3, // short by 1
+    });
+    // (7 + min(4,3) + 2) / (7 + 3 + 3) = 12/13, not 1
+    expect(getContratadoProgress(record)).toBeCloseTo(12 / 13);
+  });
 });
 
 describe("getEstadoProgress", () => {
