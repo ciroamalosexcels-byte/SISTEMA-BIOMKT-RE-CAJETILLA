@@ -105,24 +105,24 @@ function ClientCard({
         </h3>
         <div className="client-card-v11-service">{service}</div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {contenidoRows.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {contenidoRows.map((r) => (
-                  <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontSize: 13, fontWeight: 700, color: "#334155" }}>
-                    <span>-{r.contratado} {r.cardLabel}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                  <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                    <span style={{ whiteSpace: "nowrap" }}>-{r.contratado} {r.cardLabel}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onAdjustContent(r.hechoKey, 1); }}
                         onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onAdjustContent(r.hechoKey, -1); }}
                         title="Click: +1 hecho · Click derecho: -1 hecho"
-                        style={{ background: "none", border: "none", padding: 0, color: "#22c55e", fontSize: 15, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}
+                        style={{ background: "none", border: "none", padding: 0, color: "#22c55e", fontSize: 14, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}
                       >
                         +
                       </button>
-                      <span style={{ color: "#94a3b8", minWidth: 34, textAlign: "right" }}>{r.hecho}/{r.contratado}</span>
+                      <span style={{ color: "#94a3b8", minWidth: 24, textAlign: "right" }}>{r.hecho}/{r.contratado}</span>
                     </div>
                   </div>
                 ))}
@@ -135,7 +135,7 @@ function ClientCard({
           </div>
           <div
             className={`client-progress-circle ${hasContent ? progressClass(progress) : "progress-none"}`}
-            style={{ "--pct": pct } as React.CSSProperties}
+            style={{ "--pct": pct, width: 42, height: 42, minWidth: 42 } as React.CSSProperties}
           >
             <span>{hasContent ? `${pct}%` : "—"}</span>
           </div>
