@@ -105,7 +105,7 @@ function ClientCard({
         </h3>
         <div className="client-card-v11-service">{service}</div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginTop: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {contenidoRows.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
