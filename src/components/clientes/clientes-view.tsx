@@ -196,6 +196,11 @@ export function ClientesView() {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+
+      if (e.key === "Backspace") {
+        clearSearch();
+        return;
+      }
       if (!/^[\p{L}\p{N}]$/u.test(e.key)) return;
 
       const now = Date.now();
