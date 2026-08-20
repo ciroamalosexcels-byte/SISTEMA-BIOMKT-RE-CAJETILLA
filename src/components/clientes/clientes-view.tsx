@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useContentEventsStore } from "@/store/content-events";
@@ -145,6 +145,27 @@ function ClientCard({
   );
 }
 
+const SEARCH_TYPE_WINDOW_MS = 3000;
+
+function ClearSearchCard({ onClear }: { onClear: () => void }) {
+  return (
+    <div
+      className="client-card-v11"
+      onClick={onClear}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        border: "2px dashed var(--slate-300, #cbd5e1)",
+        background: "var(--slate-50, #f8fafc)",
+      }}
+    >
+      <span style={{ fontSize: 14, fontWeight: 800, color: "#64748b" }}>✕ Limpiar búsqueda</span>
+    </div>
+  );
+}
+
 export function ClientesView() {
   const rows          = useLeadsStore((s) => s.rows);
   const updateLead    = useLeadsStore((s) => s.updateLead);
@@ -165,6 +186,31 @@ export function ClientesView() {
   const [overId, setOverId] = useState<string | null>(null);
   const [bulkEventsOpen, setBulkEventsOpen] = useState(false);
 
+  /* type-ahead: escribir letras filtra clientes cuyo nombre las contiene en ese orden */
+  const [searchBuffer, setSearchBuffer] = useState("");
+  const lastKeyTimeRef = useRef(0);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      if (!/^[\p{L}\p{N}]$/u.test(e.key)) return;
+
+      const now = Date.now();
+      setSearchBuffer((prev) => (now - lastKeyTimeRef.current < SEARCH_TYPE_WINDOW_MS ? prev : "") + e.key);
+      lastKeyTimeRef.current = now;
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  function clearSearch() {
+    setSearchBuffer("");
+    lastKeyTimeRef.current = 0;
+  }
+
   const { activos, inactivos } = useMemo(() => {
     const list = rows.filter((r) => r.tab === "CLIENTES");
     const sorted = [...list].sort((a, b) => {
@@ -178,6 +224,18 @@ export function ClientesView() {
     };
   }, [rows]);
   const clients = useMemo(() => [...activos, ...inactivos], [activos, inactivos]);
+
+  const searchActive = searchBuffer.length > 0;
+  const filteredActivos = useMemo(() => {
+    if (!searchActive) return activos;
+    const needle = searchBuffer.toLowerCase();
+    return activos.filter((c) => (c.empresa || c.nombre || "").toLowerCase().includes(needle));
+  }, [activos, searchActive, searchBuffer]);
+  const filteredInactivos = useMemo(() => {
+    if (!searchActive) return inactivos;
+    const needle = searchBuffer.toLowerCase();
+    return inactivos.filter((c) => (c.empresa || c.nombre || "").toLowerCase().includes(needle));
+  }, [inactivos, searchActive, searchBuffer]);
 
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
@@ -326,36 +384,39 @@ export function ClientesView() {
         </div>
       ) : (
         <div style={{ padding: "0 0 24px" }}>
-          <div className="client-grid-v11">
-            {activos.map((lead) => (
-              <ClientCard
-                key={lead.id}
-                lead={lead}
-                progress={getProgress(lead)}
-                onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
-                isDragging={dragId === lead.id}
-                isDragOver={overId === lead.id}
-                onDragStart={(e) => handleDragStart(e, lead.id)}
-                onDragOver={(e) => handleDragOver(e, lead.id)}
-                onDrop={(e) => handleDrop(e, lead.id)}
-                onDragEnd={handleDragEnd}
-                monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
-                onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
-              />
-            ))}
-          </div>
+          {filteredActivos.length > 0 && (
+            <div className="client-grid-v11">
+              {filteredActivos.map((lead) => (
+                <ClientCard
+                  key={lead.id}
+                  lead={lead}
+                  progress={getProgress(lead)}
+                  onClick={() => !dragId && router.push(`/clientes/${lead.id}`)}
+                  isDragging={dragId === lead.id}
+                  isDragOver={overId === lead.id}
+                  onDragStart={(e) => handleDragStart(e, lead.id)}
+                  onDragOver={(e) => handleDragOver(e, lead.id)}
+                  onDrop={(e) => handleDrop(e, lead.id)}
+                  onDragEnd={handleDragEnd}
+                  monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
+                  onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
+                />
+              ))}
+              {searchActive && filteredInactivos.length === 0 && <ClearSearchCard onClear={clearSearch} />}
+            </div>
+          )}
 
-          {inactivos.length > 0 && (
+          {filteredInactivos.length > 0 && (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "18px 20px 10px" }}>
                 <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
                 <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                  Inactivos · {inactivos.length}
+                  Inactivos · {filteredInactivos.length}
                 </span>
                 <div style={{ flex: 1, height: 1, background: "var(--slate-200, #e2e8f0)" }} />
               </div>
               <div className="client-grid-v11">
-                {inactivos.map((lead) => (
+                {filteredInactivos.map((lead) => (
                   <ClientCard
                     key={lead.id}
                     lead={lead}
@@ -371,8 +432,15 @@ export function ClientesView() {
                     onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
                   />
                 ))}
+                {searchActive && <ClearSearchCard onClear={clearSearch} />}
               </div>
             </>
+          )}
+
+          {searchActive && filteredActivos.length === 0 && filteredInactivos.length === 0 && (
+            <div className="client-grid-v11">
+              <ClearSearchCard onClear={clearSearch} />
+            </div>
           )}
         </div>
       )}
