@@ -19,6 +19,7 @@ export async function GET() {
       id: r.id, clientId: r.client_id, title: r.title,
       type: r.type ?? "", datetime: r.datetime ?? undefined,
       done: r.done, notes: r.notes ?? undefined,
+      responsables: r.responsables ?? [],
     }))
   );
 }

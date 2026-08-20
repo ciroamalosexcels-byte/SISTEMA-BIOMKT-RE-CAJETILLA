@@ -65,4 +65,5 @@ export interface ManagementEvent {
   datetime?: string;
   done: boolean;
   notes?: string;
+  responsables?: string[];
 }

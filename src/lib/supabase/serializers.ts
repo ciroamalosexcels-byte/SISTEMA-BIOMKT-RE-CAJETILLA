@@ -77,6 +77,7 @@ export function serializeManagementEvent(e: ManagementEvent) {
     datetime:  d(e.datetime),
     done:      e.done,
     notes:     e.notes ?? null,
+    responsables: e.responsables ?? [],
   };
 }
 

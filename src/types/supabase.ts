@@ -344,6 +344,7 @@ export type Database = {
           done: boolean
           id: string
           notes: string | null
+          responsables: string[]
           sheet_id: string | null
           title: string
           type: string | null
@@ -356,6 +357,7 @@ export type Database = {
           done?: boolean
           id?: string
           notes?: string | null
+          responsables?: string[]
           sheet_id?: string | null
           title?: string
           type?: string | null
@@ -368,6 +370,7 @@ export type Database = {
           done?: boolean
           id?: string
           notes?: string | null
+          responsables?: string[]
           sheet_id?: string | null
           title?: string
           type?: string | null

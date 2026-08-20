@@ -14,7 +14,7 @@ import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/c
 import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { MarkerTextarea } from "@/components/shared/marker-textarea";
-import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent } from "@/types";
+import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent, TeamMember } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
 const WEEKDAYS_SHORT = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
@@ -103,7 +103,7 @@ function slotToDate(slot: string, year: number, month: number): string | undefin
   return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
 }
 
-type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string; dotColor?: string };
+type CalEvent = { id: string; scheduledDate?: string; type: string; title: string; status?: string; dotColor?: string; responsables?: string[] };
 
 const TYPE_ABBREV: Record<string, string> = {
   CARRUSEL: "CARR",
@@ -130,18 +130,21 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const MGMT_TYPE_COLOR: Record<string, string> = {
-  "Acompañamiento": "#8b5cf6",
-  "Llamada":        "#3b82f6",
-  "Visita":         "#22c55e",
-  "Cobro":          "#f59e0b",
-  "Reunión":        "#ef4444",
-  "Producción":     "#06b6d4",
-  "Pago":           "#16a34a",
+  "Acompañamiento": "#8b5cf6", // violeta
+  "Llamada":        "#38bdf8", // azul
+  "Visita":         "#22c55e", // verde
+  "Cobro":          "#f6bf26", // amarillo / biomarketing
+  "Reunión":        "#ef4444", // rojo
+  "Producción":     "#06b6d4", // cyan
+  "Pago":           "#16a34a", // verde oscuro
 };
+
+/** Paleta fija de colores "del sistema" para identificar integrantes en pastillas de responsables. */
+const MEMBER_COLOR_PALETTE = ["#ef4444", "#22c55e", "#38bdf8", "#f6bf26", "#8b5cf6", "#06b6d4", "#f97316", "#ec4899"];
 
 /* ── Mini calendar ──────────────────────────────────────────────────── */
 function ClientCalendarCard({
-  title, monthKey, onShift, contentEvents: cevs, onDayClick, onEventClick,
+  title, monthKey, onShift, contentEvents: cevs, onDayClick, onEventClick, fullLabel, memberInfo,
 }: {
   title: string;
   monthKey: string;
@@ -149,9 +152,12 @@ function ClientCalendarCard({
   contentEvents: CalEvent[];
   onDayClick?: (date: string) => void;
   onEventClick?: (id: string) => void;
+  fullLabel?: boolean;
+  memberInfo?: Map<string, { nombre: string; color: string }>;
 }) {
   const grid  = useMemo(() => buildGrid(monthKey), [monthKey]);
   const today = todayDate();
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
   const dayMap = useMemo(() => {
     const map: Record<string, CalEvent[]> = {};
@@ -192,18 +198,43 @@ function ClientCalendarCard({
               <span style={{ display: "inline-flex", width: 20, height: 20, alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: 10, fontWeight: 900, background: isToday ? "var(--dark)" : "transparent", color: isToday ? "#fff" : inMonth ? "#475569" : "#cbd5e1" }}>
                 {parseInt(date.slice(8))}
               </span>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: 2 }}>
+              <div style={{ display: "grid", gridTemplateColumns: fullLabel ? "1fr" : "1fr 1fr", gap: 2, marginTop: 2 }}>
                 {dayEvs.slice(0, 6).map(ev => {
                   const color = ev.dotColor ?? STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
-                  const label = TYPE_ABBREV[ev.type] ?? MGMT_ABBREV[ev.type] ?? (ev.type.slice(0, 3).toUpperCase() || ev.title.slice(0, 3).toUpperCase());
+                  const label = fullLabel
+                    ? (ev.type || ev.title)
+                    : (TYPE_ABBREV[ev.type] ?? MGMT_ABBREV[ev.type] ?? (ev.type.slice(0, 3).toUpperCase() || ev.title.slice(0, 3).toUpperCase()));
+                  const clickable = !!memberInfo || !!onEventClick;
                   return (
-                    <div
-                      key={ev.id}
-                      title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`}
-                      onClick={onEventClick ? e => { e.stopPropagation(); onEventClick(ev.id); } : undefined}
-                      style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: onEventClick ? "pointer" : "default" }}
-                    >
-                      {label}
+                    <div key={ev.id} style={memberInfo ? { display: "flex", flexDirection: "column", gap: 2 } : undefined}>
+                      <div
+                        title={`${ev.title}${ev.status ? ` · ${ev.status}` : ""}`}
+                        onClick={clickable ? e => {
+                          e.stopPropagation();
+                          if (memberInfo) setExpandedEventId(cur => cur === ev.id ? null : ev.id);
+                          else onEventClick?.(ev.id);
+                        } : undefined}
+                        style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: clickable ? "pointer" : "default" }}
+                      >
+                        {label}
+                      </div>
+                      {memberInfo && expandedEventId === ev.id && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                          {ev.responsables && ev.responsables.length > 0 ? (
+                            ev.responsables.map(rid => {
+                              const info = memberInfo.get(rid);
+                              if (!info) return null;
+                              return (
+                                <span key={rid} style={{ fontSize: 7, fontWeight: 800, color: "#fff", background: info.color, borderRadius: 6, padding: "1px 5px", whiteSpace: "nowrap" }}>
+                                  {info.nombre}
+                                </span>
+                              );
+                            })
+                          ) : (
+                            <span style={{ fontSize: 7, color: "#94a3b8", fontStyle: "italic" }}>Sin responsables</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -350,12 +381,14 @@ function ContentDayModal({
 
 /* ── Management day modal ───────────────────────────────────────────── */
 function ManagementDayModal({
-  date, clientId, clientName, events, onAdd, onDelete, onToggleDone, onClose,
+  date, clientId, clientName, events, members, memberInfo, onAdd, onDelete, onToggleDone, onClose,
 }: {
   date: string;
   clientId: string;
   clientName: string;
   events: ManagementEvent[];
+  members: TeamMember[];
+  memberInfo: Map<string, { nombre: string; color: string }>;
   onAdd: (ev: Omit<ManagementEvent, "id">) => void;
   onDelete: (id: string) => void;
   onToggleDone: (id: string) => void;
@@ -364,9 +397,14 @@ function ManagementDayModal({
   const [hora, setHora]     = useState("");
   const [tipo, setTipo]     = useState<string>("");
   const [motivo, setMotivo] = useState("");
+  const [responsables, setResponsables] = useState<string[]>([]);
 
   const dd = date.slice(8), mm = date.slice(5, 7), yyyy = date.slice(0, 4);
   const dateLabel = `${dd}/${mm}/${yyyy}`;
+
+  function toggleResponsable(id: string) {
+    setResponsables(cur => cur.includes(id) ? cur.filter(r => r !== id) : [...cur, id]);
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -377,8 +415,9 @@ function ManagementDayModal({
       type: tipo as ManagementEvent["type"],
       datetime: hora ? `${date}T${hora}` : date,
       done: false,
+      responsables,
     });
-    setHora(""); setTipo(""); setMotivo("");
+    setHora(""); setTipo(""); setMotivo(""); setResponsables([]);
   }
 
   return (
@@ -420,6 +459,19 @@ function ManagementDayModal({
                         </div>
                         {ev.title && ev.title !== ev.type && (
                           <p style={{ margin: "2px 0 0", fontSize: 12, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.title}</p>
+                        )}
+                        {ev.responsables && ev.responsables.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 4 }}>
+                            {ev.responsables.map(rid => {
+                              const info = memberInfo.get(rid);
+                              if (!info) return null;
+                              return (
+                                <span key={rid} style={{ fontSize: 10, fontWeight: 800, color: "#fff", background: info.color, borderRadius: 6, padding: "1px 6px" }}>
+                                  {info.nombre}
+                                </span>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                       <button
@@ -473,6 +525,33 @@ function ManagementDayModal({
                   rows={3}
                   style={{ resize: "vertical" }}
                 />
+              </div>
+              <div className="field-group" style={{ margin: 0, gridColumn: "1/-1" }}>
+                <label className="field-label">Responsables</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {members.length === 0 ? (
+                    <span style={{ fontSize: 12, color: "#94a3b8" }}>No hay integrantes activos.</span>
+                  ) : members.map(m => {
+                    const info = memberInfo.get(m.id);
+                    const active = responsables.includes(m.id);
+                    const color = info?.color ?? "#94a3b8";
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggleResponsable(m.id)}
+                        style={{
+                          padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, cursor: "pointer",
+                          border: `1.5px solid ${color}`,
+                          background: active ? color : "#fff",
+                          color: active ? "#fff" : color,
+                        }}
+                      >
+                        {m.nombre}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </form>
@@ -1468,6 +1547,14 @@ export function ClientDetailView({ clientId }: Props) {
   const curIdx  = clients.findIndex(r => r.id === clientId);
 
   const memberNames = members.filter(m => m.activo !== false).map(m => m.nombre);
+  const activeMembers = useMemo(() => members.filter(m => m.activo !== false), [members]);
+  const memberInfo = useMemo(() => {
+    const map = new Map<string, { nombre: string; color: string }>();
+    members.forEach((m, i) => {
+      map.set(m.id, { nombre: m.nombre, color: MEMBER_COLOR_PALETTE[i % MEMBER_COLOR_PALETTE.length] });
+    });
+    return map;
+  }, [members]);
 
   const myContent = useMemo(
     () => contentEvents
@@ -1486,6 +1573,7 @@ export function ClientDetailView({ clientId }: Props) {
         type: e.type ?? "",
         title: e.title || e.type || "",
         dotColor: MGMT_TYPE_COLOR[e.type ?? ""] ?? "#94a3b8",
+        responsables: e.responsables ?? [],
       })),
     [managementEvents, clientId]
   );
@@ -1659,6 +1747,8 @@ export function ClientDetailView({ clientId }: Props) {
               onShift={d => setMonthKey(k => shiftMonth(k, d))}
               contentEvents={myMgmtEventsForCal}
               onDayClick={date => setMgmtDate(date)}
+              fullLabel
+              memberInfo={memberInfo}
             />
             <ClientCalendarCard
               title="CALENDARIO DE CONTENIDO"
@@ -1785,6 +1875,8 @@ export function ClientDetailView({ clientId }: Props) {
             clientId={clientId}
             clientName={title}
             events={dayEvents}
+            members={activeMembers}
+            memberInfo={memberInfo}
             onAdd={ev => addManagementEvent(ev)}
             onDelete={id => deleteManagementEvent(id)}
             onToggleDone={id => toggleManagementDone(id)}
