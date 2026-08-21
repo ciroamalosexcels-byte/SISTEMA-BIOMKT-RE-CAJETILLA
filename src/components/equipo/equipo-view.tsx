@@ -237,8 +237,6 @@ function MemberCard({
   const isActivo = member.activo !== false;
   const isBirthday = isBirthdayToday(member, todayBA().slice(5, 10));
 
-  const sueldoNum = member.sueldo ? parseInt(member.sueldo.replace(/\D/g, ""), 10) : null;
-  const sueldoLabel = sueldoNum ? `$${sueldoNum.toLocaleString("es-AR")}` : null;
   const signo = member.fechaNacimiento ? zodiacSign(member.fechaNacimiento) : member.signo ?? "";
   const s91Color = s91AverageColor(member);
 
@@ -282,9 +280,9 @@ function MemberCard({
         <div className="team-member-name flex items-center gap-2">
           {isBirthday ? rainbowText(member.nombre) : member.nombre}
           {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 2 }}>🎂</span>}
-          {sueldoLabel && (
+          {member.roles && (
             <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
-              {sueldoLabel}
+              {member.roles}
             </span>
           )}
         </div>
