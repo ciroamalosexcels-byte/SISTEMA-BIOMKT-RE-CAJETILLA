@@ -281,7 +281,7 @@ function MemberCard({
           {isBirthday ? rainbowText(member.nombre) : member.nombre}
           {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 2 }}>🎂</span>}
           {member.roles && (
-            <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
+            <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-bviolet/[0.12] text-bviolet">
               {member.roles}
             </span>
           )}
