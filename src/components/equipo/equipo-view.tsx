@@ -160,16 +160,49 @@ function s91AverageColor(member: TeamMember): string {
   return S91_COLOR[Math.round(avg)];
 }
 
-function InfoLine({ label, value }: { label: string; value: string }) {
+const iconProps = { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+
+function CakeIcon() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-      <span style={{ fontSize: 9, fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".06em", lineHeight: 1 }}>
-        {label}
-      </span>
-      <span style={{ fontSize: 12, fontWeight: 700, color: "#07152f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {value}
-      </span>
-    </div>
+    <svg {...iconProps} aria-hidden="true">
+      <path d="M12 2v4" />
+      <path d="M5 21V12a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9" />
+      <path d="M3 21h18" />
+      <path d="M5 15c1 1 2 1 3 0s2-1 3 0 2 1 3 0 2-1 3 0" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg {...iconProps} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  );
+}
+
+function SignoIcon() {
+  return (
+    <svg {...iconProps} aria-hidden="true">
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
+    </svg>
+  );
+}
+
+function InfoIcon({ icon, value, shrink }: { icon: React.ReactNode; value: string; shrink?: boolean }) {
+  return (
+    <span
+      style={{
+        display: "flex", alignItems: "center", gap: 4,
+        fontSize: 12, fontWeight: 700, color: "#334155",
+        minWidth: 0, flex: shrink ? "1 1 auto" : "0 0 auto",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}
+    >
+      <span style={{ color: "#94a3b8", flexShrink: 0, display: "inline-flex" }}>{icon}</span>
+      {value}
+    </span>
   );
 }
 
@@ -232,10 +265,9 @@ function MemberCard({
         ⠿
       </div>
 
-      {/* Círculo con el promedio del 9.1 */}
+      {/* Círculo relleno con el promedio del 9.1 */}
       <div
-        className="client-progress-circle client-progress-circle-header"
-        style={{ position: "absolute", top: 10, right: 10, "--pct": 100, "--progress-color": s91Color } as React.CSSProperties}
+        style={{ position: "absolute", top: 10, right: 10, width: 26, height: 26, borderRadius: "50%", background: s91Color, flexShrink: 0 }}
         title="Promedio 9.1"
       />
 
@@ -254,10 +286,10 @@ function MemberCard({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {member.edad && <InfoLine label="Edad" value={`${member.edad} años`} />}
-        {member.horarios && <InfoLine label="Horario" value={member.horarios} />}
-        {signo && <InfoLine label="Signo" value={signo} />}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {member.edad && <InfoIcon icon={<CakeIcon />} value={member.edad} />}
+        {member.horarios && <InfoIcon icon={<ClockIcon />} value={member.horarios} shrink />}
+        {signo && <InfoIcon icon={<SignoIcon />} value={signo} />}
         {!member.edad && !member.horarios && !signo && (
           <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>Sin datos cargados</span>
         )}
