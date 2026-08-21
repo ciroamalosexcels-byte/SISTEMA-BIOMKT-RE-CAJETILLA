@@ -87,7 +87,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   carruselMode: {
     enabled: false,
     sections: [],
-    durationSeconds: 15,
+    durationSeconds: 8,
   },
 };
 

@@ -164,7 +164,7 @@ export function AppShell({ children }: AppShellProps) {
 
     let idx = 0;
     let timeoutId: ReturnType<typeof setTimeout>;
-    const seconds = carruselMode.durationSeconds || 15;
+    const seconds = carruselMode.durationSeconds || 8;
 
     function goToCurrent() {
       router.push(activeSections[idx].href);

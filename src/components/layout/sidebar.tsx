@@ -141,10 +141,11 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW,
   return (
     <div style={{
       position: "fixed", left: sidebarW + 4, bottom: 44, zIndex: 300,
-      background: "#07152f", border: "1px solid rgba(255,255,255,0.1)",
+      background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.1)",
       borderRadius: 14, padding: 8, width: 228,
       boxShadow: "0 18px 50px rgba(0,0,0,0.6)",
       display: "flex", flexDirection: "column", gap: 1,
+      fontFamily: "var(--font-poppins), Poppins, sans-serif",
     }}>
       {/* Modo noche */}
       <button className={MBTN} onClick={() => { update({ darkMode: !settings.darkMode }); onClose(); }}>
@@ -398,8 +399,14 @@ export function Sidebar(_props: SidebarProps) {
           {/* Modo Carrusel */}
           <button
             className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-bold transition-colors whitespace-nowrap ${settings.carruselMode.enabled ? "text-bviolet hover:bg-bviolet/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
-            onClick={() => setCarruselOpen((v) => !v)}
-            title="Modo Carrusel"
+            onClick={() => {
+              if (settings.carruselMode.enabled) {
+                update({ carruselMode: { ...settings.carruselMode, enabled: false } });
+              } else {
+                setCarruselOpen((v) => !v);
+              }
+            }}
+            title={settings.carruselMode.enabled ? "Detener Modo Carrusel" : "Modo Carrusel"}
           >
             <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
               <PlayCircle size={17} />
