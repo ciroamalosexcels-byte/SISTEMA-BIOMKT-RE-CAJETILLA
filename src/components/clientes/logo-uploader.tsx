@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface Props {
   leadId: string;
@@ -21,14 +20,13 @@ export function LogoUploader({ leadId, logoUrl, onUploaded, size = 44 }: Props) 
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const supabase = createClient();
-      const { error } = await supabase.storage
-        .from("client-logos")
-        .upload(`${leadId}.${ext}`, file, { upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from("client-logos").getPublicUrl(`${leadId}.${ext}`);
-      onUploaded(`${data.publicUrl}?t=${Date.now()}`);
+      const formData = new FormData();
+      formData.append("leadId", leadId);
+      formData.append("file", file);
+      const res = await fetch("/api/supabase/logo-upload", { method: "POST", body: formData });
+      const data: { url?: string; error?: string } = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || "upload failed");
+      onUploaded(data.url);
     } catch (err) {
       console.error("[LogoUploader] upload falló:", err);
       alert("No se pudo subir el logo. Probá de nuevo.");
