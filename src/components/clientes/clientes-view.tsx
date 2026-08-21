@@ -85,10 +85,24 @@ function ClientCard({
         minHeight: 0,
       }}
     >
+      {/* Logo del cliente */}
+      <div
+        style={{
+          position: "absolute", top: 6, right: 6,
+          width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
+          background: "#e2e8f0", flexShrink: 0,
+        }}
+      >
+        {lead.logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={lead.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
+      </div>
+
       {/* Drag handle */}
       <div
         style={{
-          position: "absolute", top: 10, right: 10,
+          position: "absolute", top: 14, right: 14,
           color: "#cbd5e1", fontSize: 13, lineHeight: 1,
           pointerEvents: "none", userSelect: "none",
           letterSpacing: -1,
