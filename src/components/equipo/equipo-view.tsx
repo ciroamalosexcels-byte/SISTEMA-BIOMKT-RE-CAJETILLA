@@ -182,12 +182,14 @@ function ClockIcon() {
   );
 }
 
-function SignoIcon() {
-  return (
-    <svg {...iconProps} aria-hidden="true">
-      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
-    </svg>
-  );
+const ZODIAC_GLYPH: Record<string, string> = {
+  "Aries": "♈", "Tauro": "♉", "Géminis": "♊", "Cáncer": "♋",
+  "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Escorpio": "♏",
+  "Sagitario": "♐", "Capricornio": "♑", "Acuario": "♒", "Piscis": "♓",
+};
+
+function SignoGlyph({ signo }: { signo: string }) {
+  return <span style={{ fontSize: 13, lineHeight: 1 }}>{ZODIAC_GLYPH[signo] ?? "—"}</span>;
 }
 
 function InfoIcon({ icon, value, shrink }: { icon: React.ReactNode; value: string; shrink?: boolean }) {
@@ -289,7 +291,7 @@ function MemberCard({
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {member.edad && <InfoIcon icon={<CakeIcon />} value={member.edad} />}
         {member.horarios && <InfoIcon icon={<ClockIcon />} value={member.horarios} shrink />}
-        {signo && <InfoIcon icon={<SignoIcon />} value={signo} />}
+        {signo && <InfoIcon icon={<SignoGlyph signo={signo} />} value={signo} />}
         {!member.edad && !member.horarios && !signo && (
           <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>Sin datos cargados</span>
         )}
