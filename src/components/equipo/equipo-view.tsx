@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useAppSettings } from "@/store/app-settings";
-import { BADGES, STATUS91_ITEMS } from "@/lib/constants";
-import { todayBA, currentMonthBA } from "@/lib/dates";
+import { STATUS91_ITEMS } from "@/lib/constants";
+import { todayBA, currentMonthBA, zodiacSign } from "@/lib/dates";
 import { DatosModal } from "./datos-modal";
 import { BirthdayCelebration } from "./birthday-celebration";
 import type { TeamMember } from "@/types";
@@ -150,78 +150,117 @@ const EMPTY_MEMBER: TeamMember = {
   monthlyPoints: [],
 };
 
+const S91_SCORE: Record<string, number> = { red: 0, yellow: 1, green: 2, lime: 3 };
+const S91_COLOR = ["#ff1616", "#ffc21a", "#157a4d", "#52ff00"];
+
+function s91AverageColor(member: TeamMember): string {
+  const vals = STATUS91_ITEMS.map((k) => member.status91?.[k] ?? "").filter((v) => v in S91_SCORE);
+  if (vals.length === 0) return "#e2e8f0";
+  const avg = vals.reduce((sum, v) => sum + S91_SCORE[v], 0) / vals.length;
+  return S91_COLOR[Math.round(avg)];
+}
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+      <span style={{ fontSize: 9, fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".06em", lineHeight: 1 }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#07152f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function MemberCard({
   member,
   assignedLeads,
-  closings,
   onClick,
-  onDelete,
-  onToggleActivo,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   member: TeamMember;
   assignedLeads: number;
-  closings: number;
   onClick: () => void;
-  onDelete: () => void;
-  onToggleActivo: () => void;
+  isDragging: boolean;
+  isDragOver: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
 }) {
-  const { settings } = useAppSettings();
   const isActivo = member.activo !== false;
   const isBirthday = isBirthdayToday(member, todayBA().slice(5, 10));
 
   const sueldoNum = member.sueldo ? parseInt(member.sueldo.replace(/\D/g, ""), 10) : null;
   const sueldoLabel = sueldoNum ? `$${sueldoNum.toLocaleString("es-AR")}` : null;
+  const signo = member.fechaNacimiento ? zodiacSign(member.fechaNacimiento) : member.signo ?? "";
+  const s91Color = s91AverageColor(member);
 
   return (
-    <div className="team-member" onClick={onClick} style={!isActivo ? { opacity: 0.6 } : undefined}>
-      <div className="team-member-head">
-        <div>
-          <div className="team-member-name flex items-center gap-2">
-            {isBirthday ? rainbowText(member.nombre) : member.nombre}
-            {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 2 }}>🎂</span>}
-            {sueldoLabel && (
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
-                {sueldoLabel}
-              </span>
-            )}
-          </div>
-          <div className="team-member-meta">
-            Asignado en {assignedLeads} lead{assignedLeads !== 1 ? "s" : ""}
-          </div>
+    <div
+      className="team-member"
+      draggable
+      onClick={onClick}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      style={{
+        position: "relative",
+        opacity: isDragging ? 0.35 : isActivo ? 1 : 0.6,
+        outline: isDragOver ? "2px solid var(--amber, #f6bf26)" : "none",
+        outlineOffset: isDragOver ? "-2px" : "0",
+        cursor: "grab",
+        transition: "opacity 0.15s, outline 0.1s",
+      }}
+    >
+      {/* Drag handle */}
+      <div
+        style={{
+          position: "absolute", top: 10, left: 10,
+          color: "#cbd5e1", fontSize: 13, lineHeight: 1,
+          pointerEvents: "none", userSelect: "none", letterSpacing: -1,
+        }}
+        title="Arrastrá para reordenar"
+      >
+        ⠿
+      </div>
+
+      {/* Círculo con el promedio del 9.1 */}
+      <div
+        className="client-progress-circle client-progress-circle-header"
+        style={{ position: "absolute", top: 10, right: 10, "--pct": 100, "--progress-color": s91Color } as React.CSSProperties}
+        title="Promedio 9.1"
+      />
+
+      <div style={{ paddingLeft: 14, paddingRight: 40 }}>
+        <div className="team-member-name flex items-center gap-2">
+          {isBirthday ? rainbowText(member.nombre) : member.nombre}
+          {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 2 }}>🎂</span>}
+          {sueldoLabel && (
+            <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-amber/[0.12] text-amber-700 dark:text-amber">
+              {sueldoLabel}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={onToggleActivo}
-            className="btn btn-sm btn-outline"
-            type="button"
-            style={isActivo ? { color: "#64748b", fontSize: 11 } : { color: "#16a34a", borderColor: "#16a34a", fontSize: 11 }}
-          >
-            {isActivo ? "Inactivar" : "Activar"}
-          </button>
-          <button
-            onClick={() => { if (confirm(`¿Eliminar a ${member.nombre}?`)) onDelete(); }}
-            className="btn btn-sm btn-danger"
-            type="button"
-          >
-            Eliminar
-          </button>
+        <div className="team-member-meta">
+          Asignado en {assignedLeads} lead{assignedLeads !== 1 ? "s" : ""}
         </div>
       </div>
 
-      <div className="badges">
-        {BADGES.map((b) => {
-          const req    = settings.badgeRequirements[b.key] ?? Infinity;
-          const earned = closings >= req;
-          return (
-            <span
-              key={b.key}
-              className={`badge${earned ? ` ${b.className}` : " locked"}`}
-              title={`${b.label} — ${req} cierres (tenés ${closings})`}
-            >
-              {b.icon} {b.label}
-            </span>
-          );
-        })}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {member.edad && <InfoLine label="Edad" value={`${member.edad} años`} />}
+        {member.horarios && <InfoLine label="Horario" value={member.horarios} />}
+        {signo && <InfoLine label="Signo" value={signo} />}
+        {!member.edad && !member.horarios && !signo && (
+          <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>Sin datos cargados</span>
+        )}
       </div>
     </div>
   );
@@ -230,23 +269,26 @@ function MemberCard({
 export function EquipoView() {
   const router = useRouter();
   const rows = useLeadsStore((s) => s.rows);
-  const { members, addMember, updateMember, deleteMember, save: teamSave } = useTeamStore();
+  const { members, addMember, updateMember } = useTeamStore();
   const [showAdd, setShowAdd] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
-  const activos   = members.filter((m) => m.activo !== false);
-  const inactivos = members.filter((m) => m.activo === false);
+  const sortedMembers = useMemo(() => {
+    return [...members].sort((a, b) => {
+      const ao = a.teamOrder ?? Infinity;
+      const bo = b.teamOrder ?? Infinity;
+      return ao !== bo ? ao - bo : 0;
+    });
+  }, [members]);
+  const activos   = sortedMembers.filter((m) => m.activo !== false);
+  const inactivos = sortedMembers.filter((m) => m.activo === false);
   const todayMD = todayBA().slice(5, 10);
   const hasBirthdayToday = members.some((m) => isBirthdayToday(m, todayMD));
 
   function leadsFor(nombre: string) {
     return rows.filter(
       (r) => r.responsable1 === nombre || r.responsable2 === nombre
-    ).length;
-  }
-
-  function closingsFor(nombre: string) {
-    return rows.filter(
-      (r) => r.tab === "CLIENTES" && (r.responsable1 === nombre || r.responsable2 === nombre)
     ).length;
   }
 
@@ -258,16 +300,56 @@ export function EquipoView() {
     setShowAdd(false);
   }
 
+  function handleDragStart(e: React.DragEvent, id: string) {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (id !== dragId) setOverId(id);
+  }
+
+  function handleDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) { setDragId(null); setOverId(null); return; }
+
+    const combined = [...activos, ...inactivos];
+    const fromIdx = combined.findIndex((m) => m.id === dragId);
+    const toIdx   = combined.findIndex((m) => m.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const reordered = [...combined];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    reordered.forEach((m, i) => {
+      if (m.teamOrder !== i) updateMember(m.id, { teamOrder: i });
+    });
+
+    setDragId(null);
+    setOverId(null);
+  }
+
+  function handleDragEnd() {
+    setDragId(null);
+    setOverId(null);
+  }
+
   function renderCard(m: TeamMember) {
     return (
       <MemberCard
         key={m.id}
         member={m}
         assignedLeads={leadsFor(m.nombre)}
-        closings={closingsFor(m.nombre)}
-        onClick={() => router.push(`/equipo/${m.id}`)}
-        onDelete={() => { deleteMember(m.id); teamSave(); }}
-        onToggleActivo={() => { updateMember(m.id, { activo: !(m.activo ?? true) }); teamSave(); }}
+        onClick={() => !dragId && router.push(`/equipo/${m.id}`)}
+        isDragging={dragId === m.id}
+        isDragOver={overId === m.id}
+        onDragStart={(e) => handleDragStart(e, m.id)}
+        onDragOver={(e) => handleDragOver(e, m.id)}
+        onDrop={(e) => handleDrop(e, m.id)}
+        onDragEnd={handleDragEnd}
       />
     );
   }

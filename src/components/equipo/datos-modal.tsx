@@ -15,9 +15,10 @@ interface Props {
   onClose: () => void;
   onSave: (patch: Partial<TeamMember>) => void;
   onToggleActivo?: () => void;
+  onDelete?: () => void;
 }
 
-export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
+export function DatosModal({ member, onClose, onSave, onToggleActivo, onDelete }: Props) {
   const [nombre, setNombre] = useState(member.nombre);
   const [fechaNacimiento, setFechaNacimiento] = useState(member.fechaNacimiento ?? "");
   const [equipo, setEquipo] = useState(member.equipo ?? "");
@@ -196,18 +197,27 @@ export function DatosModal({ member, onClose, onSave, onToggleActivo }: Props) {
         </div>
 
         <div className="modal-footer">
-          <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-amber" type="button" onClick={handleSave}>Guardar</button>
           {onToggleActivo && (
             <button
-              className="btn btn-outline ml-auto"
+              className="btn btn-outline"
               type="button"
               style={(member.activo ?? true) ? { color: "#64748b" } : { color: "#16a34a", borderColor: "#16a34a" }}
               onClick={() => { onToggleActivo(); onClose(); }}
             >
-              {(member.activo ?? true) ? "Marcar inactivo" : "Marcar activo"}
+              {(member.activo ?? true) ? "Inactivar" : "Activar"}
             </button>
           )}
+          {onDelete && (
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={() => { if (confirm(`¿Eliminar a ${member.nombre}?`)) { onDelete(); onClose(); } }}
+            >
+              Eliminar
+            </button>
+          )}
+          <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-amber" type="button" onClick={handleSave}>Guardar</button>
         </div>
       </div>
     </div>

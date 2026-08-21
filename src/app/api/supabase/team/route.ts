@@ -48,6 +48,7 @@ export async function GET() {
       sueldo: (m as any).sueldo ?? undefined,
       activo: (m as any).activo ?? true,
       color: m.color ?? undefined,
+      teamOrder: (m as any).team_order ?? undefined,
       badges: m.badges as ("wood" | "bronze" | "silver" | "gold")[],
       status91: s91,
       monthlyPoints: (points ?? [])
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
     badges:           Array.isArray(body.badges) ? body.badges : [],
     activo:           typeof body.activo === "boolean" ? body.activo : true,
     color:            str(body.color),
+    team_order:       typeof body.teamOrder === "number" ? body.teamOrder : null,
   } as any).select("id").single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

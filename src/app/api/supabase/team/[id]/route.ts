@@ -41,6 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     badges:           Array.isArray(body.badges) ? body.badges : [],
     activo:           typeof body.activo === "boolean" ? body.activo : true,
     color:            str(body.color),
+    team_order:       typeof body.teamOrder === "number" ? body.teamOrder : null,
   };
 
   const { error } = await admin.from("team_members").update(row as any).eq("id", id);

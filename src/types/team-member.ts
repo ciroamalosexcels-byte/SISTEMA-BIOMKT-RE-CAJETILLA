@@ -21,6 +21,7 @@ export interface TeamMember {
   sueldo?: string;
   activo?: boolean;
   color?: string;
+  teamOrder?: number;
   sueno?: string;
   telefono?: string;
   mail?: string;

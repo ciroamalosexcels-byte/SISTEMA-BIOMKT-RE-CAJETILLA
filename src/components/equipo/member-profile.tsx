@@ -95,7 +95,7 @@ interface Props { memberId: string; }
 export function MemberProfile({ memberId }: Props) {
   const router = useRouter();
   const rows = useLeadsStore((s) => s.rows);
-  const { members, updateMember, awardBadge, revokeBadge, save: teamSave } = useTeamStore();
+  const { members, updateMember, deleteMember, awardBadge, revokeBadge, save: teamSave } = useTeamStore();
   const { settings } = useAppSettings();
 
   const raw = members.find((m) => m.id === memberId);
@@ -319,6 +319,8 @@ export function MemberProfile({ memberId }: Props) {
           member={member}
           onClose={() => setDatosOpen(false)}
           onSave={(p) => { patch(p); setDatosOpen(false); teamSave(); }}
+          onToggleActivo={() => { updateMember(memberId, { activo: !(member.activo ?? true) }); teamSave(); }}
+          onDelete={() => { deleteMember(memberId); teamSave(); router.push("/equipo"); }}
         />
       )}
     </div>
