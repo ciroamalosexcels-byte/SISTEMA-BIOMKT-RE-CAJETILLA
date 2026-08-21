@@ -40,6 +40,11 @@ export interface AppSettings {
   servicePlans: Record<string, Record<string, PlanItem[]>>;
   selectedPlanService: string;
   selectedPlanName: string;
+  viewMode: {
+    enabled: boolean;
+    tabs: string[];
+    durations: Record<string, number>;
+  };
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -79,6 +84,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   servicePlans: {},
   selectedPlanService: PLAN_SERVICES[0],
   selectedPlanName: PLAN_NAMES[0],
+  viewMode: {
+    enabled: false,
+    tabs: [],
+    durations: {},
+  },
 };
 
 export interface Toast {
