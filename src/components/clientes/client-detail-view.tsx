@@ -1690,14 +1690,7 @@ export function ClientDetailView({ clientId }: Props) {
               <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(1)}  style={{ fontSize: 16, padding: "4px 10px" }}>›</button>
             </div>
           )}
-          <button
-            type="button"
-            onClick={cycleEstado}
-            title={ESTADO_FACES[estadoIdx].label}
-            style={{ fontSize: 28, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
-          >
-            {ESTADO_FACES[estadoIdx].emoji}
-          </button>
+          <LogoUploader leadId={lead.id} logoUrl={lead.logoUrl} onUploaded={(url) => patch({ logoUrl: url })} size={44} />
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
               <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>
@@ -1711,6 +1704,14 @@ export function ClientDetailView({ clientId }: Props) {
               )}
             </div>
           </div>
+          <button
+            type="button"
+            onClick={cycleEstado}
+            title={ESTADO_FACES[estadoIdx].label}
+            style={{ fontSize: 22, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
+          >
+            {ESTADO_FACES[estadoIdx].emoji}
+          </button>
           <div
             className={`client-progress-circle ${clientProgress !== null ? progressClass(clientProgress) : "progress-none"}`}
             style={{ "--pct": clientProgress !== null ? Math.round(clientProgress * 100) : 0, width: 40, height: 40, minWidth: 40 } as React.CSSProperties}
