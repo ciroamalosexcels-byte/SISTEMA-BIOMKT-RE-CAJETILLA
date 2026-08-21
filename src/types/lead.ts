@@ -47,6 +47,8 @@ export interface Lead {
   activo?: boolean; // undefined / true = activo, false = inactivo
   // Orden visual en el grid de clientes
   clientOrder?: number;
+  // Logo circular del cliente (Supabase Storage, bucket client-logos)
+  logoUrl?: string;
 }
 
 export type LeadFormData = Omit<Lead, "id" | "fechaContacto" | "tab">;
