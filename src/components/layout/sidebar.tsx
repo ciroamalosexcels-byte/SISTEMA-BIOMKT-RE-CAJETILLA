@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   TrendingUp, Users, Building2,
   Moon, Sun, RefreshCw, Upload, Save,
-  ChevronLeft, ChevronDown, Bell, Settings, Eye,
+  ChevronLeft, ChevronDown, Bell, Settings, PlayCircle,
   LayoutDashboard, GitMerge, UserCheck, CalendarDays,
   ClipboardList, Map, FileText, Users2, MessageSquare,
   BriefcaseBusiness, BarChart3, Database, LogOut, LogIn,
@@ -15,7 +15,7 @@ import { useAppSettings } from "@/store/app-settings";
 import { useLeadsStore } from "@/store/leads";
 import { ApiSettingsModal } from "./api-settings-modal";
 import { ColumnWidthsModal } from "./column-widths-modal";
-import { ViewModeModal } from "./view-mode-modal";
+import { CarruselMenu } from "./carrusel-menu";
 import { ImportLeadsModal } from "@/components/ui/import-leads-modal";
 import { WORKSPACE_NAV } from "@/lib/constants";
 import type { WorkspaceMode } from "@/lib/constants";
@@ -112,9 +112,9 @@ function NotificationCenter({ onClose }: { onClose: () => void }) {
 /* ── Settings popup ──────────────────────────────────────────────── */
 const MBTN = "flex items-center gap-2 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-white/[0.08] transition-colors whitespace-nowrap bg-transparent border-none cursor-pointer w-full text-white";
 
-function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onViewMode, sidebarW, onSync, syncing, isAdmin }: {
+function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, sidebarW, onSync, syncing, isAdmin }: {
   onClose: () => void; onImport: () => void;
-  onApiSettings: () => void; onColWidths: () => void; onViewMode: () => void;
+  onApiSettings: () => void; onColWidths: () => void;
   sidebarW: number;
   onSync?: () => void; syncing?: boolean; isAdmin?: boolean;
 }) {
@@ -158,7 +158,6 @@ function SettingsMenu({ onClose, onImport, onApiSettings, onColWidths, onViewMod
       <button className={MBTN} onClick={exportClientesCSV}><FileText size={17} /> Exportar clientes CSV</button>
       <button className={MBTN} onClick={() => { onApiSettings(); onClose(); }}><Settings size={17} /> Link API</button>
       <button className={MBTN} onClick={() => { onColWidths(); onClose(); }}><Settings size={17} /> Ancho columnas</button>
-      <button className={MBTN} onClick={() => { onViewMode(); onClose(); }}><Eye size={17} /> Modo Vista</button>
       {isAdmin && (
         <button
           className={MBTN}
@@ -212,7 +211,7 @@ export function Sidebar(_props: SidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [apiSettingsOpen, setApiSettingsOpen] = useState(false);
   const [colWidthsOpen, setColWidthsOpen] = useState(false);
-  const [viewModeOpen, setViewModeOpen] = useState(false);
+  const [carruselOpen, setCarruselOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const settingsRef = useRef<HTMLButtonElement>(null);
 
@@ -396,6 +395,18 @@ export function Sidebar(_props: SidebarProps) {
         {/* Utilidades — columna vertical igual que el nav */}
         <div className="border-t border-white/[0.05] py-1 flex-shrink-0">
 
+          {/* Modo Carrusel */}
+          <button
+            className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-bold transition-colors whitespace-nowrap ${settings.carruselMode.enabled ? "text-bviolet hover:bg-bviolet/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
+            onClick={() => setCarruselOpen((v) => !v)}
+            title="Modo Carrusel"
+          >
+            <span className="flex-shrink-0 min-w-[20px] flex items-center justify-center">
+              <PlayCircle size={17} />
+            </span>
+            <span className={lbl} style={{ fontWeight: 700 }}>Modo Carrusel</span>
+          </button>
+
           {/* Notificaciones */}
           <button
             className={`flex items-center gap-2.5 px-3 py-2 w-full border-none bg-transparent cursor-pointer text-[11px] font-bold transition-colors whitespace-nowrap ${hasUnread ? "text-bviolet hover:bg-bviolet/[0.06]" : "text-white hover:bg-white/[0.06]"}`}
@@ -470,6 +481,15 @@ export function Sidebar(_props: SidebarProps) {
       </aside>
 
       {/* Popups y modales */}
+      {carruselOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[299]"
+            onClick={() => setCarruselOpen(false)}
+          />
+          <CarruselMenu onClose={() => setCarruselOpen(false)} sidebarW={sidebarW} />
+        </>
+      )}
       {settingsOpen && (
         <>
           {/* Backdrop invisible — click fuera del menú lo cierra */}
@@ -482,7 +502,6 @@ export function Sidebar(_props: SidebarProps) {
             onImport={() => setImportOpen(true)}
             onApiSettings={() => setApiSettingsOpen(true)}
             onColWidths={() => setColWidthsOpen(true)}
-            onViewMode={() => setViewModeOpen(true)}
             sidebarW={sidebarW}
             onSync={handleDbSync}
             syncing={dbSyncing}
@@ -493,7 +512,6 @@ export function Sidebar(_props: SidebarProps) {
       {notifOpen       && <NotificationCenter onClose={() => setNotifOpen(false)} />}
       {apiSettingsOpen && <ApiSettingsModal onClose={() => setApiSettingsOpen(false)} />}
       {colWidthsOpen   && <ColumnWidthsModal onClose={() => setColWidthsOpen(false)} />}
-      {viewModeOpen    && <ViewModeModal onClose={() => setViewModeOpen(false)} />}
       {importOpen      && <ImportLeadsModal onClose={() => setImportOpen(false)} />}
     </>
   );

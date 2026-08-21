@@ -96,6 +96,15 @@ export const TABS = [
   { key: "CALENDARIO", label: "📅", href: "/calendario" },
 ] as const;
 
+/* Secciones fijas del Modo Carrusel — cada una apunta a su vista "home" */
+export const CARRUSEL_SECTIONS = [
+  { key: "GENERAL",  label: "Panel General", href: "/general" },
+  { key: "EQUIPO",   label: "Equipo",        href: "/equipo" },
+  { key: "VENTA",    label: "Venta",         href: "/seguimiento" },
+  { key: "CLIENTES", label: "Clientes",      href: "/clientes" },
+  { key: "CAJA",     label: "Caja",          href: "/caja" },
+] as const;
+
 export type WorkspaceMode = "ventas" | "clientes" | "equipo" | "caja";
 
 export const WORKSPACE_TITLES: Record<WorkspaceMode, string> = {

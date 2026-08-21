@@ -40,10 +40,10 @@ export interface AppSettings {
   servicePlans: Record<string, Record<string, PlanItem[]>>;
   selectedPlanService: string;
   selectedPlanName: string;
-  viewMode: {
+  carruselMode: {
     enabled: boolean;
-    tabs: string[];
-    durations: Record<string, number>;
+    sections: string[];
+    durationSeconds: number;
   };
 }
 
@@ -84,10 +84,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   servicePlans: {},
   selectedPlanService: PLAN_SERVICES[0],
   selectedPlanName: PLAN_NAMES[0],
-  viewMode: {
+  carruselMode: {
     enabled: false,
-    tabs: [],
-    durations: {},
+    sections: [],
+    durationSeconds: 15,
   },
 };
 

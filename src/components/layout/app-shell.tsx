@@ -16,7 +16,7 @@ import { storage } from "@/lib/storage";
 import { normalizeISODate } from "@/lib/dates";
 import { todayBA } from "@/lib/dates";
 import { useRouter } from "next/navigation";
-import { TABS } from "@/lib/constants";
+import { CARRUSEL_SECTIONS } from "@/lib/constants";
 import type { WorkspaceMode } from "@/lib/constants";
 
 interface AppShellProps {
@@ -31,7 +31,7 @@ export function AppShell({ children }: AppShellProps) {
   const toasts = useAppSettings((s) => s.toasts);
   const dismissToast = useAppSettings((s) => s.dismissToast);
   const addNotification = useAppSettings((s) => s.addNotification);
-  const viewMode = useAppSettings((s) => s.settings.viewMode);
+  const carruselMode = useAppSettings((s) => s.settings.carruselMode);
   const router = useRouter();
 
   const loadLeads = useLeadsStore((s) => s.load);
@@ -156,23 +156,23 @@ export function AppShell({ children }: AppShellProps) {
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
-  /* ─── Modo Vista: rotación automática entre pestañas ─────────── */
+  /* ─── Modo Carrusel: rotación automática entre secciones ─────── */
   useEffect(() => {
-    if (!viewMode.enabled) return;
-    const activeTabs = TABS.filter((t) => viewMode.tabs.includes(t.key));
-    if (activeTabs.length === 0) return;
+    if (!carruselMode.enabled) return;
+    const activeSections = CARRUSEL_SECTIONS.filter((s) => carruselMode.sections.includes(s.key));
+    if (activeSections.length === 0) return;
 
     let idx = 0;
     let timeoutId: ReturnType<typeof setTimeout>;
+    const seconds = carruselMode.durationSeconds || 15;
 
     function goToCurrent() {
-      router.push(activeTabs[idx].href);
-      const seconds = viewMode.durations[activeTabs[idx].key] ?? 15;
+      router.push(activeSections[idx].href);
       timeoutId = setTimeout(advance, seconds * 1000);
     }
 
     function advance() {
-      idx = (idx + 1) % activeTabs.length;
+      idx = (idx + 1) % activeSections.length;
       goToCurrent();
     }
 
@@ -180,7 +180,7 @@ export function AppShell({ children }: AppShellProps) {
 
     return () => clearTimeout(timeoutId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode.enabled, viewMode.tabs, viewMode.durations]);
+  }, [carruselMode.enabled, carruselMode.sections, carruselMode.durationSeconds]);
 
   /* ─── Auto-refresh desde Supabase cada 5 minutos (silent) ────── */
   useEffect(() => {
