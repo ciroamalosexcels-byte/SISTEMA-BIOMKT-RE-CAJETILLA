@@ -15,6 +15,8 @@ import { loadLeadsFromSupabase, loadTeamFromSupabase } from "@/lib/supabase/load
 import { storage } from "@/lib/storage";
 import { normalizeISODate } from "@/lib/dates";
 import { todayBA } from "@/lib/dates";
+import { useRouter } from "next/navigation";
+import { TABS } from "@/lib/constants";
 import type { WorkspaceMode } from "@/lib/constants";
 
 interface AppShellProps {
@@ -29,6 +31,8 @@ export function AppShell({ children }: AppShellProps) {
   const toasts = useAppSettings((s) => s.toasts);
   const dismissToast = useAppSettings((s) => s.dismissToast);
   const addNotification = useAppSettings((s) => s.addNotification);
+  const viewMode = useAppSettings((s) => s.settings.viewMode);
+  const router = useRouter();
 
   const loadLeads = useLeadsStore((s) => s.load);
   const loadTeam = useTeamStore((s) => s.load);
@@ -151,6 +155,32 @@ export function AppShell({ children }: AppShellProps) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
+
+  /* ─── Modo Vista: rotación automática entre pestañas ─────────── */
+  useEffect(() => {
+    if (!viewMode.enabled) return;
+    const activeTabs = TABS.filter((t) => viewMode.tabs.includes(t.key));
+    if (activeTabs.length === 0) return;
+
+    let idx = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function goToCurrent() {
+      router.push(activeTabs[idx].href);
+      const seconds = viewMode.durations[activeTabs[idx].key] ?? 15;
+      timeoutId = setTimeout(advance, seconds * 1000);
+    }
+
+    function advance() {
+      idx = (idx + 1) % activeTabs.length;
+      goToCurrent();
+    }
+
+    goToCurrent();
+
+    return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode.enabled, viewMode.tabs, viewMode.durations]);
 
   /* ─── Auto-refresh desde Supabase cada 5 minutos (silent) ────── */
   useEffect(() => {
