@@ -182,14 +182,19 @@ function ClockIcon() {
   );
 }
 
+/* ︎ fuerza presentación de texto (no emoji a color) en fuentes que lo soportan */
 const ZODIAC_GLYPH: Record<string, string> = {
-  "Aries": "♈", "Tauro": "♉", "Géminis": "♊", "Cáncer": "♋",
-  "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Escorpio": "♏",
-  "Sagitario": "♐", "Capricornio": "♑", "Acuario": "♒", "Piscis": "♓",
+  "Aries": "♈︎", "Tauro": "♉︎", "Géminis": "♊︎", "Cáncer": "♋︎",
+  "Leo": "♌︎", "Virgo": "♍︎", "Libra": "♎︎", "Escorpio": "♏︎",
+  "Sagitario": "♐︎", "Capricornio": "♑︎", "Acuario": "♒︎", "Piscis": "♓︎",
 };
 
 function SignoGlyph({ signo }: { signo: string }) {
-  return <span style={{ fontSize: 13, lineHeight: 1 }}>{ZODIAC_GLYPH[signo] ?? "—"}</span>;
+  return (
+    <span style={{ fontSize: 13, lineHeight: 1, fontVariantEmoji: "text" } as React.CSSProperties}>
+      {ZODIAC_GLYPH[signo] ?? "—"}
+    </span>
+  );
 }
 
 function InfoIcon({ icon, value, shrink }: { icon: React.ReactNode; value: string; shrink?: boolean }) {
