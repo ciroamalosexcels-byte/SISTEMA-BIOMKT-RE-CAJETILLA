@@ -43,6 +43,7 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     ticket: (row as any).ticket ?? undefined,
     clave: row.clave ?? undefined,
     claveEmail: row.clave_email ?? undefined,
+    logoUrl: row.logo_url ?? undefined,
     clientOrder: row.client_order ?? undefined,
   };
 }

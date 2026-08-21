@@ -35,6 +35,7 @@ export function serializeLead(lead: Lead, stageMap: Map<string, string>) {
     ticket:                    lead.ticket ?? null,
     clave:                     lead.clave ?? null,
     clave_email:               lead.claveEmail ?? null,
+    logo_url:                  lead.logoUrl ?? null,
     rubro:                     lead.rubro ?? null,
     servicio:                  lead.servicio ?? null,
     source:                    lead.source ?? null,
