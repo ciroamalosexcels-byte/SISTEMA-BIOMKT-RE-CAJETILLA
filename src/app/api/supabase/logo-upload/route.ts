@@ -47,3 +47,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { leadId } = await req.json();
+    if (typeof leadId !== "string" || !UUID_RE.test(leadId)) {
+      return NextResponse.json({ error: "leadId inválido" }, { status: 400 });
+    }
+
+    const admin = createAdminClient();
+    const { data: files } = await admin.storage.from("client-logos").list("");
+    const matches = (files ?? []).filter((f) => f.name.startsWith(`${leadId}.`)).map((f) => f.name);
+    if (matches.length > 0) {
+      const { error } = await admin.storage.from("client-logos").remove(matches);
+      if (error) {
+        console.error("[logo-upload DELETE] Supabase error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    }
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[logo-upload DELETE] Exception:", e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
