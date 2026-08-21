@@ -14,6 +14,7 @@ import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/c
 import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { MarkerTextarea } from "@/components/shared/marker-textarea";
+import { LogoUploader } from "./logo-uploader";
 import type { Lead, ContentEvent, ManagementEvent, ClientMonthlyContent, TeamMember } from "@/types";
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
@@ -815,6 +816,10 @@ function ClientDataModal({
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body" style={{ overflowY: "auto", padding: "28px 32px", gap: 20 }}>
+
+          <div className="field-group" style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            <LogoUploader leadId={lead.id} logoUrl={lead.logoUrl} onUploaded={(url) => onUpdate({ logoUrl: url })} size={72} />
+          </div>
 
           {/* ── Contacto principal ────────────────────── */}
           <div className="field-group">
