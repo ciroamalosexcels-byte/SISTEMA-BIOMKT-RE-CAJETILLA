@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { LogoOptionsModal } from "./logo-options-modal";
 import { LogoCropModal } from "./logo-crop-modal";
+import { LogoBwModal } from "./logo-bw-modal";
 
 interface Props {
   leadId: string;
@@ -16,6 +17,7 @@ export function LogoUploader({ leadId, logoUrl, onUploaded, size = 44 }: Props) 
   const [uploading, setUploading] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [cropObjectUrl, setCropObjectUrl] = useState<string | null>(null);
+  const [bwObjectUrl, setBwObjectUrl] = useState<string | null>(null);
 
   async function uploadFile(file: File) {
     setUploading(true);
@@ -73,36 +75,30 @@ export function LogoUploader({ leadId, logoUrl, onUploaded, size = 44 }: Props) 
     closeCrop();
   }
 
-  async function handleToggleBw() {
+  async function openBwAdjust() {
     if (!logoUrl) return;
     setOptionsOpen(false);
     setUploading(true);
     try {
       const blob = await fetch(logoUrl).then((r) => r.blob());
-      const objUrl = URL.createObjectURL(blob);
-      const img = new Image();
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error("no se pudo cargar la imagen"));
-        img.src = objUrl;
-      });
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("no canvas context");
-      ctx.filter = "grayscale(1)";
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(objUrl);
-      const outBlob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-      if (!outBlob) throw new Error("no se pudo generar la imagen");
-      await uploadFile(new File([outBlob], "logo.png", { type: "image/png" }));
-    } catch (err) {
-      console.error("[LogoUploader] blanco y negro falló:", err);
-      alert("No se pudo aplicar blanco y negro. Probá de nuevo.");
+      setBwObjectUrl(URL.createObjectURL(blob));
+    } catch {
+      alert("No se pudo cargar el logo para editar.");
     } finally {
       setUploading(false);
     }
+  }
+
+  function closeBwAdjust() {
+    if (bwObjectUrl) URL.revokeObjectURL(bwObjectUrl);
+    setBwObjectUrl(null);
+  }
+
+  async function handleBwSave(blob: Blob) {
+    setUploading(true);
+    await uploadFile(new File([blob], "logo.png", { type: "image/png" }));
+    setUploading(false);
+    closeBwAdjust();
   }
 
   async function handleDownload() {
@@ -178,12 +174,12 @@ export function LogoUploader({ leadId, logoUrl, onUploaded, size = 44 }: Props) 
 
       {optionsOpen && (
         <LogoOptionsModal
-          hasLogo={!!logoUrl}
+          logoUrl={logoUrl}
           busy={uploading}
           onClose={() => setOptionsOpen(false)}
           onChange={openFilePicker}
           onCrop={openCrop}
-          onToggleBw={handleToggleBw}
+          onAdjustBw={openBwAdjust}
           onDownload={handleDownload}
           onDelete={handleDelete}
         />
@@ -195,6 +191,15 @@ export function LogoUploader({ leadId, logoUrl, onUploaded, size = 44 }: Props) 
           saving={uploading}
           onCancel={closeCrop}
           onSave={handleCropSave}
+        />
+      )}
+
+      {bwObjectUrl && (
+        <LogoBwModal
+          objectUrl={bwObjectUrl}
+          saving={uploading}
+          onCancel={closeBwAdjust}
+          onSave={handleBwSave}
         />
       )}
     </>
