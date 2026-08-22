@@ -102,7 +102,7 @@ function ClientCard({
       {/* Drag handle */}
       <div
         style={{
-          position: "absolute", top: 14, right: 14,
+          position: "absolute", top: 14, left: 14,
           color: "#cbd5e1", fontSize: 13, lineHeight: 1,
           pointerEvents: "none", userSelect: "none",
           letterSpacing: -1,
@@ -113,7 +113,7 @@ function ClientCard({
       </div>
 
       <div className="client-card-text-v11">
-        <h3 style={{ margin: 0, paddingRight: 18 }}>
+        <h3 style={{ margin: 0, paddingLeft: 18 }}>
           {isBirthday ? rainbowText(title) : title}
           {isBirthday && <span title="¡Cumpleaños!" style={{ marginLeft: 6 }}>🎂</span>}
         </h3>
