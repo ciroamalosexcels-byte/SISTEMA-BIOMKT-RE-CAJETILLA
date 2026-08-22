@@ -49,6 +49,8 @@ export interface Lead {
   clientOrder?: number;
   // Logo circular del cliente (Supabase Storage, bucket client-logos)
   logoUrl?: string;
+  // Link externo — el nombre del cliente en el header lo abre en una pestaña nueva
+  link?: string;
 }
 
 export type LeadFormData = Omit<Lead, "id" | "fechaContacto" | "tab">;

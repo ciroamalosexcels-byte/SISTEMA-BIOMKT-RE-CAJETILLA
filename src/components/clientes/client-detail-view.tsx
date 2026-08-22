@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
@@ -812,7 +813,7 @@ function ClientDataModal({
     <div className="modal-backdrop open" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 680 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Datos del cliente</h2>
+          <h2 className="modal-title">Datos</h2>
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body" style={{ overflowY: "auto", padding: "28px 32px", gap: 20 }}>
@@ -899,6 +900,10 @@ function ClientDataModal({
           <div className="field-group">
             <label className="field-label">Dirección</label>
             <input className="field" value={lead.direccion ?? ""} onChange={e => onUpdate({ direccion: e.target.value })} placeholder="Dirección" />
+          </div>
+          <div className="field-group" style={{ gridColumn: "1 / -1" }}>
+            <label className="field-label">Link (el nombre del cliente lo va a abrir)</label>
+            <input className="field" type="url" value={lead.link ?? ""} onChange={e => onUpdate({ link: e.target.value })} placeholder="https://..." />
           </div>
 
           {/* ── Servicio / Responsables ───────────────── */}
@@ -1691,19 +1696,6 @@ export function ClientDetailView({ clientId }: Props) {
             </div>
           )}
           <LogoUploader leadId={lead.id} logoUrl={lead.logoUrl} onUploaded={(url) => patch({ logoUrl: url })} size={44} />
-          <div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>
-              {lead.servicio && (
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", textTransform: "uppercase" }}>{lead.servicio}</span>
-              )}
-              {(lead.activo ?? true) ? (
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>Activo</span>
-              ) : (
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>Inactivo</span>
-              )}
-            </div>
-          </div>
           <button
             type="button"
             onClick={cycleEstado}
@@ -1718,6 +1710,33 @@ export function ClientDetailView({ clientId }: Props) {
             title={progressMode === "contratado" ? "Contratado vs. hecho" : "Progreso mensual por estado"}
           >
             <span>{clientProgress !== null ? `${Math.round(clientProgress * 100)}%` : "—"}</span>
+          </div>
+          <div>
+            {lead.link ? (
+              <a
+                href={lead.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="client-detail-title"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", color: "inherit" }}
+                title={lead.link}
+              >
+                {title}
+                <ExternalLink size={16} style={{ opacity: 0.5, flexShrink: 0 }} />
+              </a>
+            ) : (
+              <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 2 }}>
+              {lead.servicio && (
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", textTransform: "uppercase" }}>{lead.servicio}</span>
+              )}
+              {(lead.activo ?? true) ? (
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>Activo</span>
+              ) : (
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap" }}>Inactivo</span>
+              )}
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -1735,7 +1754,7 @@ export function ClientDetailView({ clientId }: Props) {
             <button className="btn btn-sm btn-outline" type="button" onClick={() => setMonthKey(k => shiftMonth(k, 1))}>›</button>
           </div>
           <button type="button" className="btn btn-amber btn-sm" onClick={() => setShowData(true)}>
-            Datos del cliente
+            Datos
           </button>
           <button type="button" className="btn btn-outline btn-sm" onClick={() => router.push("/clientes")}>
             Volver

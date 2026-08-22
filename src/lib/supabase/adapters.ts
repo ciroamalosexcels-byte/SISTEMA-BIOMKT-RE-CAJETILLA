@@ -44,6 +44,7 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     clave: row.clave ?? undefined,
     claveEmail: row.clave_email ?? undefined,
     logoUrl: row.logo_url ?? undefined,
+    link: row.link ?? undefined,
     clientOrder: row.client_order ?? undefined,
   };
 }
