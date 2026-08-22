@@ -1689,13 +1689,6 @@ export function ClientDetailView({ clientId }: Props) {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="client-detail-head">
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {clients.length > 1 && (
-            <div style={{ display: "flex", gap: 4 }}>
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(-1)} style={{ fontSize: 16, padding: "4px 10px" }}>‹</button>
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(1)}  style={{ fontSize: 16, padding: "4px 10px" }}>›</button>
-            </div>
-          )}
-          <LogoUploader leadId={lead.id} logoUrl={lead.logoUrl} onUploaded={(url) => patch({ logoUrl: url })} size={44} />
           <button
             type="button"
             onClick={cycleEstado}
@@ -1738,6 +1731,12 @@ export function ClientDetailView({ clientId }: Props) {
               )}
             </div>
           </div>
+          {clients.length > 1 && (
+            <div style={{ display: "flex", gap: 4 }}>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(-1)} style={{ fontSize: 16, padding: "4px 10px" }}>‹</button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate(1)}  style={{ fontSize: 16, padding: "4px 10px" }}>›</button>
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
