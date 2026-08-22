@@ -317,38 +317,10 @@ export function ClientesView() {
     setOverId(null);
   }
 
-  function exportCSV() {
-    const header = "Cliente,Nombre,Teléfono,Dirección,Servicio,Mes de entrada,Ticket";
-    const rows = clients.map(c => {
-      const q = (v: string | number | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-      return [
-        q(c.empresa),
-        q(c.nombre),
-        q(c.telefono),
-        q(c.direccion),
-        q(c.servicio),
-        q(c.mesEntrada),
-        q(c.ticket),
-      ].join(",");
-    });
-    const csv  = [header, ...rows].join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `clientes-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <div className="clients-v11-panel">
       <div className="panel-head">
-        <div className="panel-title-row">
-          <h2 className="panel-title">CLIENTES</h2>
-          <div className="panel-subtitle">
-            {activos.length} ACTIVO{activos.length !== 1 ? "S" : ""}
-          </div>
+        <div className="panel-title-row" style={{ alignItems: "center" }}>
           <button
             type="button"
             onClick={() => setProgressMode(progressMode === "estado" ? "contratado" : "estado")}
@@ -362,6 +334,12 @@ export function ClientesView() {
           >
             <span>{globalProgress !== null ? `${Math.round(globalProgress * 100)}%` : "—"}</span>
           </button>
+          <div>
+            <h2 className="panel-title" style={{ margin: 0 }}>CLIENTES</h2>
+            <div className="panel-subtitle" style={{ marginTop: 2 }}>
+              {activos.length} ACTIVO{activos.length !== 1 ? "S" : ""}
+            </div>
+          </div>
         </div>
         {clients.length > 0 && (
           <div className="client-panel-actions">
@@ -383,15 +361,8 @@ export function ClientesView() {
               className="btn btn-amber btn-sm"
               style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
             >
-              + Añadir eventos masivamente
+              + Añadir eventos
               {bulkEventSeries.length > 0 && <span className="bulk-button-count">{bulkEventSeries.length}</span>}
-            </button>
-            <button
-              onClick={exportCSV}
-              className="btn btn-outline btn-sm"
-              style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}
-            >
-              ↓ Exportar CSV
             </button>
           </div>
         )}
