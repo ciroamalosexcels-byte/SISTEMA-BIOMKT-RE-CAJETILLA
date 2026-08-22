@@ -1693,7 +1693,7 @@ export function ClientDetailView({ clientId }: Props) {
             type="button"
             onClick={cycleEstado}
             title={ESTADO_FACES[estadoIdx].label}
-            style={{ fontSize: 22, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
+            style={{ fontSize: 38, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
           >
             {ESTADO_FACES[estadoIdx].emoji}
           </button>
