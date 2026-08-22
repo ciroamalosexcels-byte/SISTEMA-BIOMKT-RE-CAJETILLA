@@ -88,7 +88,7 @@ function ClientCard({
       {/* Logo del cliente */}
       <div
         style={{
-          position: "absolute", top: 6, right: 6,
+          position: "absolute", top: 16, right: 12,
           width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
           background: "#e2e8f0", flexShrink: 0,
         }}
