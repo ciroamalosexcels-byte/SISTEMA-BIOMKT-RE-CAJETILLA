@@ -3,6 +3,16 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+
+function InstagramIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
@@ -1297,6 +1307,7 @@ function QuickLoadModal({
   const [refMonth, setRefMonth] = useState(() => Number(baParts().month));
   const [processing, setProcessing] = useState(false);
   const [processErr, setProcessErr] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => { images.forEach(img => URL.revokeObjectURL(img.url)); };
@@ -1506,9 +1517,37 @@ function QuickLoadModal({
                   <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
                   <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Subí la(s) captura(s) del calendario de Meta</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <input type="file" accept="image/*" multiple onChange={e => handleFiles(e.target.files)} />
-                  <span style={{ fontSize: 11, color: "#94a3b8" }}>o pegá con Ctrl+V (Cmd+V) en cualquier parte de esta ventana</span>
+                <div
+                  tabIndex={0}
+                  onPaste={e => {
+                    const files = Array.from(e.clipboardData?.items ?? [])
+                      .filter(item => item.type.startsWith("image/"))
+                      .map(item => item.getAsFile())
+                      .filter((f): f is File => f !== null);
+                    if (files.length === 0) return;
+                    e.preventDefault();
+                    addImageFiles(files);
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                    border: "2px dashed #e2e8f0", borderRadius: 12, padding: "18px 14px", cursor: "pointer",
+                    outline: "none", background: "#fafbfc",
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "var(--amber)"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá acá con Ctrl+V (Cmd+V)</span>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>o hacé click para elegir el archivo de tu compu</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={e => handleFiles(e.target.files)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ display: "none" }}
+                  />
                 </div>
                 {images.length > 0 && (
                   <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "4px 0" }}>
@@ -1907,21 +1946,34 @@ export function ClientDetailView({ clientId }: Props) {
             <span>{clientProgress !== null ? `${Math.round(clientProgress * 100)}%` : "—"}</span>
           </div>
           <div>
-            {lead.link ? (
-              <a
-                href={lead.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="client-detail-title"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", color: "inherit" }}
-                title={lead.link}
-              >
-                {title}
-                <ExternalLink size={16} style={{ opacity: 0.5, flexShrink: 0 }} />
-              </a>
-            ) : (
-              <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {lead.link ? (
+                <a
+                  href={lead.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="client-detail-title"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", color: "inherit" }}
+                  title={lead.link}
+                >
+                  {title}
+                  <ExternalLink size={16} style={{ opacity: 0.5, flexShrink: 0 }} />
+                </a>
+              ) : (
+                <h2 className="client-detail-title" style={{ margin: 0 }}>{title}</h2>
+              )}
+              {lead.instagram && (
+                <a
+                  href={`https://instagram.com/${lead.instagram.replace(/^@/, "").trim()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`Ver perfil de Instagram: @${lead.instagram.replace(/^@/, "").trim()}`}
+                  style={{ display: "flex", alignItems: "center", flexShrink: 0, color: "#E1306C" }}
+                >
+                  <InstagramIcon size={18} />
+                </a>
+              )}
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 2 }}>
               {lead.servicio && (
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", textTransform: "uppercase" }}>{lead.servicio}</span>
