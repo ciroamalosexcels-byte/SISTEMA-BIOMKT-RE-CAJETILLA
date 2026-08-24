@@ -826,9 +826,9 @@ function ClientDataModal({
           <h2 className="modal-title">Datos</h2>
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-body" style={{ overflowY: "auto", padding: "28px 32px", gap: 20 }}>
+        <div className="modal-body client-data-grid" style={{ overflowY: "auto", padding: "20px 28px" }}>
 
-          <div className="field-group" style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center", marginBottom: 4 }}>
+          <div className="field-group" style={{ gridColumn: "1 / -1", flexDirection: "row", justifyContent: "center" }}>
             <LogoUploader leadId={lead.id} logoUrl={lead.logoUrl} onUploaded={(url) => onUpdate({ logoUrl: url })} size={72} />
           </div>
 
