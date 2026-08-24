@@ -754,12 +754,12 @@ body.is-dragging * { transition: none !important; animation: none !important; }
 .client-detail-title { margin: 0; font-size: 27px; line-height: 1; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; color: var(--dark); }
 .client-detail-sub { font-size: 12px; line-height: 1.1; font-weight: 800; color: #102a56; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 4px; }
 .client-detail-body { padding: 20px; }
-.client-data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.client-data-grid .field-group { display: flex; flex-direction: column; gap: 4px; }
+.client-data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 8px; column-gap: 16px; }
+.client-data-grid .field-group { display: flex; flex-direction: column; gap: 3px; }
 .client-data-grid .field-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate-400); }
 .client-data-grid .full { grid-column: 1 / -1; }
-.client-data-grid .field, .client-data-grid select.field { min-height: 46px; }
-.client-data-grid .textarea { min-height: 82px; padding-top: 12px; }
+.client-data-grid .field, .client-data-grid select.field { min-height: 38px; padding: 8px 12px; }
+.client-data-grid .textarea { min-height: 70px; padding-top: 8px; }
 
 /* ── Team Panel Page ────────────────────────────────────────────── */
 .team-panel-page { background: #fff; border: var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-md); overflow: clip; flex-shrink: 0; min-height: calc(100vh - 190px); }
