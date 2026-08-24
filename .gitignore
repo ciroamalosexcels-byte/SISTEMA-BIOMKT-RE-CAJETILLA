@@ -31,3 +31,6 @@ mobile-crm/js/config.js
 
 # superpowers scratch workspace
 .superpowers/
+
+# tesseract.js language data cache (downloaded at runtime)
+*.traineddata

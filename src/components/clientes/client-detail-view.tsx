@@ -10,7 +10,7 @@ import { usePlansStore } from "@/store/plans";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
-import { baParts, currentMonthBA, monthLabel, shiftMonth } from "@/lib/dates";
+import { baParts, currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
 import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
@@ -1288,20 +1288,81 @@ function QuickLoadModal({
   const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[]>([]);
 
   /* ── modo "captura de Meta" ──────────────────────────────────── */
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{ file: File; url: string }[]>([]);
   const [tallyDate, setTallyDate] = useState(() => {
     const { year, month, day } = baParts();
     return `${year}-${month}-${day}`;
   });
+  const [refYear, setRefYear] = useState(() => Number(baParts().year));
+  const [refMonth, setRefMonth] = useState(() => Number(baParts().month));
+  const [processing, setProcessing] = useState(false);
+  const [processErr, setProcessErr] = useState("");
 
   useEffect(() => {
-    return () => { images.forEach(url => URL.revokeObjectURL(url)); };
+    return () => { images.forEach(img => URL.revokeObjectURL(img.url)); };
   }, [images]);
 
+  function addImageFiles(files: File[]) {
+    if (files.length === 0) return;
+    setImages(prev => [...prev, ...files.map(file => ({ file, url: URL.createObjectURL(file) }))]);
+  }
+
+  /* Pegar captura desde el portapapeles (Ctrl+V) mientras este modo está activo */
+  useEffect(() => {
+    if (mode !== "captura") return;
+    function onPaste(e: ClipboardEvent) {
+      const files = Array.from(e.clipboardData?.items ?? [])
+        .filter(item => item.type.startsWith("image/"))
+        .map(item => item.getAsFile())
+        .filter((f): f is File => f !== null);
+      if (files.length === 0) return;
+      e.preventDefault();
+      addImageFiles(files);
+    }
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [mode]);
+
   function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    const urls = Array.from(files).map(f => URL.createObjectURL(f));
-    setImages(prev => [...prev, ...urls]);
+    if (!files) return;
+    addImageFiles(Array.from(files));
+  }
+
+  async function processImages() {
+    if (images.length === 0) return;
+    setProcessing(true);
+    setProcessErr("");
+    try {
+      const formData = new FormData();
+      formData.append("year", String(refYear));
+      formData.append("month", String(refMonth));
+      images.forEach(img => formData.append("images", img.file));
+      const res = await fetch("/api/carga-rapida-captura", { method: "POST", body: formData });
+      const data: { items?: { scheduledDate: string; type: "REEL" | "PLACA" }[]; error?: string } = await res.json();
+      if (!res.ok || !data.items) throw new Error(data.error || "No se pudo procesar");
+      const items = data.items;
+      if (items.length === 0) {
+        setProcessErr("No se detectó ningún horario en la(s) captura(s). Probá con una captura más nítida o cargá a mano con los botones de abajo.");
+        return;
+      }
+      const today = todayBA();
+      setPreview(prev => [
+        ...prev,
+        ...items.map(item => ({
+          clientId,
+          title: "Sin título",
+          type: item.type as ContentEvent["type"],
+          status: (item.scheduledDate.slice(0, 10) < today ? "COMPLETO" : "CALENDARIZADO") as ContentEvent["status"],
+          scheduledDate: item.scheduledDate,
+          assignee: defaultAssignee || undefined,
+          done: false, timerSeconds: 0, timerRunning: false,
+        })),
+      ]);
+    } catch (e) {
+      setProcessErr(e instanceof Error ? e.message : "No se pudo procesar la captura");
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function addTally(type: ContentEvent["type"]) {
@@ -1445,12 +1506,15 @@ function QuickLoadModal({
                   <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
                   <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Subí la(s) captura(s) del calendario de Meta</span>
                 </div>
-                <input type="file" accept="image/*" multiple onChange={e => handleFiles(e.target.files)} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input type="file" accept="image/*" multiple onChange={e => handleFiles(e.target.files)} />
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>o pegá con Ctrl+V (Cmd+V) en cualquier parte de esta ventana</span>
+                </div>
                 {images.length > 0 && (
                   <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "4px 0" }}>
-                    {images.map((url, i) => (
+                    {images.map((img, i) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={url} alt={`Captura ${i + 1}`} style={{ height: 320, borderRadius: 10, border: "1px solid #e2e8f0", flexShrink: 0 }} />
+                      <img key={i} src={img.url} alt={`Captura ${i + 1}`} style={{ height: 320, borderRadius: 10, border: "1px solid #e2e8f0", flexShrink: 0 }} />
                     ))}
                   </div>
                 )}
@@ -1459,11 +1523,41 @@ function QuickLoadModal({
               {/* Divisor */}
               <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
 
-              {/* Paso 2 — carga rápida a click, mirando la captura */}
+              {/* Paso 2 — procesamiento automático */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>2</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Marcá lo que ves en la captura, día por día</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Leemos automáticamente fecha, hora y tipo (Reel/Publicación)</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>Mes de la captura:</span>
+                  <select className="field" value={refMonth} onChange={e => setRefMonth(parseInt(e.target.value, 10))} style={{ width: 130 }}>
+                    {["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].map((m, i) => (
+                      <option key={m} value={i + 1}>{m}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    className="field"
+                    value={refYear}
+                    onChange={e => setRefYear(parseInt(e.target.value, 10) || refYear)}
+                    style={{ width: 90 }}
+                  />
+                  <button type="button" className="btn btn-amber btn-sm" onClick={processImages} disabled={images.length === 0 || processing}>
+                    {processing ? "Leyendo…" : "Procesar automáticamente"}
+                  </button>
+                </div>
+                {processErr && <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{processErr}</span>}
+              </div>
+
+              {/* Divisor */}
+              <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+
+              {/* Paso 3 — carga manual a click, por si falta algo */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>3</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>¿Faltó algo? Agregalo a mano mirando la captura</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <input
@@ -1475,9 +1569,6 @@ function QuickLoadModal({
                   />
                   <button type="button" className="btn btn-sm btn-outline" onClick={() => addTally("REEL")}>+ Reel</button>
                   <button type="button" className="btn btn-sm btn-outline" onClick={() => addTally("PLACA")}>+ Publicación</button>
-                  <span style={{ fontSize: 11, color: "#94a3b8" }}>
-                    {preview.filter(ev => ev.scheduledDate?.startsWith(tallyDate)).length} cargado{preview.filter(ev => ev.scheduledDate?.startsWith(tallyDate)).length !== 1 ? "s" : ""} para este día
-                  </span>
                 </div>
               </div>
             </>
