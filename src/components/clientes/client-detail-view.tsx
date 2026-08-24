@@ -1280,11 +1280,45 @@ function QuickLoadModal({
   onAdd: (events: Omit<ContentEvent, "id" | "order">[]) => void;
   onClose: () => void;
 }) {
+  const [mode, setMode] = useState<"texto" | "captura">("texto");
   const [raw, setRaw]       = useState("");
   const [json, setJson]     = useState("");
   const [copied, setCopied] = useState(false);
   const [parseErr, setErr]  = useState("");
   const [preview, setPreview] = useState<Omit<ContentEvent, "id" | "order">[]>([]);
+
+  /* ── modo "captura de Meta" ──────────────────────────────────── */
+  const [images, setImages] = useState<string[]>([]);
+  const [tallyDate, setTallyDate] = useState(() => {
+    const { year, month, day } = baParts();
+    return `${year}-${month}-${day}`;
+  });
+
+  useEffect(() => {
+    return () => { images.forEach(url => URL.revokeObjectURL(url)); };
+  }, [images]);
+
+  function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const urls = Array.from(files).map(f => URL.createObjectURL(f));
+    setImages(prev => [...prev, ...urls]);
+  }
+
+  function addTally(type: ContentEvent["type"]) {
+    setPreview(prev => [...prev, {
+      clientId,
+      title: "Sin título",
+      type,
+      status: "CALENDARIZADO",
+      scheduledDate: `${tallyDate}T08:00`,
+      assignee: defaultAssignee || undefined,
+      done: false, timerSeconds: 0, timerRunning: false,
+    }]);
+  }
+
+  function removeRow(idx: number) {
+    setPreview(prev => prev.filter((_, i) => i !== idx));
+  }
 
   /* ── helpers para editar preview ──────────────────────────────── */
   function updateRow(idx: number, patch: Partial<Omit<ContentEvent, "id" | "order">>) {
@@ -1341,47 +1375,113 @@ function QuickLoadModal({
 
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16, overflowY: "auto", maxHeight: "calc(92vh - 130px)" }}>
 
-          {/* Paso 1 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá el contenido que te pasó el cliente</span>
-            </div>
-            <textarea
-              className="textarea"
-              rows={4}
-              value={raw}
-              onChange={e => setRaw(e.target.value)}
-              placeholder="Pegá acá el documento, lista o párrafo con el contenido del cliente…"
-              style={{ resize: "vertical" }}
-            />
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <button type="button" className="btn btn-amber btn-sm" onClick={copyPrompt} disabled={!raw.trim()}>
-                {copied ? "¡Prompt copiado!" : "Copiar prompt para IA"}
-              </button>
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>Pegalo en ChatGPT, Claude, Gemini, etc.</span>
-            </div>
+          {/* Selector de modo */}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className={`btn btn-sm ${mode === "texto" ? "btn-amber" : "btn-outline"}`}
+              onClick={() => setMode("texto")}
+            >
+              Pegar texto
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${mode === "captura" ? "btn-amber" : "btn-outline"}`}
+              onClick={() => setMode("captura")}
+            >
+              Desde capturas de Meta
+            </button>
           </div>
 
-          {/* Divisor */}
-          <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+          {mode === "texto" ? (
+            <>
+              {/* Paso 1 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá el contenido que te pasó el cliente</span>
+                </div>
+                <textarea
+                  className="textarea"
+                  rows={4}
+                  value={raw}
+                  onChange={e => setRaw(e.target.value)}
+                  placeholder="Pegá acá el documento, lista o párrafo con el contenido del cliente…"
+                  style={{ resize: "vertical" }}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <button type="button" className="btn btn-amber btn-sm" onClick={copyPrompt} disabled={!raw.trim()}>
+                    {copied ? "¡Prompt copiado!" : "Copiar prompt para IA"}
+                  </button>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>Pegalo en ChatGPT, Claude, Gemini, etc.</span>
+                </div>
+              </div>
 
-          {/* Paso 2 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>2</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá la respuesta de la IA</span>
-            </div>
-            <textarea
-              className="textarea"
-              rows={4}
-              value={json}
-              onChange={e => setJson(e.target.value)}
-              placeholder='[ { "titulo": "Carrusel verano", "tipo": "CARRUSEL", ... } ]'
-              style={{ resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
-            />
-            {parseErr && <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{parseErr}</span>}
-          </div>
+              {/* Divisor */}
+              <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+
+              {/* Paso 2 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>2</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Pegá la respuesta de la IA</span>
+                </div>
+                <textarea
+                  className="textarea"
+                  rows={4}
+                  value={json}
+                  onChange={e => setJson(e.target.value)}
+                  placeholder='[ { "titulo": "Carrusel verano", "tipo": "CARRUSEL", ... } ]'
+                  style={{ resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
+                />
+                {parseErr && <span style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{parseErr}</span>}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Paso 1 — subir capturas */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>1</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Subí la(s) captura(s) del calendario de Meta</span>
+                </div>
+                <input type="file" accept="image/*" multiple onChange={e => handleFiles(e.target.files)} />
+                {images.length > 0 && (
+                  <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "4px 0" }}>
+                    {images.map((url, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={url} alt={`Captura ${i + 1}`} style={{ height: 320, borderRadius: 10, border: "1px solid #e2e8f0", flexShrink: 0 }} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Divisor */}
+              <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
+
+              {/* Paso 2 — carga rápida a click, mirando la captura */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ background: "var(--amber)", color: "#07152f", borderRadius: "50%", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>2</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--slate-700, #334155)" }}>Marcá lo que ves en la captura, día por día</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <input
+                    type="date"
+                    className="field"
+                    value={tallyDate}
+                    onChange={e => setTallyDate(e.target.value)}
+                    style={{ width: 160 }}
+                  />
+                  <button type="button" className="btn btn-sm btn-outline" onClick={() => addTally("REEL")}>+ Reel</button>
+                  <button type="button" className="btn btn-sm btn-outline" onClick={() => addTally("PLACA")}>+ Publicación</button>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>
+                    {preview.filter(ev => ev.scheduledDate?.startsWith(tallyDate)).length} cargado{preview.filter(ev => ev.scheduledDate?.startsWith(tallyDate)).length !== 1 ? "s" : ""} para este día
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Divisor */}
           <div style={{ height: 1, background: "var(--slate-100, #f1f5f9)" }} />
@@ -1399,20 +1499,22 @@ function QuickLoadModal({
             <div style={{ border: "1px solid var(--slate-100,#f1f5f9)", borderRadius: 12, overflow: "hidden", minHeight: 48 }}>
               {preview.length === 0 ? (
                 <div style={{ padding: "16px 14px", fontSize: 12, color: "#94a3b8", textAlign: "center" }}>
-                  {json.trim() ? "..." : "La verificación aparecerá aquí cuando pegues la respuesta de la IA"}
+                  {mode === "texto"
+                    ? (json.trim() ? "..." : "La verificación aparecerá aquí cuando pegues la respuesta de la IA")
+                    : "Aparecerá acá cada vez que toques + Reel o + Publicación"}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {/* Header */}
-                  <div style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px", gap: 8, padding: "6px 12px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
-                    {["#", "Título", "Tipo", "Fecha pub."].map(h => (
+                  <div style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px 22px", gap: 8, padding: "6px 12px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                    {["#", "Título", "Tipo", "Fecha pub.", ""].map(h => (
                       <span key={h} style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</span>
                     ))}
                   </div>
                   {/* Filas */}
                   <div style={{ maxHeight: 260, overflowY: "auto" }}>
                     {preview.map((ev, i) => (
-                      <div key={i} style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px", gap: 8, padding: "7px 12px", borderBottom: i < preview.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "24px 1fr 110px 160px 22px", gap: 8, padding: "7px 12px", borderBottom: i < preview.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
                         {/* # */}
                         <span style={{ fontSize: 11, fontWeight: 900, color: "var(--amber)" }}>{i + 1}</span>
                         {/* Título editable */}
@@ -1438,6 +1540,15 @@ function QuickLoadModal({
                           onChange={e => updateRow(i, { scheduledDate: e.target.value || undefined })}
                           placeholder="Sin fecha"
                         />
+                        {/* Borrar fila */}
+                        <button
+                          type="button"
+                          onClick={() => removeRow(i)}
+                          title="Quitar"
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#cbd5e1", fontSize: 14, padding: 0, lineHeight: 1 }}
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))}
                   </div>
