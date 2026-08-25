@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           archivo: string | null
           assignee: string | null
+          auto_generated: boolean
           client_id: string
           copy: string | null
           created_at: string
@@ -40,6 +41,7 @@ export type Database = {
         Insert: {
           archivo?: string | null
           assignee?: string | null
+          auto_generated?: boolean
           client_id: string
           copy?: string | null
           created_at?: string
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           archivo?: string | null
           assignee?: string | null
+          auto_generated?: boolean
           client_id?: string
           copy?: string | null
           created_at?: string
