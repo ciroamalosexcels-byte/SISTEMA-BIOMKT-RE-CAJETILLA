@@ -1,4 +1,4 @@
-import type { ClientMonthlyContent, ContentCounts } from "@/types";
+import type { ClientMonthlyContent, ContentCounts, ContentEvent } from "@/types";
 
 export function findMonthlyRecord(
   records: ClientMonthlyContent[],
@@ -56,4 +56,57 @@ export function resolveMonthlyContent(
     publicacionesHechas: 0,
     publicacionesContratadas: prefill.publicacionesContratadas,
   };
+}
+
+/**
+ * "Hecho" ya no es un número que se tipea a mano: es un espejo de cuántos
+ * ContentEvent de ese tipo/mes/cliente están en estado CALENDARIZADO. Fuente
+ * única de verdad = el calendario de Planificación.
+ */
+export function countCalendarizadoByType(
+  contentEvents: ContentEvent[],
+  clientId: string,
+  month: string, // "YYYY-MM"
+  type: ContentEvent["type"],
+): number {
+  return contentEvents.filter(
+    (e) => e.clientId === clientId && e.type === type && e.status === "CALENDARIZADO" && (e.scheduledDate ?? "").startsWith(month)
+  ).length;
+}
+
+/** Reemplaza los *Hechas/*Hechos guardados por el conteo en vivo de CALENDARIZADO. */
+export function withLiveHechos<T extends ContentCounts>(
+  record: T,
+  contentEvents: ContentEvent[],
+  clientId: string,
+  month: string,
+): T {
+  return {
+    ...record,
+    historiasHechas: countCalendarizadoByType(contentEvents, clientId, month, "HISTORIA"),
+    reelsHechos: countCalendarizadoByType(contentEvents, clientId, month, "REEL"),
+    publicacionesHechas: countCalendarizadoByType(contentEvents, clientId, month, "PLACA"),
+  };
+}
+
+/**
+ * Busca qué evento marcar/desmarcar como CALENDARIZADO cuando se usa +/- en el
+ * contador. direction 1 = marcar (el pendiente más próximo en fecha),
+ * direction -1 = desmarcar (el calendarizado más reciente).
+ */
+export function findEventToToggleCalendarizado(
+  contentEvents: ContentEvent[],
+  clientId: string,
+  month: string,
+  type: ContentEvent["type"],
+  direction: 1 | -1,
+): ContentEvent | undefined {
+  if (direction > 0) {
+    return contentEvents
+      .filter((e) => e.clientId === clientId && e.type === type && e.status !== "CALENDARIZADO" && (e.scheduledDate ?? "").startsWith(month))
+      .sort((a, b) => (a.scheduledDate ?? "").localeCompare(b.scheduledDate ?? ""))[0];
+  }
+  return contentEvents
+    .filter((e) => e.clientId === clientId && e.type === type && e.status === "CALENDARIZADO" && (e.scheduledDate ?? "").startsWith(month))
+    .sort((a, b) => (b.scheduledDate ?? "").localeCompare(a.scheduledDate ?? ""))[0];
 }
