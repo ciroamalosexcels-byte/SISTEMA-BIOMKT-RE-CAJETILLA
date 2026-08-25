@@ -26,10 +26,10 @@ export const CONTENIDOS_CATEGORIAS: readonly {
   cardLabel: string;
   hechoKey: "historiasHechas" | "reelsHechos" | "publicacionesHechas";
   contratadoKey: "historiasContratadas" | "reelsContratados" | "publicacionesContratadas";
-  /** Tipo de ContentEvent que corresponde a esta categoría en el calendario de Planificación. */
-  contentType: ContentType;
+  /** Tipo de ContentEvent que corresponde a esta categoría en el calendario — null para Historias (no aplica el punto verde de "subido hoy"). */
+  contentType: ContentType | null;
 }[] = [
-  { label: "Historias Diarias", cardLabel: "Historias",     hechoKey: "historiasHechas",     contratadoKey: "historiasContratadas",     contentType: "HISTORIA" },
+  { label: "Historias Diarias", cardLabel: "Historias",     hechoKey: "historiasHechas",     contratadoKey: "historiasContratadas",     contentType: null },
   { label: "Reels",             cardLabel: "Reels",         hechoKey: "reelsHechos",          contratadoKey: "reelsContratados",         contentType: "REEL" },
   { label: "Publicaciones",     cardLabel: "Publicaciones", hechoKey: "publicacionesHechas",  contratadoKey: "publicacionesContratadas", contentType: "PLACA" },
 ];

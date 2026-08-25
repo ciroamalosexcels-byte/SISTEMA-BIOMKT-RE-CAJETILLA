@@ -7,7 +7,7 @@ import { useContentEventsStore } from "@/store/content-events";
 import { currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { CONTENIDOS_CATEGORIAS } from "@/lib/constants";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
-import { resolveMonthlyContent, withLiveHechos, findEventToToggleCalendarizado } from "@/lib/client-monthly-content";
+import { resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
@@ -62,8 +62,7 @@ function ClientCard({
       contratadoKey,
       hecho: monthlyRecord?.[hechoKey] ?? 0,
       contratado: monthlyRecord?.[contratadoKey] ?? 0,
-      // El punto verde de "subido hoy" no aplica a Historias (se repiten todos los días).
-      subidoHoy: cardLabel !== "Historias" && (todayTypes?.has(contentType) ?? false),
+      subidoHoy: contentType !== null && (todayTypes?.has(contentType) ?? false),
     }))
     .filter((r) => r.contratado > 0);
 
@@ -127,7 +126,7 @@ function ClientCard({
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onAdjustContent(r.hechoKey, 1); }}
                         onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onAdjustContent(r.hechoKey, -1); }}
-                        title="Click: marca un contenido pendiente como calendarizado · Click derecho: desmarca el último calendarizado"
+                        title="Click: +1 hecho · Click derecho: -1 hecho"
                         style={{ background: "none", border: "none", padding: 0, color: "#22c55e", fontSize: 14, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}
                       >
                         +
@@ -187,7 +186,7 @@ export function ClientesView() {
   const progressMode  = useContentEventsStore((s) => s.progressMode);
   const setProgressMode = useContentEventsStore((s) => s.setProgressMode);
   const monthlyContentRecords = useClientMonthlyContentStore((s) => s.records);
-  const updateContentEvent = useContentEventsStore((s) => s.updateContentEvent);
+  const upsertMonthlyContent = useClientMonthlyContentStore((s) => s.upsert);
   const router = useRouter();
 
   const [monthKey, setMonthKey] = useState(currentMonthBA);
@@ -264,25 +263,20 @@ export function ClientesView() {
     return map;
   }, [contentEvents]);
 
-  /** El registro mensual con *Hechas/*Hechos reemplazados por el conteo en vivo de eventos CALENDARIZADO. */
-  function getLiveMonthlyRecord(leadId: string): ContentCounts | undefined {
-    const record = resolveMonthlyContent(monthlyContentRecords, leadId, monthKey);
-    return record ? withLiveHechos(record, contentEvents, leadId, monthKey) : record;
-  }
-
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
-      ? getContratadoProgress(getLiveMonthlyRecord(lead.id))
+      ? getContratadoProgress(resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey))
       : getEstadoProgress(lead.id, contentEvents, monthKey);
   }
 
-  /** +1: marca el próximo evento pendiente de ese tipo como CALENDARIZADO. -1: revierte el calendarizado más reciente. */
   function adjustContent(leadId: string, hechoKey: keyof ContentPatch, delta: number) {
-    const category = CONTENIDOS_CATEGORIAS.find((c) => c.hechoKey === hechoKey);
-    if (!category) return;
-    const target = findEventToToggleCalendarizado(contentEvents, leadId, monthKey, category.contentType, delta > 0 ? 1 : -1);
-    if (!target) return;
-    updateContentEvent(target.id, { status: delta > 0 ? "CALENDARIZADO" : "SIN EDITAR" });
+    const current: ContentPatch = resolveMonthlyContent(monthlyContentRecords, leadId, monthKey) ?? {
+      historiasHechas: 0, historiasContratadas: 0,
+      reelsHechos: 0, reelsContratados: 0,
+      publicacionesHechas: 0, publicacionesContratadas: 0,
+    };
+    const nextHecho = Math.max(0, current[hechoKey] + delta);
+    upsertMonthlyContent(leadId, monthKey, { ...current, [hechoKey]: nextHecho });
   }
 
   const globalProgress = useMemo(() => {
@@ -401,7 +395,7 @@ export function ClientesView() {
                   onDragOver={(e) => handleDragOver(e, lead.id)}
                   onDrop={(e) => handleDrop(e, lead.id)}
                   onDragEnd={handleDragEnd}
-                  monthlyRecord={getLiveMonthlyRecord(lead.id)}
+                  monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                   onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
                   todayTypes={todayContentTypesByClient.get(lead.id)}
                 />
@@ -432,7 +426,7 @@ export function ClientesView() {
                     onDragOver={(e) => handleDragOver(e, lead.id)}
                     onDrop={(e) => handleDrop(e, lead.id)}
                     onDragEnd={handleDragEnd}
-                    monthlyRecord={getLiveMonthlyRecord(lead.id)}
+                    monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                     onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
                     todayTypes={todayContentTypesByClient.get(lead.id)}
                   />
