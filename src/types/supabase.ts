@@ -201,7 +201,10 @@ export type Database = {
           email: string | null
           empresa: string
           empresa_bio: string
+          facebook: string | null
           fecha_contacto: string
+          fecha_inicio: string | null
+          clave_facebook: string | null
           id: string
           instagram: string | null
           latitud: number | null
@@ -247,7 +250,10 @@ export type Database = {
           email?: string | null
           empresa?: string
           empresa_bio?: string
+          facebook?: string | null
           fecha_contacto?: string
+          fecha_inicio?: string | null
+          clave_facebook?: string | null
           id?: string
           instagram?: string | null
           latitud?: number | null
@@ -293,7 +299,10 @@ export type Database = {
           email?: string | null
           empresa?: string
           empresa_bio?: string
+          facebook?: string | null
           fecha_contacto?: string
+          fecha_inicio?: string | null
+          clave_facebook?: string | null
           id?: string
           instagram?: string | null
           latitud?: number | null

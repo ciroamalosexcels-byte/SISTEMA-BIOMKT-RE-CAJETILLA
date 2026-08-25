@@ -23,6 +23,8 @@ export interface Lead {
   // Extended client fields
   email?: string;
   instagram?: string;
+  facebook?: string;
+  claveFacebook?: string;
   rubro?: string;
   servicio?: string;
   source?: string;
@@ -51,6 +53,8 @@ export interface Lead {
   logoUrl?: string;
   // Link externo — el nombre del cliente en el header lo abre en una pestaña nueva
   link?: string;
+  // Fecha en la que el cliente inició (ISO date string)
+  fechaInicio?: string;
 }
 
 export type LeadFormData = Omit<Lead, "id" | "fechaContacto" | "tab">;

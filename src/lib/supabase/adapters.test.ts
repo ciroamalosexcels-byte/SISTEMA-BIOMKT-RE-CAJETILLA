@@ -101,18 +101,15 @@ describe("adaptLead", () => {
       "id", "sheetId", "nombre", "nombre2", "empresa", "observaciones",
       "telefono", "telefono2", "responsable1", "responsable2", "direccion",
       "empresaBio", "medio", "tab", "fechaContacto", "activo",
-      "email", "instagram", "rubro", "servicio", "source", "mesEntrada",
+      "email", "instagram", "facebook", "claveFacebook", "rubro", "servicio", "source", "mesEntrada",
       "objetivos", "planAudiovisual", "cumpleanos", "cumpleanos2",
       "proximoSeguimientoDias", "proximoSeguimientoFecha",
       "meetingDatetime", "planId", "clientOrder",
+      "ticket", "clave", "claveEmail", "logoUrl", "link", "fechaInicio",
     ];
 
     // Campos intencionalmente excluidos del adapter (gestionados por fuera de la DB normal)
-    const INTENTIONALLY_EXCLUDED: (keyof Lead)[] = [
-      "clave",      // gestionado via Supabase Vault (clave_secret_id), no en texto plano
-      "claveEmail", // nuevo campo — pendiente mapear en adaptLead
-      "ticket",     // nuevo campo — pendiente mapear en adaptLead
-    ];
+    const INTENTIONALLY_EXCLUDED: (keyof Lead)[] = [];
 
     const ALL_LEAD_KEYS: (keyof Lead)[] = [
       ...LEAD_FIELDS_FROM_DB,

@@ -27,6 +27,8 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     fechaContacto: row.fecha_contacto,
     email: row.email ?? undefined,
     instagram: row.instagram ?? undefined,
+    facebook: row.facebook ?? undefined,
+    claveFacebook: row.clave_facebook ?? undefined,
     rubro: row.rubro ?? undefined,
     servicio: row.servicio ?? undefined,
     source: row.source ?? undefined,
@@ -45,6 +47,7 @@ export function adaptLead(row: LeadRow, stageMap: Map<string, string>): Lead {
     claveEmail: row.clave_email ?? undefined,
     logoUrl: row.logo_url ?? undefined,
     link: row.link ?? undefined,
+    fechaInicio: row.fecha_inicio ?? undefined,
     clientOrder: row.client_order ?? undefined,
   };
 }
