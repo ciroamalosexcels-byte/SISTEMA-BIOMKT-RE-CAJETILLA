@@ -11,6 +11,7 @@ import { resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
+import { CONTENT_TYPE_ICON } from "@/components/shared/content-type-icons";
 import type { ClientMonthlyContentInput, ContentCounts, ContentEvent, Lead } from "@/types";
 
 type ContentPatch = Omit<ClientMonthlyContentInput, "clientId" | "month">;
@@ -60,9 +61,11 @@ function ClientCard({
       cardLabel,
       hechoKey,
       contratadoKey,
+      contentType,
       hecho: monthlyRecord?.[hechoKey] ?? 0,
       contratado: monthlyRecord?.[contratadoKey] ?? 0,
-      subidoHoy: contentType !== null && (todayTypes?.has(contentType) ?? false),
+      // El punto verde de "subido hoy" no aplica a Historias (se repiten todos los días).
+      subidoHoy: cardLabel !== "Historias" && (todayTypes?.has(contentType) ?? false),
     }))
     .filter((r) => r.contratado > 0);
 
@@ -113,13 +116,15 @@ function ClientCard({
           <div style={{ flex: 1, minWidth: 0 }}>
             {contenidoRows.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {contenidoRows.map((r) => (
+                {contenidoRows.map((r) => {
+                  const Icon = CONTENT_TYPE_ICON[r.contentType];
+                  return (
                   <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3, fontSize: 13, fontWeight: 700, color: "#334155" }}>
-                    <span style={{ whiteSpace: "nowrap" }}>
+                    <span style={{ whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}>
                       {r.subidoHoy
-                        ? <span title="Contenido calendarizado para hoy" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#22c55e", marginRight: 2 }} />
+                        ? <span title="Contenido calendarizado para hoy" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#22c55e", marginRight: -1 }} />
                         : "-"}
-                      {r.contratado} {r.cardLabel}
+                      {r.contratado} {Icon && <Icon size={13} />}
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
                       <button
@@ -134,7 +139,8 @@ function ClientCard({
                       <span style={{ color: "#94a3b8", minWidth: 24, textAlign: "right" }}>{r.hecho}/{r.contratado}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>

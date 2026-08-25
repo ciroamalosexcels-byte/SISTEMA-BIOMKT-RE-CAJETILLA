@@ -14,34 +14,7 @@ function InstagramIcon({ size = 18 }: { size?: number }) {
   );
 }
 
-/* ── Íconos de tipo de contenido para las tarjetas del calendario ────── */
-function HistoriaIcon({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-      <circle cx="12" cy="12" r="9" strokeDasharray="7.5 5.5" />
-    </svg>
-  );
-}
-function ReelIcon({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6 4.2c0-1.1 1.2-1.75 2.1-1.15l12 8c.8.53.8 1.72 0 2.25l-12 8c-.9.6-2.1-.05-2.1-1.15V4.2z" />
-    </svg>
-  );
-}
-function PublicacionIcon({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <rect x="3" y="3" width="14" height="14" rx="4" opacity="0.5" />
-      <rect x="7" y="7" width="14" height="14" rx="4" />
-    </svg>
-  );
-}
-const CONTENT_TYPE_ICON: Record<string, (props: { size?: number }) => JSX.Element> = {
-  HISTORIA: HistoriaIcon,
-  REEL: ReelIcon,
-  PLACA: PublicacionIcon,
-};
+import { CONTENT_TYPE_ICON } from "@/components/shared/content-type-icons";
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
