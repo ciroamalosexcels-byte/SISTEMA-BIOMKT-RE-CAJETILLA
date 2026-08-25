@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 /* ── Íconos de tipo de contenido — calendario y tarjetas de Clientes ─── */
 export function HistoriaIcon({ size = 12 }: { size?: number }) {
   return (
@@ -21,7 +23,7 @@ export function PublicacionIcon({ size = 12 }: { size?: number }) {
     </svg>
   );
 }
-export const CONTENT_TYPE_ICON: Record<string, (props: { size?: number }) => JSX.Element> = {
+export const CONTENT_TYPE_ICON: Record<string, (props: { size?: number }) => ReactElement> = {
   HISTORIA: HistoriaIcon,
   REEL: ReelIcon,
   PLACA: PublicacionIcon,
