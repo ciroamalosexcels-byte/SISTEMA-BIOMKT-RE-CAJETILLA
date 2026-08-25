@@ -11,7 +11,7 @@ import { resolveMonthlyContent } from "@/lib/client-monthly-content";
 import { BulkEventsModal } from "./bulk-events-modal";
 import { useClientMonthlyContentStore } from "@/store/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
-import type { ClientMonthlyContentInput, ContentCounts, Lead } from "@/types";
+import type { ClientMonthlyContentInput, ContentCounts, ContentEvent, Lead } from "@/types";
 
 type ContentPatch = Omit<ClientMonthlyContentInput, "clientId" | "month">;
 
@@ -33,6 +33,7 @@ function ClientCard({
   onDragStart, onDragOver, onDrop, onDragEnd,
   monthlyRecord,
   onAdjustContent,
+  todayTypes,
 }: {
   lead: Lead;
   progress: number | null;
@@ -45,6 +46,7 @@ function ClientCard({
   onDragEnd: () => void;
   monthlyRecord: ContentCounts | undefined;
   onAdjustContent: (hechoKey: keyof ContentPatch, delta: number) => void;
+  todayTypes: Set<ContentEvent["type"]> | undefined;
 }) {
   const title   = lead.empresa || lead.nombre || "Sin nombre";
   const service = lead.servicio || "—";
@@ -54,12 +56,13 @@ function ClientCard({
   const isBirthday = isBirthdayToday(lead, todayBA().slice(5, 10));
 
   const contenidoRows = CONTENIDOS_CATEGORIAS
-    .map(({ cardLabel, hechoKey, contratadoKey }) => ({
+    .map(({ cardLabel, hechoKey, contratadoKey, contentType }) => ({
       cardLabel,
       hechoKey,
       contratadoKey,
       hecho: monthlyRecord?.[hechoKey] ?? 0,
       contratado: monthlyRecord?.[contratadoKey] ?? 0,
+      subidoHoy: contentType !== null && (todayTypes?.has(contentType) ?? false),
     }))
     .filter((r) => r.contratado > 0);
 
@@ -112,7 +115,12 @@ function ClientCard({
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {contenidoRows.map((r) => (
                   <div key={r.cardLabel} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3, fontSize: 13, fontWeight: 700, color: "#334155" }}>
-                    <span style={{ whiteSpace: "nowrap" }}>-{r.contratado} {r.cardLabel}</span>
+                    <span style={{ whiteSpace: "nowrap" }}>
+                      {r.subidoHoy
+                        ? <span title="Contenido calendarizado para hoy" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#22c55e", marginRight: 2 }} />
+                        : "-"}
+                      {r.contratado} {r.cardLabel}
+                    </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
                       <button
                         type="button"
@@ -242,6 +250,18 @@ export function ClientesView() {
     const needle = searchBuffer.toLowerCase();
     return inactivos.filter((c) => (c.empresa || c.nombre || "").toLowerCase().includes(needle));
   }, [inactivos, searchActive, searchBuffer]);
+
+  const todayContentTypesByClient = useMemo(() => {
+    const today = todayBA();
+    const map = new Map<string, Set<ContentEvent["type"]>>();
+    for (const ev of contentEvents) {
+      if (!ev.type || (ev.scheduledDate ?? "").slice(0, 10) !== today) continue;
+      const set = map.get(ev.clientId) ?? new Set<ContentEvent["type"]>();
+      set.add(ev.type);
+      map.set(ev.clientId, set);
+    }
+    return map;
+  }, [contentEvents]);
 
   function getProgress(lead: Lead): number | null {
     return progressMode === "contratado"
@@ -377,6 +397,7 @@ export function ClientesView() {
                   onDragEnd={handleDragEnd}
                   monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                   onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
+                  todayTypes={todayContentTypesByClient.get(lead.id)}
                 />
               ))}
               {searchActive && filteredInactivos.length === 0 && <ClearSearchCard onClear={clearSearch} />}
@@ -407,6 +428,7 @@ export function ClientesView() {
                     onDragEnd={handleDragEnd}
                     monthlyRecord={resolveMonthlyContent(monthlyContentRecords, lead.id, monthKey)}
                     onAdjustContent={(hechoKey, delta) => adjustContent(lead.id, hechoKey, delta)}
+                    todayTypes={todayContentTypesByClient.get(lead.id)}
                   />
                 ))}
                 {searchActive && <ClearSearchCard onClear={clearSearch} />}
