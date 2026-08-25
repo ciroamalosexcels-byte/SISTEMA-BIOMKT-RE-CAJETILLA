@@ -22,7 +22,7 @@ import { CONTENT_TYPES, CONTENT_STATUS, MANAGEMENT_TYPES, CONTENIDOS_CATEGORIAS 
 import { useColumnWidthsStore, PLAN_COLUMN_FIELDS } from "@/store/column-widths";
 import { baParts, currentMonthBA, monthLabel, shiftMonth, todayBA } from "@/lib/dates";
 import { getContratadoProgress, getEstadoProgress, progressClass } from "@/lib/client-progress";
-import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent, countCalendarizadoByType } from "@/lib/client-monthly-content";
+import { findMonthlyRecord, getMostRecentContratado, resolveMonthlyContent, countCalendarizadoByType, findEventToToggleCalendarizado } from "@/lib/client-monthly-content";
 import { MonthPickerMenu } from "@/components/shared/month-picker-menu";
 import { MarkerTextarea } from "@/components/shared/marker-textarea";
 import { LogoUploader } from "./logo-uploader";
@@ -924,6 +924,13 @@ function ClientDataModal({
     setTimeout(() => setJustGenerated(false), 1500);
   }
 
+  /** +1: marca el próximo evento pendiente de ese tipo como CALENDARIZADO. -1: revierte el calendarizado más reciente. */
+  function toggleCalendarizado(contentType: ContentEvent["type"], direction: 1 | -1) {
+    const target = findEventToToggleCalendarizado(contentEvents, lead.id, monthKey, contentType, direction);
+    if (!target) return;
+    useContentEventsStore.getState().updateContentEvent(target.id, { status: direction > 0 ? "CALENDARIZADO" : "SIN EDITAR" });
+  }
+
   return (
     <>
     {showConfirmDelete && (
@@ -1142,13 +1149,22 @@ function ClientDataModal({
               <button type="button" className="btn btn-sm btn-outline" onClick={() => onShiftMonth(1)}>›</button>
             </div>
             <div className="contenidos-box">
-              {CONTENIDOS_CATEGORIAS.map(({ label, hechoKey, contratadoKey }) => {
+              {CONTENIDOS_CATEGORIAS.map(({ label, hechoKey, contratadoKey, contentType }) => {
                 const hecho = currentValues[hechoKey];
                 const contratado = currentValues[contratadoKey];
                 return (
                   <div key={label} className="contenidos-row">
                     <span className="contenidos-row-label">-{contratado} {label}</span>
                     <div className="contenidos-row-inputs">
+                      <button
+                        type="button"
+                        onClick={() => toggleCalendarizado(contentType, 1)}
+                        onContextMenu={(e) => { e.preventDefault(); toggleCalendarizado(contentType, -1); }}
+                        title="Click: marca un contenido pendiente como calendarizado · Click derecho: desmarca el último calendarizado"
+                        style={{ background: "none", border: "none", padding: "0 4px 0 0", color: "#22c55e", fontSize: 16, fontWeight: 900, cursor: "pointer", lineHeight: 1 }}
+                      >
+                        +
+                      </button>
                       <input
                         type="number"
                         min={0}
