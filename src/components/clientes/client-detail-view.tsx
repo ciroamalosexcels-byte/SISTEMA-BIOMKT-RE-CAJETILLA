@@ -13,6 +13,35 @@ function InstagramIcon({ size = 18 }: { size?: number }) {
     </svg>
   );
 }
+
+/* ── Íconos de tipo de contenido para las tarjetas del calendario ────── */
+function HistoriaIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" strokeDasharray="7.5 5.5" />
+    </svg>
+  );
+}
+function ReelIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M6 4.2c0-1.1 1.2-1.75 2.1-1.15l12 8c.8.53.8 1.72 0 2.25l-12 8c-.9.6-2.1-.05-2.1-1.15V4.2z" />
+    </svg>
+  );
+}
+function PublicacionIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="3" width="14" height="14" rx="4" opacity="0.5" />
+      <rect x="7" y="7" width="14" height="14" rx="4" />
+    </svg>
+  );
+}
+const CONTENT_TYPE_ICON: Record<string, (props: { size?: number }) => JSX.Element> = {
+  HISTORIA: HistoriaIcon,
+  REEL: ReelIcon,
+  PLACA: PublicacionIcon,
+};
 import { useLeadsStore } from "@/store/leads";
 import { useTeamStore } from "@/store/team";
 import { useContentEventsStore } from "@/store/content-events";
@@ -301,6 +330,7 @@ function ClientCalendarCard({
               <div style={{ display: "grid", gridTemplateColumns: fullLabel ? "1fr" : "1fr 1fr", gap: 2, marginTop: 2 }}>
                 {dayEvs.slice(0, 6).map(ev => {
                   const color = ev.dotColor ?? STATUS_COLOR[ev.status ?? ""] ?? "#94a3b8";
+                  const Icon = !fullLabel ? CONTENT_TYPE_ICON[ev.type] : undefined;
                   const label = fullLabel
                     ? (ev.type || ev.title)
                     : (TYPE_ABBREV[ev.type] ?? MGMT_ABBREV[ev.type] ?? (ev.type.slice(0, 3).toUpperCase() || ev.title.slice(0, 3).toUpperCase()));
@@ -314,9 +344,9 @@ function ClientCalendarCard({
                           if (memberInfo) setExpandedEventId(cur => cur === ev.id ? null : ev.id);
                           else onEventClick?.(ev.id);
                         } : undefined}
-                        style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: clickable ? "pointer" : "default" }}
+                        style={{ padding: "1px 3px", borderRadius: 4, borderLeft: `3px solid ${color}`, background: color + "22", fontSize: 8, fontWeight: 900, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: clickable ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center" }}
                       >
-                        {label}
+                        {Icon ? <Icon size={11} /> : label}
                       </div>
                       {memberInfo && expandedEventId === ev.id && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
